@@ -15,7 +15,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            try {
+              if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme'))) {
+                document.documentElement.classList.add('dark');
+              } else {
+                document.documentElement.classList.remove('dark');
+              }
+            } catch (_) {}
+          `
+        }} />
+      </head>
       <body>
         <AuthProvider>
           {children}
@@ -23,9 +36,9 @@ export default function RootLayout({
             position="top-right"
             toastOptions={{
               style: {
-                background: '#1a1a1a',
-                color: '#ffffff',
-                border: '1px solid #2a2a2a',
+                background: 'var(--color-surface-2)',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '10px',
                 fontSize: '0.875rem',
               },

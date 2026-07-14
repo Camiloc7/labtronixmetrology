@@ -15,6 +15,8 @@ import {
   Gear,
   SignOut,
   ChartBar,
+  CaretLeft,
+  CaretRight,
 } from '@phosphor-icons/react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { getInitials } from '@/lib/utils/formatters';
@@ -37,7 +39,14 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Administración',    href: '/admin',           icon: <Gear size={20} weight="duotone" />, roles: ['ADMIN'] },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  setIsOpen: (val: boolean) => void;
+  isCollapsed: boolean;
+  setIsCollapsed: (val: boolean) => void;
+}
+
+export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -53,9 +62,21 @@ export default function Sidebar() {
   );
 
   return (
-    <aside className="sidebar">
-      {/* Logo */}
-      <div className="sidebar__logo">
+    <>
+      <div className={`sidebar-overlay ${isOpen ? 'sidebar-overlay--open' : ''}`} onClick={() => setIsOpen(false)} />
+      <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''} ${isCollapsed ? 'sidebar--collapsed' : ''}`}>
+        
+        {/* Toggle Button (Desktop only) */}
+        <button
+          className="desktop-only sidebar__toggle-btn"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          title={isCollapsed ? 'Expandir menú' : 'Contraer menú'}
+        >
+          {isCollapsed ? <CaretRight weight="bold" size={14} /> : <CaretLeft weight="bold" size={14} />}
+        </button>
+
+        {/* Logo */}
+        <div className="sidebar__logo">
         <div style={{
           width: 36,
           height: 36,
@@ -75,7 +96,7 @@ export default function Sidebar() {
             style={{ objectFit: 'contain' }}
           />
         </div>
-        <div className="sidebar__logo-text">
+        <div className="sidebar__logo-text" style={{ display: isCollapsed ? 'none' : 'flex' }}>
           <span className="sidebar__logo-name">Labtronix</span>
           <span className="sidebar__logo-sub">Metrología</span>
         </div>
@@ -83,17 +104,23 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="sidebar__nav">
-        <span className="sidebar__section-label">Menú principal</span>
+        <span className="sidebar__section-label" style={{ opacity: isCollapsed ? 0 : 1, transition: 'opacity 0.2s' }}>
+          Menú principal
+        </span>
         {filteredItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           return (
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setIsOpen(false)}
               className={`sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
+              title={isCollapsed ? item.label : undefined}
             >
-              {item.icon}
-              {item.label}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20 }}>
+                {item.icon}
+              </div>
+              {!isCollapsed && <span>{item.label}</span>}
               {isActive && (
                 <motion.div
                   layoutId="sidebar-active"
@@ -114,21 +141,22 @@ export default function Sidebar() {
 
       {/* User footer */}
       {user && (
-        <div className="sidebar__footer">
-          <div className="sidebar__user">
-            <div className="sidebar__user-avatar">
+        <div className="sidebar__footer" style={{ padding: isCollapsed ? '16px 8px' : '16px 12px' }}>
+          <div className="sidebar__user" style={{ justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
+            <div className="sidebar__user-avatar" title={isCollapsed ? user.name : undefined}>
               {getInitials(user.name)}
             </div>
-            <div className="sidebar__user-info">
-              <div className="sidebar__user-name">{user.name}</div>
-              <div className="sidebar__user-role">{user.role}</div>
-            </div>
+            {!isCollapsed && (
+              <div className="sidebar__user-info">
+                <div className="sidebar__user-name">{user.name}</div>
+                <div className="sidebar__user-role">{user.role}</div>
+              </div>
+            )}
             <button
               onClick={handleLogout}
               title="Cerrar sesión"
               style={{
-                color: 'var(--color-text-muted)',
-                display: 'flex',
+                display: isCollapsed ? 'none' : 'flex',
                 alignItems: 'center',
                 padding: 6,
                 borderRadius: 'var(--radius-sm)',
@@ -149,5 +177,6 @@ export default function Sidebar() {
         </div>
       )}
     </aside>
+    </>
   );
 }

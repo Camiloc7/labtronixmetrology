@@ -1,7 +1,8 @@
 'use client';
 import { usePathname } from 'next/navigation';
-import { Bell } from '@phosphor-icons/react';
+import { Bell, List, Moon, Sun } from '@phosphor-icons/react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useTheme } from '@/components/ThemeProvider';
 
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard':      'Dashboard',
@@ -15,9 +16,14 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/logs':     'Logs de Actividad',
 };
 
-export default function TopBar() {
+interface TopBarProps {
+  onMenuToggle: () => void;
+}
+
+export default function TopBar({ onMenuToggle }: TopBarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   // Buscar el título más específico
   const title =
@@ -28,7 +34,10 @@ export default function TopBar() {
   return (
     <header className="topbar no-print">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{
+        <button className="mobile-only btn btn--ghost" style={{ padding: 4 }} onClick={onMenuToggle}>
+          <List size={24} />
+        </button>
+        <div className="desktop-only" style={{
           width: 3,
           height: 20,
           background: 'var(--color-brand)',
@@ -38,6 +47,25 @@ export default function TopBar() {
       </div>
 
       <div className="topbar__actions">
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
+          style={{
+            width: 36,
+            height: 36,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 'var(--radius-md)',
+            color: 'var(--color-text-muted)',
+            transition: 'all var(--transition)',
+            background: 'var(--color-surface-2)',
+            border: '1px solid var(--color-border)',
+          }}
+        >
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+
         <button
           style={{
             width: 36,
