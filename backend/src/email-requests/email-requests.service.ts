@@ -2,12 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EmailRequest, EmailRequestStatus } from './entities/email-request.entity';
+import { ExcelService } from '../common/excel/excel.service';
 
 @Injectable()
 export class EmailRequestsService {
   constructor(
     @InjectRepository(EmailRequest)
     private readonly emailRequestsRepo: Repository<EmailRequest>,
+    private readonly excelService: ExcelService,
   ) {}
 
   /** Extrae datos estructurados del texto del correo usando regex */
@@ -64,5 +66,49 @@ export class EmailRequestsService {
     req.status = EmailRequestStatus.DESCARTADO;
     req.processedById = userId;
     return this.emailRequestsRepo.save(req);
+  }
+
+  async exportToExcel(): Promise<Buffer> {
+    const requests = await this.emailRequestsRepo.find({ order: { createdAt: 'DESC' } });
+    const data = requests.map(req => ({
+      ID: req.id,
+      ContenidoOriginal: req.rawContent,
+      EmailsExtraidos: req.extractedData?.emails?.join(', ') || '',
+      NITExtraido: req.extractedData?.nit || '',
+      Estado: req.status,
+      FechaCaptura: req.createdAt,
+    }));
+    return this.excelService.exportToExcel(data, 'SolicitudesEmail');
+  }
+
+  async importFromExcel(buffer: Buffer): Promise<{ total: number; created: number; updated: number }> {
+    const data = await this.excelService.importFromExcel(buffer);
+    let created = 0;
+    let updated = 0;
+
+    for (const row of data) {
+      const id = row['ID'] ? String(row['ID']).trim() : null;
+      const rawContent = row['ContenidoOriginal'];
+      if (!rawContent) continue;
+
+      let req: EmailRequest | null = null;
+      if (id && id.length === 36) { 
+        req = await this.emailRequestsRepo.findOne({ where: { id } });
+      }
+
+      if (req) {
+        await this.emailRequestsRepo.save({
+          ...req,
+          status: (row['Estado'] as EmailRequestStatus) || req.status,
+          rawContent,
+        });
+        updated++;
+      } else {
+        await this.create(rawContent);
+        created++;
+      }
+    }
+
+    return { total: data.length, created, updated };
   }
 }

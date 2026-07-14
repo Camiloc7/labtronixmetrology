@@ -9,6 +9,7 @@ import { EquipmentModule } from './equipment/equipment.module';
 import { WorkOrdersModule } from './work-orders/work-orders.module';
 import { EmailRequestsModule } from './email-requests/email-requests.module';
 import { ActivityLogsModule } from './activity-logs/activity-logs.module';
+import { ExcelModule } from './common/excel/excel.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ActivityLogsModule } from './activity-logs/activity-logs.module';
     WorkOrdersModule,
     EmailRequestsModule,
     ActivityLogsModule,
+    ExcelModule,
   ],
 })
 export class AppModule {}

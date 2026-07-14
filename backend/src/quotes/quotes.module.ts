@@ -6,9 +6,10 @@ import { Quote } from './entities/quote.entity';
 import { QuoteItem } from './entities/quote-item.entity';
 import { Client } from '../clients/entities/client.entity';
 import { JwtModule } from '@nestjs/jwt';
+import { ExcelModule } from '../common/excel/excel.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Quote, QuoteItem, Client]), JwtModule],
+  imports: [TypeOrmModule.forFeature([Quote, QuoteItem, Client]), JwtModule, ExcelModule],
   providers: [QuotesService],
   controllers: [QuotesController],
   exports: [QuotesService],

@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Plus, EnvelopeOpen, Check, Trash, Eye } from '@phosphor-icons/react';
-import { emailRequestsApi } from '@/lib/api';
+import { emailRequestsApi, excelApi } from '@/lib/api';
+import { ImportExportActions } from '@/components/ImportExportActions';
 import { formatDateTime, getEmailStatusBadge } from '@/lib/utils/formatters';
 import type { EmailRequest } from '@/lib/types';
 
@@ -59,16 +60,39 @@ export default function EmailRequestsPage() {
     } catch { toast.error('Error'); }
   };
 
+  const handleExport = async () => {
+    await excelApi.downloadExcel('/email-requests/export', 'solicitudes-email.xlsx');
+  };
+
+  const handleImport = async (file: File) => {
+    return await excelApi.uploadExcel('/email-requests/import', file);
+  };
+
+  const EMAIL_COLUMNS = [
+    { name: 'ID', description: 'ID UUID de la solicitud (dejar vacío si es nuevo)' },
+    { name: 'ContenidoOriginal', description: 'Texto original del correo', required: true },
+    { name: 'Estado', description: 'PENDIENTE, PROCESADO, DESCARTADO' },
+  ];
+
   return (
     <div>
       <div className="page-header">
         <div>
-          <h1 className="page-header__title">Solicitudes por Correo</h1>
-          <p className="page-header__subtitle">Capture y analice el contenido de correos recibidos de clientes</p>
+          <h1 className="page-header__title">Solicitudes por Email</h1>
+          <p className="page-header__subtitle">Correos entrantes pendientes de gestión</p>
         </div>
-        <button className="btn btn--primary" onClick={() => setShowForm(!showForm)}>
-          <Plus size={18} weight="bold" /> Capturar Correo
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <ImportExportActions
+            onExport={handleExport}
+            onImport={handleImport}
+            onImportSuccess={fetchData}
+            entityName="Solicitudes de Email"
+            expectedColumns={EMAIL_COLUMNS}
+          />
+          <button className="btn btn--primary" onClick={() => setShowForm(!showForm)}>
+            <Plus size={18} weight="bold" /> Capturar Correo
+          </button>
+        </div>
       </div>
 
       {/* Form */}

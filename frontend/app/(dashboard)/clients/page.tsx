@@ -7,7 +7,8 @@ import {
   Plus, MagnifyingGlass, Buildings, Phone, Envelope,
   MapPin, PencilSimple, Trash, Eye,
 } from '@phosphor-icons/react';
-import { clientsApi } from '@/lib/api';
+import { clientsApi, excelApi } from '@/lib/api';
+import { ImportExportActions } from '@/components/ImportExportActions';
 import { formatDate } from '@/lib/utils/formatters';
 import type { Client } from '@/lib/types';
 
@@ -47,6 +48,25 @@ export default function ClientsPage() {
     }
   };
 
+  const handleExport = async () => {
+    await excelApi.downloadExcel('/clients/export', 'clientes.xlsx');
+  };
+
+  const handleImport = async (file: File) => {
+    return await excelApi.uploadExcel('/clients/import', file);
+  };
+
+  const CLIENTS_COLUMNS = [
+    { name: 'NombreEmpresa', description: 'Nombre del cliente', required: true },
+    { name: 'NIT', description: 'Número de identificación tributaria (Llave única)' },
+    { name: 'Contacto', description: 'Nombre del contacto principal' },
+    { name: 'Telefono', description: 'Teléfono de contacto' },
+    { name: 'Email', description: 'Correo electrónico' },
+    { name: 'Direccion', description: 'Dirección física' },
+    { name: 'Ciudad', description: 'Ciudad' },
+    { name: 'Estado', description: 'Activo o Inactivo' },
+  ];
+
   return (
     <div>
       <div className="page-header">
@@ -54,10 +74,19 @@ export default function ClientsPage() {
           <h1 className="page-header__title">Clientes</h1>
           <p className="page-header__subtitle">Gestión de empresas clientes del laboratorio</p>
         </div>
-        <Link href="/clients/new" className="btn btn--primary">
-          <Plus size={18} weight="bold" />
-          Nuevo Cliente
-        </Link>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <ImportExportActions
+            onExport={handleExport}
+            onImport={handleImport}
+            onImportSuccess={fetchClients}
+            entityName="Clientes"
+            expectedColumns={CLIENTS_COLUMNS}
+          />
+          <Link href="/clients/new" className="btn btn--primary">
+            <Plus size={18} weight="bold" />
+            Nuevo Cliente
+          </Link>
+        </div>
       </div>
 
       {/* Search */}

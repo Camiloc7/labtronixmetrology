@@ -1,6 +1,8 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, UseInterceptors, UploadedFile, Res, BadRequestException
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
@@ -14,6 +16,27 @@ import { Roles } from '../common/decorators/roles.decorator';
 @Controller('clients')
 export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
+
+  @Get('export')
+  @Roles('ADMIN', 'COMERCIAL')
+  @ApiOperation({ summary: 'Exportar clientes a Excel' })
+  async exportExcel(@Res() res: Response) {
+    const buffer = await this.clientsService.exportToExcel();
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="clientes.xlsx"',
+    });
+    res.send(buffer);
+  }
+
+  @Post('import')
+  @Roles('ADMIN', 'COMERCIAL')
+  @ApiOperation({ summary: 'Importar clientes desde Excel' })
+  @UseInterceptors(FileInterceptor('file'))
+  async importExcel(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Archivo no proporcionado');
+    return this.clientsService.importFromExcel(file.buffer);
+  }
 
   @Get()
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')

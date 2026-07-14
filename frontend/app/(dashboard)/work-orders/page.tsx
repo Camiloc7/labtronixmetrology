@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Plus, ClipboardText, Funnel } from '@phosphor-icons/react';
-import { workOrdersApi } from '@/lib/api';
+import { workOrdersApi, excelApi } from '@/lib/api';
+import { ImportExportActions } from '@/components/ImportExportActions';
 import { formatDate, OT_STATUS_LABELS, getOtStatusBadge } from '@/lib/utils/formatters';
 import type { WorkOrder, WorkOrderStatus } from '@/lib/types';
 
@@ -30,6 +31,31 @@ export default function WorkOrdersPage() {
       .finally(() => setLoading(false));
   }, [statusFilter]);
 
+  const handleExport = async () => {
+    await excelApi.downloadExcel('/work-orders/export', 'ordenes-trabajo.xlsx');
+  };
+
+  const handleImport = async (file: File) => {
+    return await excelApi.uploadExcel('/work-orders/import', file);
+  };
+
+  const reloadData = () => {
+    setLoading(true);
+    workOrdersApi.getAll(statusFilter || undefined)
+      .then(setOrders)
+      .catch(() => toast.error('Error al cargar órdenes'))
+      .finally(() => setLoading(false));
+  };
+
+  const WO_COLUMNS = [
+    { name: 'OT', description: 'Número de orden de trabajo (Llave única)', required: true },
+    { name: 'NITCliente', description: 'NIT del cliente asociado' },
+    { name: 'CodigoEquipo', description: 'Código interno del equipo calibrado' },
+    { name: 'TipoServicio', description: 'PROPIO o TERCERIZADO' },
+    { name: 'Estado', description: 'RECIBIDO, EN_PROCESO, CALIBRADO, LISTO_ENVIO, DESPACHADO' },
+    { name: 'Notas', description: 'Notas técnicas' },
+  ];
+
   return (
     <div>
       <div className="page-header">
@@ -37,9 +63,18 @@ export default function WorkOrdersPage() {
           <h1 className="page-header__title">Órdenes de Trabajo</h1>
           <p className="page-header__subtitle">Seguimiento y gestión de calibraciones</p>
         </div>
-        <Link href="/work-orders/new" className="btn btn--primary">
-          <Plus size={18} weight="bold" /> Nueva OT
-        </Link>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <ImportExportActions
+            onExport={handleExport}
+            onImport={handleImport}
+            onImportSuccess={reloadData}
+            entityName="Órdenes de Trabajo"
+            expectedColumns={WO_COLUMNS}
+          />
+          <Link href="/work-orders/new" className="btn btn--primary">
+            <Plus size={18} weight="bold" /> Nueva OT
+          </Link>
+        </div>
       </div>
 
       {/* Filtros de estado */}

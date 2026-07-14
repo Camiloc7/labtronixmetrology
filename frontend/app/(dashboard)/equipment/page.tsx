@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Plus, MagnifyingGlass, Wrench, Tag, Hash } from '@phosphor-icons/react';
-import { equipmentApi } from '@/lib/api';
+import { equipmentApi, excelApi } from '@/lib/api';
+import { ImportExportActions } from '@/components/ImportExportActions';
 import { formatDate, formatDateTime } from '@/lib/utils/formatters';
 import type { Equipment } from '@/lib/types';
 
@@ -26,6 +27,25 @@ export default function EquipmentPage() {
     return () => clearTimeout(t);
   }, [fetchData]);
 
+  const handleExport = async () => {
+    await excelApi.downloadExcel('/equipment/export', 'equipos.xlsx');
+  };
+
+  const handleImport = async (file: File) => {
+    return await excelApi.uploadExcel('/equipment/import', file);
+  };
+
+  const EQUIPMENT_COLUMNS = [
+    { name: 'CodigoInterno', description: 'Código único interno del equipo', required: true },
+    { name: 'NITCliente', description: 'NIT del dueño para asociarlo automáticamente' },
+    { name: 'Marca', description: 'Marca del equipo' },
+    { name: 'Modelo', description: 'Modelo del equipo' },
+    { name: 'NumeroSerie', description: 'Número de serie' },
+    { name: 'Capacidad', description: 'Capacidad o rango de medición' },
+    { name: 'Ubicacion', description: 'Ubicación física' },
+    { name: 'Notas', description: 'Notas adicionales' },
+  ];
+
   return (
     <div>
       <div className="page-header">
@@ -33,9 +53,18 @@ export default function EquipmentPage() {
           <h1 className="page-header__title">Equipos</h1>
           <p className="page-header__subtitle">Registro de equipos recibidos para calibración</p>
         </div>
-        <Link href="/equipment/new" className="btn btn--primary">
-          <Plus size={18} weight="bold" /> Registrar Equipo
-        </Link>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <ImportExportActions
+            onExport={handleExport}
+            onImport={handleImport}
+            onImportSuccess={fetchData}
+            entityName="Equipos"
+            expectedColumns={EQUIPMENT_COLUMNS}
+          />
+          <Link href="/equipment/new" className="btn btn--primary">
+            <Plus size={18} weight="bold" /> Registrar Equipo
+          </Link>
+        </div>
       </div>
 
       <div className="search-bar" style={{ marginBottom: 24, maxWidth: 380 }}>

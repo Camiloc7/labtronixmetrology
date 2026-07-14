@@ -1,5 +1,7 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, UseInterceptors, UploadedFile, Res, BadRequestException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { EmailRequestsService } from './email-requests.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -23,6 +25,27 @@ class ProcessEmailRequestDto {
 @Controller('email-requests')
 export class EmailRequestsController {
   constructor(private readonly emailRequestsService: EmailRequestsService) {}
+
+  @Get('export')
+  @Roles('ADMIN', 'COMERCIAL')
+  @ApiOperation({ summary: 'Exportar solicitudes a Excel' })
+  async exportExcel(@Res() res: Response) {
+    const buffer = await this.emailRequestsService.exportToExcel();
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="solicitudes-email.xlsx"',
+    });
+    res.send(buffer);
+  }
+
+  @Post('import')
+  @Roles('ADMIN', 'COMERCIAL')
+  @ApiOperation({ summary: 'Importar solicitudes desde Excel' })
+  @UseInterceptors(FileInterceptor('file'))
+  async importExcel(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Archivo no proporcionado');
+    return this.emailRequestsService.importFromExcel(file.buffer);
+  }
 
   @Get()
   @Roles('ADMIN', 'COMERCIAL')

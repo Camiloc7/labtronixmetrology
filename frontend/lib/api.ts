@@ -166,3 +166,28 @@ export const activityLogsApi = {
   getAll: (limit?: number) =>
     api.get('/activity-logs', { params: { limit } }).then((r) => r.data),
 };
+
+// ─── Excel Import/Export ──────────────────────────────────────────────────────
+export const excelApi = {
+  downloadExcel: async (url: string, filename: string) => {
+    const response = await api.get(url, { responseType: 'blob' });
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(link.href);
+  },
+  uploadExcel: async (url: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(url, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+};

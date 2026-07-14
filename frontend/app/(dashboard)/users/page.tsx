@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Plus, PencilSimple, Trash, UserCircle, Check, X } from '@phosphor-icons/react';
-import { usersApi } from '@/lib/api';
+import { usersApi, excelApi } from '@/lib/api';
+import { ImportExportActions } from '@/components/ImportExportActions';
 import { formatDate, getInitials, ROLE_LABELS } from '@/lib/utils/formatters';
 import type { User, CreateUserDto, UserRole } from '@/lib/types';
 
@@ -68,16 +69,40 @@ export default function UsersPage() {
     } catch { toast.error('Error al desactivar'); }
   };
 
+  const handleExport = async () => {
+    await excelApi.downloadExcel('/users/export', 'usuarios.xlsx');
+  };
+
+  const handleImport = async (file: File) => {
+    return await excelApi.uploadExcel('/users/import', file);
+  };
+
+  const USERS_COLUMNS = [
+    { name: 'Nombre', description: 'Nombre completo', required: true },
+    { name: 'Email', description: 'Correo electrónico (Llave única)', required: true },
+    { name: 'Rol', description: 'ADMIN, COMERCIAL o TECNICO' },
+    { name: 'Estado', description: 'Activo o Inactivo' },
+  ];
+
   return (
     <div>
       <div className="page-header">
         <div>
-          <h1 className="page-header__title">Gestión de Usuarios</h1>
-          <p className="page-header__subtitle">Administrar cuentas y roles del sistema</p>
+          <h1 className="page-header__title">Usuarios del Sistema</h1>
+          <p className="page-header__subtitle">Administración de cuentas y accesos</p>
         </div>
-        <button className="btn btn--primary" onClick={openCreate}>
-          <Plus size={18} weight="bold" /> Nuevo Usuario
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <ImportExportActions
+            onExport={handleExport}
+            onImport={handleImport}
+            onImportSuccess={fetchUsers}
+            entityName="Usuarios"
+            expectedColumns={USERS_COLUMNS}
+          />
+          <button className="btn btn--primary" onClick={openCreate}>
+            <Plus size={18} weight="bold" /> Nuevo Usuario
+          </button>
+        </div>
       </div>
 
       {/* Form modal */}

@@ -4,10 +4,11 @@ import { Repository } from 'typeorm';
 import type { Response } from 'express';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const PdfPrinter = require('pdfmake');
-import { Quote } from './entities/quote.entity';
+import { Quote, QuoteStatus } from './entities/quote.entity';
 import { QuoteItem } from './entities/quote-item.entity';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { Client } from '../clients/entities/client.entity';
+import { ExcelService } from '../common/excel/excel.service';
 
 @Injectable()
 export class QuotesService {
@@ -18,6 +19,7 @@ export class QuotesService {
     private readonly itemsRepo: Repository<QuoteItem>,
     @InjectRepository(Client)
     private readonly clientsRepo: Repository<Client>,
+    private readonly excelService: ExcelService,
   ) {}
 
   private async generateQuoteNumber(): Promise<string> {
@@ -181,5 +183,67 @@ export class QuotesService {
     res.setHeader('Content-Disposition', `attachment; filename="${quote.quoteNumber}.pdf"`);
     pdfDoc.pipe(res);
     pdfDoc.end();
+  }
+
+  async exportToExcel(): Promise<Buffer> {
+    const quotes = await this.quotesRepo.find({ relations: { client: true, createdBy: true }, order: { createdAt: 'DESC' } });
+    const data = quotes.map(qt => ({
+      Cotizacion: qt.quoteNumber,
+      NITCliente: qt.client?.nit || '',
+      NombreCliente: qt.client?.companyName || '',
+      Estado: qt.status,
+      Total: qt.totalValue,
+      ValidaHasta: qt.validUntil,
+      Notas: qt.notes,
+      FechaCreacion: qt.createdAt,
+    }));
+    return this.excelService.exportToExcel(data, 'Cotizaciones');
+  }
+
+  async importFromExcel(buffer: Buffer, userId: string): Promise<{ total: number; created: number; updated: number }> {
+    const data = await this.excelService.importFromExcel(buffer);
+    let created = 0;
+    let updated = 0;
+
+    for (const row of data) {
+      const quoteNumber = row['Cotizacion'] ? String(row['Cotizacion']).trim() : null;
+      const nitCliente = row['NITCliente'] ? String(row['NITCliente']).trim() : null;
+
+      let clientId: string | null = null;
+      if (nitCliente) {
+        const client = await this.clientsRepo.findOne({ where: { nit: nitCliente } });
+        if (client) clientId = client.id;
+      }
+
+      let qt: Quote | null = null;
+      if (quoteNumber) {
+        qt = await this.quotesRepo.findOne({ where: { quoteNumber } });
+      }
+
+      const status = (row['Estado'] as QuoteStatus) || qt?.status || QuoteStatus.BORRADOR;
+
+      if (qt) {
+        await this.quotesRepo.save({
+          ...qt,
+          clientId: clientId || qt.clientId || undefined,
+          status,
+          notes: row['Notas'] || qt.notes || undefined,
+        });
+        updated++;
+      } else if (quoteNumber) {
+        const newQt = this.quotesRepo.create({
+          quoteNumber,
+          clientId: clientId || undefined,
+          createdById: userId,
+          status,
+          notes: row['Notas'] || undefined,
+          totalValue: 0,
+        });
+        await this.quotesRepo.save(newQt);
+        created++;
+      }
+    }
+
+    return { total: data.length, created, updated };
   }
 }

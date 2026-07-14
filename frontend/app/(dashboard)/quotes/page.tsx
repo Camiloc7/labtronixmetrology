@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Plus, FileText, FilePdf, Eye } from '@phosphor-icons/react';
-import { quotesApi } from '@/lib/api';
+import { quotesApi, excelApi } from '@/lib/api';
+import { ImportExportActions } from '@/components/ImportExportActions';
 import { formatDate, formatCOP, QUOTE_STATUS_LABELS, getQuoteStatusBadge } from '@/lib/utils/formatters';
 import type { Quote } from '@/lib/types';
 
@@ -16,6 +17,26 @@ export default function QuotesPage() {
     quotesApi.getAll().then(setQuotes).catch(() => toast.error('Error al cargar cotizaciones')).finally(() => setLoading(false));
   }, []);
 
+  const handleExport = async () => {
+    await excelApi.downloadExcel('/quotes/export', 'cotizaciones.xlsx');
+  };
+
+  const handleImport = async (file: File) => {
+    return await excelApi.uploadExcel('/quotes/import', file);
+  };
+
+  const reloadData = () => {
+    setLoading(true);
+    quotesApi.getAll().then(setQuotes).catch(() => toast.error('Error al cargar cotizaciones')).finally(() => setLoading(false));
+  };
+
+  const QUOTES_COLUMNS = [
+    { name: 'Cotizacion', description: 'Número de la cotización (Llave única)', required: true },
+    { name: 'NITCliente', description: 'NIT del cliente a quien va dirigida' },
+    { name: 'Estado', description: 'BORRADOR, ENVIADA, APROBADA, RECHAZADA' },
+    { name: 'Notas', description: 'Observaciones o condiciones' },
+  ];
+
   return (
     <div>
       <div className="page-header">
@@ -23,9 +44,18 @@ export default function QuotesPage() {
           <h1 className="page-header__title">Cotizaciones</h1>
           <p className="page-header__subtitle">Gestión de propuestas económicas para clientes</p>
         </div>
-        <Link href="/quotes/new" className="btn btn--primary">
-          <Plus size={18} weight="bold" /> Nueva Cotización
-        </Link>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <ImportExportActions
+            onExport={handleExport}
+            onImport={handleImport}
+            onImportSuccess={reloadData}
+            entityName="Cotizaciones"
+            expectedColumns={QUOTES_COLUMNS}
+          />
+          <Link href="/quotes/new" className="btn btn--primary">
+            <Plus size={18} weight="bold" /> Nueva Cotización
+          </Link>
+        </div>
       </div>
 
       {loading ? (

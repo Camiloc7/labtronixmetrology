@@ -1,6 +1,8 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query, UseGuards,
+  Controller, Get, Post, Patch, Body, Param, Query, UseGuards, UseInterceptors, UploadedFile, Res, BadRequestException
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { WorkOrdersService } from './work-orders.service';
 import { CreateWorkOrderDto, ChangeStatusDto } from './dto/work-order.dto';
@@ -15,6 +17,27 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 @Controller('work-orders')
 export class WorkOrdersController {
   constructor(private readonly workOrdersService: WorkOrdersService) {}
+
+  @Get('export')
+  @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
+  @ApiOperation({ summary: 'Exportar OTs a Excel' })
+  async exportExcel(@Res() res: Response) {
+    const buffer = await this.workOrdersService.exportToExcel();
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="ordenes-trabajo.xlsx"',
+    });
+    res.send(buffer);
+  }
+
+  @Post('import')
+  @Roles('ADMIN', 'TECNICO')
+  @ApiOperation({ summary: 'Importar OTs desde Excel' })
+  @UseInterceptors(FileInterceptor('file'))
+  async importExcel(@UploadedFile() file: Express.Multer.File, @CurrentUser('sub') userId: string) {
+    if (!file) throw new BadRequestException('Archivo no proporcionado');
+    return this.workOrdersService.importFromExcel(file.buffer, userId);
+  }
 
   @Get()
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')

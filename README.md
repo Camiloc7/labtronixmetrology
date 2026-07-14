@@ -414,3 +414,6 @@ Get-Process -Id (Get-NetTCPConnection -LocalPort 3002).OwningProcess | Stop-Proc
 ---
 
 *Labtronix Metrology – Plataforma MVP v1.0 · Desarrollado por Jhonatan Camilo Corredor Silva*
+
+<!-- Kill port -->
+npx kill-port 3002

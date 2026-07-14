@@ -20,13 +20,13 @@ export class User {
   @Column({ length: 200, unique: true })
   email: string;
 
-  @Column({ name: 'password_hash', nullable: true })
+  @Column({ name: 'password_hash', nullable: true, type: 'varchar' })
   passwordHash?: string | null;
 
-  @Column({ name: 'google_id', nullable: true, unique: true })
+  @Column({ name: 'google_id', nullable: true, unique: true, type: 'varchar' })
   googleId?: string | null;
 
-  @Column({ name: 'hashed_refresh_token', nullable: true })
+  @Column({ name: 'hashed_refresh_token', nullable: true, type: 'varchar' })
   hashedRefreshToken?: string | null;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.COMERCIAL })

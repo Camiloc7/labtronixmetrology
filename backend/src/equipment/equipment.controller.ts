@@ -1,6 +1,8 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query, UseGuards,
+  Controller, Get, Post, Patch, Body, Param, Query, UseGuards, UseInterceptors, UploadedFile, Res, BadRequestException
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { EquipmentService } from './equipment.service';
 import { CreateEquipmentDto } from './dto/create-equipment.dto';
@@ -14,6 +16,27 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 @Controller('equipment')
 export class EquipmentController {
   constructor(private readonly equipmentService: EquipmentService) {}
+
+  @Get('export')
+  @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
+  @ApiOperation({ summary: 'Exportar equipos a Excel' })
+  async exportExcel(@Res() res: Response) {
+    const buffer = await this.equipmentService.exportToExcel();
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="equipos.xlsx"',
+    });
+    res.send(buffer);
+  }
+
+  @Post('import')
+  @Roles('ADMIN', 'COMERCIAL')
+  @ApiOperation({ summary: 'Importar equipos desde Excel' })
+  @UseInterceptors(FileInterceptor('file'))
+  async importExcel(@UploadedFile() file: Express.Multer.File, @CurrentUser('sub') userId: string) {
+    if (!file) throw new BadRequestException('Archivo no proporcionado');
+    return this.equipmentService.importFromExcel(file.buffer, userId);
+  }
 
   @Get()
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')

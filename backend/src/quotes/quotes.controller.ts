@@ -1,6 +1,7 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query, UseGuards, Res,
+  Controller, Get, Post, Patch, Body, Param, Query, UseGuards, Res, UseInterceptors, UploadedFile, BadRequestException
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { QuotesService } from './quotes.service';
@@ -15,6 +16,27 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 @Controller('quotes')
 export class QuotesController {
   constructor(private readonly quotesService: QuotesService) {}
+
+  @Get('export')
+  @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
+  @ApiOperation({ summary: 'Exportar cotizaciones a Excel' })
+  async exportExcel(@Res() res: Response) {
+    const buffer = await this.quotesService.exportToExcel();
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="cotizaciones.xlsx"',
+    });
+    res.send(buffer);
+  }
+
+  @Post('import')
+  @Roles('ADMIN', 'COMERCIAL')
+  @ApiOperation({ summary: 'Importar cotizaciones desde Excel' })
+  @UseInterceptors(FileInterceptor('file'))
+  async importExcel(@UploadedFile() file: Express.Multer.File, @CurrentUser('sub') userId: string) {
+    if (!file) throw new BadRequestException('Archivo no proporcionado');
+    return this.quotesService.importFromExcel(file.buffer, userId);
+  }
 
   @Get()
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
