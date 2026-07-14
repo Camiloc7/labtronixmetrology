@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api/v1';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -10,16 +10,80 @@ const api = axios.create({
   },
 });
 
-// Interceptor de respuesta para manejar 401 globalmente
+// Flag to prevent multiple refresh requests simultaneously
+let isRefreshing = false;
+let failedQueue: { resolve: (value?: unknown) => void; reject: (reason?: any) => void }[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Interceptor de respuesta para manejar 401 globalmente e intentar refresh
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Si es 401 y no es la ruta de login o refresh, intentamos refrescar el token
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      originalRequest.url !== '/auth/login' &&
+      originalRequest.url !== '/auth/refresh'
+    ) {
+      if (isRefreshing) {
+        return new Promise(function (resolve, reject) {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
+        processQueue(null);
+        return api(originalRequest);
+      } catch (err) {
+        processQueue(err, null);
+        // Falló el refresh token (expiro o invalido), forzar login
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          if (currentPath !== '/login') {
+            window.location.href = '/login';
+          }
+        }
+        return Promise.reject(err);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    // Si sigue fallando y estamos en el cliente, redirigir a login
+    if (
+      error.response?.status === 401 &&
+      typeof window !== 'undefined' &&
+      originalRequest.url !== '/auth/login'
+    ) {
       const currentPath = window.location.pathname;
       if (currentPath !== '/login') {
         window.location.href = '/login';
       }
     }
+
     return Promise.reject(error);
   },
 );
@@ -32,6 +96,8 @@ export const authApi = {
     api.post('/auth/login', { email, password }).then((r) => r.data),
   logout: () => api.post('/auth/logout').then((r) => r.data),
   me: () => api.get('/auth/me').then((r) => r.data),
+  // Google Auth initiation is done via window.location.href to the backend
+  getGoogleAuthUrl: () => `${API_URL}/auth/google`,
 };
 
 // ─── Users ────────────────────────────────────────────────────────────────────

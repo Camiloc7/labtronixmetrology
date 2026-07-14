@@ -20,8 +20,14 @@ export class User {
   @Column({ length: 200, unique: true })
   email: string;
 
-  @Column({ name: 'password_hash' })
-  passwordHash: string;
+  @Column({ name: 'password_hash', nullable: true })
+  passwordHash?: string | null;
+
+  @Column({ name: 'google_id', nullable: true, unique: true })
+  googleId?: string | null;
+
+  @Column({ name: 'hashed_refresh_token', nullable: true })
+  hashedRefreshToken?: string | null;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.COMERCIAL })
   role: UserRole;

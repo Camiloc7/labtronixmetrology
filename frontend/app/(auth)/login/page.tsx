@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Eye, EyeSlash, SignIn, LockKey, Envelope } from '@phosphor-icons/react';
+import { Eye, EyeSlash, SignIn, LockKey, Envelope, GoogleLogo } from '@phosphor-icons/react';
 import { useAuth } from '@/lib/hooks/useAuth';
 
 
@@ -221,6 +221,37 @@ function LoginContent() {
                 <SignIn size={20} weight="bold" />
               )}
               {loading ? 'Iniciando...' : 'Iniciar sesión'}
+            </motion.button>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              margin: '24px 0',
+              color: 'var(--color-text-muted)'
+            }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+              <span style={{ padding: '0 16px', fontSize: '0.85rem' }}>o</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+            </div>
+
+            <motion.button
+              type="button"
+              className="btn btn--outline btn--lg"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={() => {
+                window.location.href = process.env.NEXT_PUBLIC_API_URL 
+                  ? process.env.NEXT_PUBLIC_API_URL.replace('/v1', '') + '/auth/google'
+                  : 'http://localhost:3002/api/auth/google';
+              }}
+              style={{
+                width: '100%',
+                justifyContent: 'center',
+                background: 'var(--color-surface)',
+              }}
+            >
+              <GoogleLogo size={20} weight="bold" />
+              Continuar con Google
             </motion.button>
           </form>
 

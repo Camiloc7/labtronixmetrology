@@ -401,4 +401,16 @@ labtronixmetrology/
 
 ---
 
+## Solución de Problemas (Troubleshooting)
+
+### Error: listen EADDRINUSE (Puerto ocupado en Windows)
+Si al ejecutar `npm run start:dev` te aparece un error indicando que el puerto (ej. 3002 o 3001) ya está en uso (`EADDRINUSE`), puedes forzar el cierre del proceso en PowerShell con este comando:
+
+```powershell
+Get-Process -Id (Get-NetTCPConnection -LocalPort 3002).OwningProcess | Stop-Process -Force
+```
+*(Cambia el 3002 por el puerto que esté fallando).*
+
+---
+
 *Labtronix Metrology – Plataforma MVP v1.0 · Desarrollado por Jhonatan Camilo Corredor Silva*

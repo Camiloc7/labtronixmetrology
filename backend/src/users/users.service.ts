@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -28,15 +28,37 @@ export class UsersService {
     return this.usersRepo.findOne({ where: { email } });
   }
 
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.usersRepo.findOne({ where: { googleId } });
+  }
+
+  async updateRefreshToken(id: string, hashedToken: string | null): Promise<void> {
+    await this.usersRepo.update(id, { hashedRefreshToken: hashedToken } as any);
+  }
+
   async create(dto: CreateUserDto): Promise<Omit<User, 'passwordHash'>> {
     const exists = await this.findByEmail(dto.email);
     if (exists) throw new ConflictException('El email ya está registrado');
 
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+    let passwordHash: string | undefined = undefined;
+    if (dto.password) {
+      passwordHash = await bcrypt.hash(dto.password, 10);
+    }
     const user = this.usersRepo.create({ ...dto, passwordHash });
     const saved = await this.usersRepo.save(user);
     const { passwordHash: _, ...result } = saved;
     return result as any;
+  }
+
+  async createGoogleUser(email: string, name: string, googleId: string): Promise<User> {
+    const user = this.usersRepo.create({
+      email,
+      name,
+      googleId,
+      role: UserRole.COMERCIAL,
+      isActive: true,
+    });
+    return this.usersRepo.save(user);
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<Omit<User, 'passwordHash'>> {
