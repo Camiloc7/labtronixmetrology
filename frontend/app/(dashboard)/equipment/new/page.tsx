@@ -14,6 +14,7 @@ export default function NewEquipmentPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [form, setForm] = useState<CreateEquipmentDto>({
     clientId: '',
+    name: '',
     brand: '',
     model: '',
     serialNumber: '',
@@ -74,6 +75,7 @@ export default function NewEquipmentPage() {
             </div>
 
             {[
+              { key: 'name', label: 'Instrumento / Nombre', placeholder: 'Ej: Balanza Analítica' },
               { key: 'brand', label: 'Marca', placeholder: 'Mettler Toledo' },
               { key: 'model', label: 'Modelo', placeholder: 'ME54' },
               { key: 'serialNumber', label: 'N° de Serie', placeholder: 'SN123456789' },

@@ -70,6 +70,7 @@ export interface Equipment {
   client: Client;
   clientId: string;
   internalCode: string;
+  name?: string;
   brand?: string;
   model?: string;
   serialNumber?: string;
@@ -236,6 +237,7 @@ export interface CreateQuoteDto {
 
 export interface CreateEquipmentDto {
   clientId: string;
+  name?: string;
   brand?: string;
   model?: string;
   serialNumber?: string;

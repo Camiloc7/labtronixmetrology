@@ -97,6 +97,7 @@ export default function EquipmentPage() {
               <tr>
                 <th>Código</th>
                 <th>Cliente</th>
+                <th>Instrumento</th>
                 <th>Marca / Modelo</th>
                 <th>N° Serie</th>
                 <th>Ubicación</th>
@@ -119,6 +120,7 @@ export default function EquipmentPage() {
                       </span>
                     </td>
                     <td style={{ fontWeight: 500 }}>{eq.client?.companyName}</td>
+                    <td style={{ fontWeight: 600 }}>{eq.name || '—'}</td>
                     <td>
                       <div>{eq.brand || '—'}</div>
                       {eq.model && <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{eq.model}</div>}

@@ -34,6 +34,11 @@ export default function DashboardPage() {
   const [clientCount, setClientCount] = useState(0);
   const [equipmentCount, setEquipmentCount] = useState(0);
   const [quoteCount, setQuoteCount] = useState(0);
+  
+  const [allEquipment, setAllEquipment] = useState<Equipment[]>([]);
+  const [allClients, setAllClients] = useState<Client[]>([]);
+  const [selectedClient, setSelectedClient] = useState<string>('TODAS');
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,6 +56,9 @@ export default function DashboardPage() {
         setClientCount(clients.length);
         setEquipmentCount(equips.length);
         setQuoteCount(quotes.length);
+        
+        setAllClients(clients);
+        setAllEquipment(equips);
       } catch (err) {
         console.error(err);
       } finally {
@@ -102,6 +110,19 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const filteredEquipment = selectedClient === 'TODAS' 
+    ? allEquipment 
+    : allEquipment.filter(e => e.clientId === selectedClient);
+
+  const equipmentTypeCounts = filteredEquipment.reduce((acc, eq) => {
+    const type = eq.name || '(en blanco)';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const equipmentChartData = Object.entries(equipmentTypeCounts).sort((a, b) => b[1] - a[1]);
+  const maxEqCount = equipmentChartData.length ? Math.max(...equipmentChartData.map(d => d[1])) : 1;
 
   return (
     <div>
@@ -265,6 +286,67 @@ export default function DashboardPage() {
           )}
         </motion.div>
       </div>
+
+      {/* Gráfico de Equipos (Instrumentos) */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.3 }}
+        className="card"
+        style={{ marginTop: 24 }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700 }}>Total Equipos por Instrumento</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label style={{ fontSize: '0.875rem', fontWeight: 600 }}>Cliente:</label>
+            <select
+              className="form-input form-input--sm"
+              value={selectedClient}
+              onChange={(e) => setSelectedClient(e.target.value)}
+              style={{ minWidth: 200 }}
+            >
+              <option value="TODAS">(Todas)</option>
+              {allClients.map((c) => (
+                <option key={c.id} value={c.id}>{c.companyName}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {equipmentChartData.length ? (
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 200, paddingBottom: 24, overflowX: 'auto', borderBottom: '1px solid var(--color-border)' }}>
+            {equipmentChartData.map(([type, count]) => {
+              const heightPct = Math.max((count / maxEqCount) * 100, 5); // at least 5% so bar is visible
+              return (
+                <div key={type} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 60, gap: 8 }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-subtle)' }}>{count}</span>
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: `${heightPct}%` }}
+                    transition={{ delay: 0.6, duration: 0.8, ease: 'easeOut' }}
+                    style={{
+                      width: 40,
+                      background: 'linear-gradient(to top, #b30000, #ff1a1a)',
+                      borderRadius: '4px 4px 0 0',
+                      boxShadow: '0 2px 8px rgba(179, 0, 0, 0.2)'
+                    }}
+                  />
+                  <span style={{ fontSize: '0.75rem', textAlign: 'center', maxWidth: 80, wordBreak: 'break-word', color: 'var(--color-text)' }}>
+                    {type}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="empty-state" style={{ padding: '40px 0' }}>
+            <p>No se encontraron equipos para el cliente seleccionado</p>
+          </div>
+        )}
+        <div style={{ marginTop: 16, textAlign: 'right', fontSize: '0.875rem', fontWeight: 700 }}>
+          Total general: {filteredEquipment.length}
+        </div>
+      </motion.div>
     </div>
   );
 }

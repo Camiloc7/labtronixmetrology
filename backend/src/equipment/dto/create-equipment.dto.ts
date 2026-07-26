@@ -9,6 +9,11 @@ export class CreateEquipmentDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  name?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   brand?: string;
 
   @ApiPropertyOptional()

@@ -20,6 +20,9 @@ export class Equipment {
   @Column({ name: 'internal_code', length: 50, unique: true })
   internalCode: string;
 
+  @Column({ length: 150, nullable: true })
+  name: string;
+
   @Column({ length: 100, nullable: true })
   brand: string;
 
