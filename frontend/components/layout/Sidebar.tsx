@@ -18,6 +18,7 @@ import {
   CaretLeft,
   CaretRight,
   UploadSimple,
+  ShoppingCart,
 } from '@phosphor-icons/react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { getInitials } from '@/lib/utils/formatters';
@@ -33,6 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard',         href: '/dashboard',       icon: <SquaresFour size={20} weight="duotone" /> },
   { label: 'Clientes',          href: '/clients',         icon: <Buildings size={20} weight="duotone" /> },
   { label: 'Cotizaciones',      href: '/quotes',          icon: <FileText size={20} weight="duotone" /> },
+  { label: 'Requisiciones',     href: '/requisitions',    icon: <ShoppingCart size={20} weight="duotone" /> },
   { label: 'Equipos',           href: '/equipment',       icon: <Wrench size={20} weight="duotone" /> },
   { label: 'Órdenes de Trabajo',href: '/work-orders',     icon: <ClipboardText size={20} weight="duotone" /> },
   { label: 'Solicitudes Email', href: '/email-requests',  icon: <EnvelopeOpen size={20} weight="duotone" />, roles: ['ADMIN', 'COMERCIAL'] },

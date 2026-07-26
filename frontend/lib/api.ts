@@ -138,21 +138,38 @@ export const equipmentApi = {
   update: (id: string, data: any) => api.patch(`/equipment/${id}`, data).then((r) => r.data),
 };
 
-// ─── Work Orders ──────────────────────────────────────────────────────────────
 export const workOrdersApi = {
   getAll: (status?: string) =>
     api.get('/work-orders', { params: status ? { status } : {} }).then((r) => r.data),
   getOne: (id: string) => api.get(`/work-orders/${id}`).then((r) => r.data),
-  getHistory: (id: string) => api.get(`/work-orders/${id}/history`).then((r) => r.data),
-  getStickerData: (id: string) => api.get(`/work-orders/${id}/sticker`).then((r) => r.data),
+  getItemHistory: (itemId: string) => api.get(`/work-orders/items/${itemId}/history`).then((r) => r.data),
+  getItemStickerData: (itemId: string) => api.get(`/work-orders/items/${itemId}/sticker`).then((r) => r.data),
   getStats: () => api.get('/work-orders/stats').then((r) => r.data),
   create: (data: any) => api.post('/work-orders', data).then((r) => r.data),
   update: (id: string, data: any) => api.patch(`/work-orders/${id}`, data).then((r) => r.data),
-  changeStatus: (id: string, data: any) =>
-    api.patch(`/work-orders/${id}/status`, data).then((r) => r.data),
+  changeItemStatus: (itemId: string, data: any) =>
+    api.patch(`/work-orders/items/${itemId}/status`, data).then((r) => r.data),
+  getPdfUrl: (id: string) => `${API_URL}/work-orders/${id}/pdf`,
+  getExcelUrl: (id: string) => `${API_URL}/work-orders/${id}/excel`,
 };
 
 // ─── Email Requests ───────────────────────────────────────────────────────────
+export const settingsApi = {
+  getAll: () => api.get('/settings').then((r) => r.data),
+  update: (key: string, value: string, description?: string) => 
+    api.put('/settings', { key, value, description }).then((r) => r.data),
+};
+
+export const requisitionsApi = {
+  getAll: () => api.get('/requisitions').then((r) => r.data),
+  getById: (id: string) => api.get(`/requisitions/${id}`).then((r) => r.data),
+  create: (data: any) => api.post('/requisitions', data).then((r) => r.data),
+  update: (id: string, data: any) => api.patch(`/requisitions/${id}`, data).then((r) => r.data),
+  delete: (id: string) => api.delete(`/requisitions/${id}`).then((r) => r.data),
+  getPdfUrl: (id: string) => `${API_URL}/requisitions/${id}/pdf`,
+  getExcelUrl: (id: string) => `${API_URL}/requisitions/${id}/excel`,
+};
+
 export const emailRequestsApi = {
   getAll: () => api.get('/email-requests').then((r) => r.data),
   create: (rawContent: string) =>

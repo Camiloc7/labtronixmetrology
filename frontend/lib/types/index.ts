@@ -82,15 +82,11 @@ export interface Equipment {
   updatedAt: string;
 }
 
-export interface WorkOrder {
+export interface WorkOrderItem {
   id: string;
-  otNumber: string;
+  workOrderId: string;
   equipment: Equipment;
   equipmentId: string;
-  client: Client;
-  clientId: string;
-  quote?: Quote;
-  quoteId?: string;
   assignedTo?: User;
   serviceType: ServiceType;
   status: WorkOrderStatus;
@@ -101,14 +97,63 @@ export interface WorkOrder {
   updatedAt: string;
 }
 
+export interface WorkOrder {
+  id: string;
+  otNumber: string;
+  client: Client;
+  clientId: string;
+  quote?: Quote;
+  quoteId?: string;
+  requestDate?: string;
+  serviceDate?: string;
+  activity?: string;
+  certificateToName?: string;
+  certificateAddress?: string;
+  certificateContact?: string;
+  certificatePhone?: string;
+  certificateCity?: string;
+  requesterName?: string;
+  requesterRole?: string;
+  authorizerName?: string;
+  authorizerRole?: string;
+  items: WorkOrderItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface StatusHistory {
   id: string;
-  workOrderId: string;
+  workOrderItemId: string;
   changedBy: User;
   previousStatus?: string;
   newStatus: string;
   notes?: string;
   changedAt: string;
+}
+
+export interface RequisitionItem {
+  id: string;
+  requisitionId: string;
+  description: string;
+  quantity: number;
+  unitOfMeasure: string;
+}
+
+export interface Requisition {
+  id: string;
+  consecutiveNumber: string;
+  activity: string;
+  date: string;
+  certificateToName: string;
+  certificateAddress: string;
+  quoteNumber?: string;
+  requesterName: string;
+  requesterRole: string;
+  authorizerName?: string;
+  authorizerRole?: string;
+  items: RequisitionItem[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface EmailRequest {
@@ -199,18 +244,55 @@ export interface CreateEquipmentDto {
   notes?: string;
 }
 
-export interface CreateWorkOrderDto {
+export interface CreateWorkOrderItemDto {
   equipmentId: string;
-  clientId: string;
-  quoteId?: string;
   assignedToId?: string;
   serviceType?: ServiceType;
   technicalNotes?: string;
 }
 
+export interface CreateWorkOrderDto {
+  otNumber: string;
+  clientId: string;
+  quoteId?: string;
+  requestDate?: string;
+  serviceDate?: string;
+  activity?: string;
+  certificateToName?: string;
+  certificateAddress?: string;
+  certificateContact?: string;
+  certificatePhone?: string;
+  certificateCity?: string;
+  requesterName?: string;
+  requesterRole?: string;
+  authorizerName?: string;
+  authorizerRole?: string;
+  items: CreateWorkOrderItemDto[];
+}
+
 export interface ChangeStatusDto {
   status: WorkOrderStatus;
   notes?: string;
+}
+
+export interface CreateRequisitionItemDto {
+  description: string;
+  quantity: number;
+  unitOfMeasure: string;
+}
+
+export interface CreateRequisitionDto {
+  consecutiveNumber: string;
+  activity: string;
+  date: string;
+  certificateToName: string;
+  certificateAddress: string;
+  quoteNumber?: string;
+  requesterName: string;
+  requesterRole: string;
+  authorizerName?: string;
+  authorizerRole?: string;
+  items: CreateRequisitionItemDto[];
 }
 
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────

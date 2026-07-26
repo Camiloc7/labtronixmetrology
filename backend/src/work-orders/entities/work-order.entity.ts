@@ -1,24 +1,10 @@
 import {
   Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn,
-  CreateDateColumn, UpdateDateColumn,
+  CreateDateColumn, UpdateDateColumn, OneToMany,
 } from 'typeorm';
-import { Equipment } from '../../equipment/entities/equipment.entity';
 import { Client } from '../../clients/entities/client.entity';
 import { Quote } from '../../quotes/entities/quote.entity';
-import { User } from '../../users/entities/user.entity';
-
-export enum WorkOrderStatus {
-  RECIBIDO = 'RECIBIDO',
-  EN_PROCESO = 'EN_PROCESO',
-  CALIBRADO = 'CALIBRADO',
-  LISTO_ENVIO = 'LISTO_ENVIO',
-  DESPACHADO = 'DESPACHADO',
-}
-
-export enum ServiceType {
-  PROPIO = 'PROPIO',
-  TERCERIZADO = 'TERCERIZADO',
-}
+import { WorkOrderItem } from './work-order-item.entity';
 
 @Entity('work_orders')
 export class WorkOrder {
@@ -27,13 +13,6 @@ export class WorkOrder {
 
   @Column({ name: 'ot_number', length: 30, unique: true })
   otNumber: string;
-
-  @ManyToOne(() => Equipment, { eager: true })
-  @JoinColumn({ name: 'equipment_id' })
-  equipment: Equipment;
-
-  @Column({ name: 'equipment_id' })
-  equipmentId: string;
 
   @ManyToOne(() => Client, { eager: true })
   @JoinColumn({ name: 'client_id' })
@@ -49,36 +28,44 @@ export class WorkOrder {
   @Column({ name: 'quote_id', nullable: true })
   quoteId: string;
 
-  @ManyToOne(() => User, { nullable: true, eager: true })
-  @JoinColumn({ name: 'assigned_to' })
-  assignedTo: User;
+  @Column({ type: 'date', nullable: true })
+  requestDate: Date;
 
-  @Column({ name: 'assigned_to', nullable: true })
-  assignedToId: string;
+  @Column({ type: 'date', nullable: true })
+  serviceDate: Date;
 
-  @Column({
-    name: 'service_type',
-    type: 'enum',
-    enum: ServiceType,
-    default: ServiceType.PROPIO,
-  })
-  serviceType: ServiceType;
+  @Column({ length: 150, nullable: true })
+  activity: string;
 
-  @Column({
-    type: 'enum',
-    enum: WorkOrderStatus,
-    default: WorkOrderStatus.RECIBIDO,
-  })
-  status: WorkOrderStatus;
+  @Column({ name: 'certificate_to_name', length: 255, nullable: true })
+  certificateToName: string;
 
-  @Column({ name: 'technical_notes', type: 'text', nullable: true })
-  technicalNotes: string;
+  @Column({ name: 'certificate_address', type: 'text', nullable: true })
+  certificateAddress: string;
 
-  @Column({ name: 'sticker_printed', default: false })
-  stickerPrinted: boolean;
+  @Column({ name: 'certificate_contact', length: 150, nullable: true })
+  certificateContact: string;
 
-  @Column({ name: 'dispatched_at', type: 'timestamp', nullable: true })
-  dispatchedAt: Date;
+  @Column({ name: 'certificate_phone', length: 50, nullable: true })
+  certificatePhone: string;
+
+  @Column({ name: 'certificate_city', length: 100, nullable: true })
+  certificateCity: string;
+
+  @Column({ name: 'requester_name', length: 150, nullable: true })
+  requesterName: string;
+
+  @Column({ name: 'requester_role', length: 150, nullable: true })
+  requesterRole: string;
+
+  @Column({ name: 'authorizer_name', length: 150, nullable: true })
+  authorizerName: string;
+
+  @Column({ name: 'authorizer_role', length: 150, nullable: true })
+  authorizerRole: string;
+
+  @OneToMany(() => WorkOrderItem, (item) => item.workOrder, { cascade: true, eager: true })
+  items: WorkOrderItem[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

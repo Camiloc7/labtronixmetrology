@@ -12,6 +12,7 @@ import { ActivityLogsModule } from './activity-logs/activity-logs.module';
 import { ExcelModule } from './common/excel/excel.module';
 import { ImportModule } from './import/import.module';
 import { SettingsModule } from './settings/settings.module';
+import { RequisitionsModule } from './requisitions/requisitions.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { SettingsModule } from './settings/settings.module';
     ExcelModule,
     ImportModule,
     SettingsModule,
+    RequisitionsModule,
   ],
 })
 export class AppModule {}

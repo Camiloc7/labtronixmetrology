@@ -245,14 +245,10 @@ export default function DashboardPage() {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <span
-                        className={`badge`}
-                        style={{
-                          background: `${STATUS_COLORS[ot.status]}20`,
-                          color: STATUS_COLORS[ot.status],
-                          fontSize: '0.65rem',
-                        }}
+                        className="badge bg-slate-100 text-slate-800"
+                        style={{ fontSize: '0.65rem' }}
                       >
-                        {OT_STATUS_LABELS[ot.status]}
+                        {ot.items?.length || 0} items
                       </span>
                       <div style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)', marginTop: 4 }}>
                         {formatDateTime(ot.createdAt)}

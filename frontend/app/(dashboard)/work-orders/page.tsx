@@ -1,152 +1,111 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Plus, ClipboardText, Funnel } from '@phosphor-icons/react';
-import { workOrdersApi, excelApi } from '@/lib/api';
-import { ImportExportActions } from '@/components/ImportExportActions';
-import { formatDate, OT_STATUS_LABELS, getOtStatusBadge } from '@/lib/utils/formatters';
-import type { WorkOrder, WorkOrderStatus } from '@/lib/types';
-
-const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: '', label: 'Todos' },
-  { value: 'RECIBIDO', label: 'Recibido' },
-  { value: 'EN_PROCESO', label: 'En Proceso' },
-  { value: 'CALIBRADO', label: 'Calibrado' },
-  { value: 'LISTO_ENVIO', label: 'Listo Envío' },
-  { value: 'DESPACHADO', label: 'Despachado' },
-];
+import { Plus, ClipboardText, FilePdf, FileXls } from '@phosphor-icons/react';
+import { workOrdersApi } from '@/lib/api';
+import type { WorkOrder } from '@/lib/types';
 
 export default function WorkOrdersPage() {
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
-    setLoading(true);
-    workOrdersApi.getAll(statusFilter || undefined)
+    workOrdersApi.getAll()
       .then(setOrders)
       .catch(() => toast.error('Error al cargar órdenes'))
       .finally(() => setLoading(false));
-  }, [statusFilter]);
+  }, []);
 
-  const handleExport = async () => {
-    await excelApi.downloadExcel('/work-orders/export', 'ordenes-trabajo.xlsx');
+  const handleDownloadPdf = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    window.open(workOrdersApi.getPdfUrl(id), '_blank');
   };
 
-  const handleImport = async (file: File) => {
-    return await excelApi.uploadExcel('/work-orders/import', file);
+  const handleDownloadExcel = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    window.open(workOrdersApi.getExcelUrl(id), '_blank');
   };
-
-  const reloadData = () => {
-    setLoading(true);
-    workOrdersApi.getAll(statusFilter || undefined)
-      .then(setOrders)
-      .catch(() => toast.error('Error al cargar órdenes'))
-      .finally(() => setLoading(false));
-  };
-
-  const WO_COLUMNS = [
-    { name: 'OT', description: 'Número de orden de trabajo (Llave única)', required: true },
-    { name: 'NITCliente', description: 'NIT del cliente asociado' },
-    { name: 'CodigoEquipo', description: 'Código interno del equipo calibrado' },
-    { name: 'TipoServicio', description: 'PROPIO o TERCERIZADO' },
-    { name: 'Estado', description: 'RECIBIDO, EN_PROCESO, CALIBRADO, LISTO_ENVIO, DESPACHADO' },
-    { name: 'Notas', description: 'Notas técnicas' },
-  ];
 
   return (
-    <div>
+    <div className="page-container fade-in">
       <div className="page-header">
         <div>
-          <h1 className="page-header__title">Órdenes de Trabajo</h1>
-          <p className="page-header__subtitle">Seguimiento y gestión de calibraciones</p>
+          <h1 className="page-title">Órdenes de Trabajo</h1>
+          <p className="page-description">Seguimiento y gestión de calibraciones de equipos</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <ImportExportActions
-            onExport={handleExport}
-            onImport={handleImport}
-            onImportSuccess={reloadData}
-            entityName="Órdenes de Trabajo"
-            expectedColumns={WO_COLUMNS}
-          />
-          <Link href="/work-orders/new" className="btn btn--primary">
+          <Link href="/work-orders/new" className="btn btn-primary">
             <Plus size={18} weight="bold" /> Nueva OT
           </Link>
         </div>
       </div>
 
-      {/* Filtros de estado */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Funnel size={16} color="var(--color-text-muted)" />
-        {STATUS_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            className={`btn btn--sm ${statusFilter === opt.value ? 'btn--primary' : 'btn--secondary'}`}
-            onClick={() => setStatusFilter(opt.value)}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><div className="spinner spinner--lg" /></div>
-      ) : orders.length === 0 ? (
-        <div className="card">
-          <div className="empty-state">
-            <ClipboardText size={48} weight="thin" className="empty-state__icon" />
-            <p className="empty-state__title">No hay órdenes de trabajo</p>
-            <p className="empty-state__sub">{statusFilter ? `No hay OTs con estado "${OT_STATUS_LABELS[statusFilter]}"` : 'Crea la primera orden de trabajo'}</p>
-            <Link href="/work-orders/new" className="btn btn--primary" style={{ marginTop: 12 }}>
-              <Plus size={16} weight="bold" /> Nueva OT
-            </Link>
+      <div className="card">
+        {loading ? (
+          <div className="text-center py-8 text-muted">Cargando órdenes de trabajo...</div>
+        ) : orders.length === 0 ? (
+          <div className="empty-state py-12 text-center">
+            <ClipboardText size={48} weight="thin" className="mx-auto text-muted mb-4" />
+            <p className="text-lg font-medium">No hay órdenes de trabajo</p>
+            <p className="text-muted">Crea una nueva orden para comenzar</p>
           </div>
-        </div>
-      ) : (
-        <div className="table-wrapper">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>OT</th>
-                <th>Cliente</th>
-                <th>Equipo</th>
-                <th>Código</th>
-                <th>Tipo</th>
-                <th>Estado</th>
-                <th>Creada</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <AnimatePresence>
-                {orders.map((ot, i) => (
-                  <motion.tr key={ot.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}>
+        ) : (
+          <div className="table-wrapper">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>OT No.</th>
+                  <th>Fecha Solicitud</th>
+                  <th>Cliente</th>
+                  <th>OFERTA No.</th>
+                  <th>Equipos (Ítems)</th>
+                  <th className="text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((order) => (
+                  <tr key={order.id}>
+                    <td className="font-medium">
+                      <Link href={`/work-orders/${order.id}`} className="text-brand hover:underline">
+                        {order.otNumber}
+                      </Link>
+                    </td>
+                    <td>{order.requestDate ? new Date(order.requestDate).toLocaleDateString() : 'N/A'}</td>
+                    <td>{order.client?.companyName}</td>
                     <td>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: 'var(--color-brand-light)', fontWeight: 700 }}>
-                        {ot.otNumber}
-                      </span>
+                      {order.quote?.quoteNumber ? (
+                        <Link href={`/quotes/${order.quoteId}`} className="text-brand hover:underline">
+                          {order.quote.quoteNumber}
+                        </Link>
+                      ) : 'N/A'}
                     </td>
-                    <td style={{ fontWeight: 500 }}>{ot.client?.companyName}</td>
-                    <td style={{ fontSize: '0.8rem' }}>
-                      <div>{ot.equipment?.brand} {ot.equipment?.model}</div>
-                      {ot.equipment?.serialNumber && <div style={{ color: 'var(--color-text-muted)' }}>SN: {ot.equipment.serialNumber}</div>}
-                    </td>
-                    <td><span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{ot.equipment?.internalCode}</span></td>
-                    <td><span className={`badge ${ot.serviceType === 'PROPIO' ? 'badge--blue' : 'badge--purple'}`}>{ot.serviceType}</span></td>
-                    <td><span className={`badge ${getOtStatusBadge(ot.status)}`}>{OT_STATUS_LABELS[ot.status]}</span></td>
-                    <td style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{formatDate(ot.createdAt)}</td>
+                    <td>{order.items?.length || 0}</td>
                     <td>
-                      <Link href={`/work-orders/${ot.id}`} className="btn btn--ghost btn--sm">Ver</Link>
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={(e) => handleDownloadPdf(order.id, e)}
+                          className="btn btn-secondary btn-sm"
+                          title="Descargar PDF"
+                        >
+                          <FilePdf size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => handleDownloadExcel(order.id, e)}
+                          className="btn btn-secondary btn-sm"
+                          title="Descargar Excel"
+                        >
+                          <FileXls size={16} />
+                        </button>
+                      </div>
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
-      )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

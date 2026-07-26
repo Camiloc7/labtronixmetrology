@@ -6,7 +6,7 @@ import type { Response } from 'express';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { WorkOrdersService } from './work-orders.service';
 import { CreateWorkOrderDto, ChangeStatusDto } from './dto/work-order.dto';
-import { WorkOrderStatus } from './entities/work-order.entity';
+import { WorkOrderStatus } from './entities/work-order-item.entity';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -18,14 +18,26 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 export class WorkOrdersController {
   constructor(private readonly workOrdersService: WorkOrdersService) {}
 
-  @Get('export')
+  @Get(':id/pdf')
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
-  @ApiOperation({ summary: 'Exportar OTs a Excel' })
-  async exportExcel(@Res() res: Response) {
-    const buffer = await this.workOrdersService.exportToExcel();
+  @ApiOperation({ summary: 'Generar PDF de OT' })
+  async generatePdf(@Param('id') id: string, @Res() res: Response) {
+    const buffer = await this.workOrdersService.generatePdf(id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="ot-${id}.pdf"`,
+    });
+    res.send(buffer);
+  }
+
+  @Get(':id/excel')
+  @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
+  @ApiOperation({ summary: 'Generar Excel de OT' })
+  async generateExcel(@Param('id') id: string, @Res() res: Response) {
+    const buffer = await this.workOrdersService.generateExcel(id);
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'Content-Disposition': 'attachment; filename="ordenes-trabajo.xlsx"',
+      'Content-Disposition': `attachment; filename="ot-${id}.xlsx"`,
     });
     res.send(buffer);
   }
@@ -41,8 +53,8 @@ export class WorkOrdersController {
 
   @Get()
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
-  findAll(@Query('status') status?: WorkOrderStatus) {
-    return this.workOrdersService.findAll(status);
+  findAll() {
+    return this.workOrdersService.findAll();
   }
 
   @Get('stats')
@@ -57,16 +69,16 @@ export class WorkOrdersController {
     return this.workOrdersService.findOne(id);
   }
 
-  @Get(':id/history')
+  @Get('items/:itemId/history')
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
-  getHistory(@Param('id') id: string) {
-    return this.workOrdersService.getHistory(id);
+  getItemHistory(@Param('itemId') itemId: string) {
+    return this.workOrdersService.getItemHistory(itemId);
   }
 
-  @Get(':id/sticker')
+  @Get('items/:itemId/sticker')
   @Roles('ADMIN', 'TECNICO')
-  getStickerData(@Param('id') id: string) {
-    return this.workOrdersService.getStickerData(id);
+  getStickerData(@Param('itemId') itemId: string) {
+    return this.workOrdersService.getStickerData(itemId);
   }
 
   @Post()
@@ -81,13 +93,13 @@ export class WorkOrdersController {
     return this.workOrdersService.update(id, dto);
   }
 
-  @Patch(':id/status')
+  @Patch('items/:itemId/status')
   @Roles('ADMIN', 'TECNICO')
-  changeStatus(
-    @Param('id') id: string,
+  changeItemStatus(
+    @Param('itemId') itemId: string,
     @Body() dto: ChangeStatusDto,
     @CurrentUser('sub') userId: string,
   ) {
-    return this.workOrdersService.changeStatus(id, dto, userId);
+    return this.workOrdersService.changeItemStatus(itemId, dto, userId);
   }
 }

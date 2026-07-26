@@ -1,7 +1,7 @@
 import {
   Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn,
 } from 'typeorm';
-import { WorkOrder } from './work-order.entity';
+import { WorkOrderItem } from './work-order-item.entity';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('status_history')
@@ -9,12 +9,12 @@ export class StatusHistory {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => WorkOrder, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'work_order_id' })
-  workOrder: WorkOrder;
+  @ManyToOne(() => WorkOrderItem, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'work_order_item_id' })
+  workOrderItem: WorkOrderItem;
 
-  @Column({ name: 'work_order_id' })
-  workOrderId: string;
+  @Column({ name: 'work_order_item_id' })
+  workOrderItemId: string;
 
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'changed_by' })
