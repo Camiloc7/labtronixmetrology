@@ -5,13 +5,21 @@ import { Requisition } from './entities/requisition.entity';
 import { CreateRequisitionDto } from './dto/create-requisition.dto';
 import { UpdateRequisitionDto } from './dto/update-requisition.dto';
 import { SettingsService } from '../settings/settings.service';
-import * as pdfMake from 'pdfmake/build/pdfmake';
-import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import * as exceljs from 'exceljs';
 import * as path from 'path';
 import * as fs from 'fs';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const PdfPrinter = require('pdfmake/js/Printer.js').default;
 
-(pdfMake as any).vfs = pdfFonts.pdfMake.vfs;
+const fonts = {
+  Roboto: {
+    normal: 'node_modules/pdfmake/build/vfs_fonts.js',
+    bold: 'node_modules/pdfmake/build/vfs_fonts.js',
+    italics: 'node_modules/pdfmake/build/vfs_fonts.js',
+    bolditalics: 'node_modules/pdfmake/build/vfs_fonts.js',
+  },
+};
+const printer = new PdfPrinter(fonts);
 
 @Injectable()
 export class RequisitionsService {

@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
-import PdfPrinter from 'pdfmake';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const PdfPrinter = require('pdfmake/js/Printer.js').default;
 import * as ExcelJS from 'exceljs';
 import { WorkOrder } from './entities/work-order.entity';
 import { WorkOrderItem, WorkOrderStatus } from './entities/work-order-item.entity';
@@ -15,7 +16,10 @@ import { Equipment } from '../equipment/entities/equipment.entity';
 
 const fonts = {
   Roboto: {
-    normal: path.join(process.cwd(), 'node_modules/pdfmake/build/vfs_fonts.js') ? Buffer.from('AAEAAAARAQAABAAQR1BPUzR4T4oAAAXcAA...') : undefined, // Will use vfs mapping below
+    normal: 'node_modules/pdfmake/build/vfs_fonts.js',
+    bold: 'node_modules/pdfmake/build/vfs_fonts.js',
+    italics: 'node_modules/pdfmake/build/vfs_fonts.js',
+    bolditalics: 'node_modules/pdfmake/build/vfs_fonts.js',
   },
 };
 
