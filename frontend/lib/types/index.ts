@@ -37,6 +37,16 @@ export interface QuoteItem {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  serviceType?: string;
+  equipmentName?: string;
+  measuringRange?: string;
+  scaleDivision?: string;
+  brand?: string;
+  model?: string;
+  serialNumber?: string;
+  internalCode?: string;
+  location?: string;
+  calibrationPoints?: string;
 }
 
 export interface Quote {
@@ -159,6 +169,16 @@ export interface CreateQuoteItemDto {
   description: string;
   quantity: number;
   unitPrice: number;
+  serviceType?: string;
+  equipmentName?: string;
+  measuringRange?: string;
+  scaleDivision?: string;
+  brand?: string;
+  model?: string;
+  serialNumber?: string;
+  internalCode?: string;
+  location?: string;
+  calibrationPoints?: string;
 }
 
 export interface CreateQuoteDto {

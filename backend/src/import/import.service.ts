@@ -91,7 +91,7 @@ export class ImportService {
 
           // Find client
           const nit = row['NIT'];
-          let client = null;
+          let client: Client | null = null;
           if (nit) {
             client = await this.clientRepo.findOne({ where: { nit } });
           }

@@ -21,6 +21,56 @@ export class CreateQuoteItemDto {
   @IsNumber()
   @Min(0)
   unitPrice: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  serviceType?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  equipmentName?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  measuringRange?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  scaleDivision?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  brand?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  model?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  serialNumber?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  internalCode?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  calibrationPoints?: string;
 }
 
 export class CreateQuoteDto {

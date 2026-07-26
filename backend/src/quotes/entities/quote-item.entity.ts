@@ -26,4 +26,34 @@ export class QuoteItem {
 
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   subtotal: number;
+
+  @Column({ name: 'service_type', length: 100, nullable: true })
+  serviceType: string;
+
+  @Column({ name: 'equipment_name', length: 200, nullable: true })
+  equipmentName: string;
+
+  @Column({ name: 'measuring_range', length: 200, nullable: true })
+  measuringRange: string;
+
+  @Column({ name: 'scale_division', length: 200, nullable: true })
+  scaleDivision: string;
+
+  @Column({ length: 100, nullable: true })
+  brand: string;
+
+  @Column({ length: 100, nullable: true })
+  model: string;
+
+  @Column({ name: 'serial_number', length: 100, nullable: true })
+  serialNumber: string;
+
+  @Column({ name: 'internal_code', length: 100, nullable: true })
+  internalCode: string;
+
+  @Column({ length: 200, nullable: true })
+  location: string;
+
+  @Column({ name: 'calibration_points', type: 'text', nullable: true })
+  calibrationPoints: string;
 }

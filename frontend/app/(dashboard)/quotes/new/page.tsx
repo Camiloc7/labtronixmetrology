@@ -9,7 +9,21 @@ import { quotesApi, clientsApi } from '@/lib/api';
 import { formatCOP } from '@/lib/utils/formatters';
 import type { Client, CreateQuoteDto, CreateQuoteItemDto } from '@/lib/types';
 
-const EMPTY_ITEM: CreateQuoteItemDto = { description: '', quantity: 1, unitPrice: 0 };
+const EMPTY_ITEM: CreateQuoteItemDto = { 
+  description: '', 
+  quantity: 1, 
+  unitPrice: 0,
+  serviceType: '',
+  equipmentName: '',
+  measuringRange: '',
+  scaleDivision: '',
+  brand: '',
+  model: '',
+  serialNumber: '',
+  internalCode: '',
+  location: '',
+  calibrationPoints: ''
+};
 
 export default function NewQuotePage() {
   const router = useRouter();
@@ -118,58 +132,82 @@ export default function NewQuotePage() {
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 8 }}
-                  style={{
+                  style={{ marginBottom: 24 }}
+                >
+                  <div style={{
                     display: 'grid',
                     gridTemplateColumns: '1fr 80px 140px 120px 40px',
                     gap: 12,
-                    marginBottom: 12,
                     alignItems: 'center',
-                  }}
-                >
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Descripción del servicio"
-                    value={item.description}
-                    onChange={(e) => updateItem(i, 'description', e.target.value)}
-                    required
-                  />
-                  <input
-                    type="number"
-                    className="form-input"
-                    min={1}
-                    value={item.quantity}
-                    onChange={(e) => updateItem(i, 'quantity', parseInt(e.target.value) || 1)}
-                  />
-                  <input
-                    type="number"
-                    className="form-input"
-                    min={0}
-                    step={1000}
-                    placeholder="0"
-                    value={item.unitPrice || ''}
-                    onChange={(e) => updateItem(i, 'unitPrice', parseFloat(e.target.value) || 0)}
-                  />
-                  <div style={{
-                    padding: '10px 14px',
-                    background: 'var(--color-surface-2)',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: 'var(--color-success)',
                   }}>
-                    {formatCOP(item.quantity * item.unitPrice)}
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Descripción del servicio"
+                      value={item.description}
+                      onChange={(e) => updateItem(i, 'description', e.target.value)}
+                      required
+                    />
+                    <input
+                      type="number"
+                      className="form-input"
+                      min={1}
+                      value={item.quantity}
+                      onChange={(e) => updateItem(i, 'quantity', parseInt(e.target.value) || 1)}
+                    />
+                    <input
+                      type="number"
+                      className="form-input"
+                      min={0}
+                      step={1000}
+                      placeholder="0"
+                      value={item.unitPrice || ''}
+                      onChange={(e) => updateItem(i, 'unitPrice', parseFloat(e.target.value) || 0)}
+                    />
+                    <div style={{
+                      padding: '10px 14px',
+                      background: 'var(--color-surface-2)',
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: 'var(--color-success)',
+                    }}>
+                      {formatCOP(item.quantity * item.unitPrice)}
+                    </div>
+                    {items.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => removeItem(i)}
+                        className="btn btn--danger btn--sm"
+                        style={{ padding: '8px', justifyContent: 'center' }}
+                      >
+                        <Trash size={15} />
+                      </button>
+                    ) : <div />}
                   </div>
-                  {items.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeItem(i)}
-                      className="btn btn--danger btn--sm"
-                      style={{ padding: '8px', justifyContent: 'center' }}
-                    >
-                      <Trash size={15} />
-                    </button>
-                  )}
+
+                  {/* Technical fields grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+                    gap: 8,
+                    marginTop: 8,
+                    padding: 12,
+                    background: 'var(--color-surface-1)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--color-border)',
+                  }}>
+                    <input type="text" className="form-input form-input--sm" placeholder="Tipo de Servicio" value={item.serviceType || ''} onChange={(e) => updateItem(i, 'serviceType', e.target.value)} />
+                    <input type="text" className="form-input form-input--sm" placeholder="Equipo" value={item.equipmentName || ''} onChange={(e) => updateItem(i, 'equipmentName', e.target.value)} />
+                    <input type="text" className="form-input form-input--sm" placeholder="Intervalo/Rango" value={item.measuringRange || ''} onChange={(e) => updateItem(i, 'measuringRange', e.target.value)} />
+                    <input type="text" className="form-input form-input--sm" placeholder="Div. Escala" value={item.scaleDivision || ''} onChange={(e) => updateItem(i, 'scaleDivision', e.target.value)} />
+                    <input type="text" className="form-input form-input--sm" placeholder="Marca" value={item.brand || ''} onChange={(e) => updateItem(i, 'brand', e.target.value)} />
+                    <input type="text" className="form-input form-input--sm" placeholder="Modelo" value={item.model || ''} onChange={(e) => updateItem(i, 'model', e.target.value)} />
+                    <input type="text" className="form-input form-input--sm" placeholder="Serie" value={item.serialNumber || ''} onChange={(e) => updateItem(i, 'serialNumber', e.target.value)} />
+                    <input type="text" className="form-input form-input--sm" placeholder="Cód. Interno" value={item.internalCode || ''} onChange={(e) => updateItem(i, 'internalCode', e.target.value)} />
+                    <input type="text" className="form-input form-input--sm" placeholder="Ubicación" value={item.location || ''} onChange={(e) => updateItem(i, 'location', e.target.value)} />
+                    <input type="text" className="form-input form-input--sm" placeholder="Puntos Cal." value={item.calibrationPoints || ''} onChange={(e) => updateItem(i, 'calibrationPoints', e.target.value)} />
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>

@@ -54,10 +54,29 @@ export default function QuoteDetailPage() {
             href={quotesApi.getPdfUrl(id)}
             target="_blank"
             rel="noreferrer"
-            className="btn btn--primary"
+            className="btn btn--secondary btn--sm"
           >
             <FilePdf size={18} weight="bold" />
-            Descargar PDF
+            PDF Comercial
+          </a>
+          <a
+            href={quotesApi.getTechnicalPdfUrl(id)}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn--primary btn--sm"
+          >
+            <FilePdf size={18} weight="bold" />
+            PDF Técnico
+          </a>
+          <a
+            href={quotesApi.getTechnicalExcelUrl(id)}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn--primary btn--sm"
+            style={{ backgroundColor: '#107c41', borderColor: '#107c41' }}
+          >
+            <DownloadSimple size={18} weight="bold" />
+            Excel Técnico
           </a>
         </div>
       </div>
@@ -104,14 +123,24 @@ export default function QuoteDetailPage() {
         {/* Ítems */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card">
           <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 20 }}>Ítems de Cotización</h2>
-          <div className="table-wrapper" style={{ border: 'none' }}>
-            <table className="table">
+          <div className="table-wrapper" style={{ border: 'none', overflowX: 'auto' }}>
+            <table className="table" style={{ minWidth: 1200 }}>
               <thead>
                 <tr>
                   <th>Descripción</th>
-                  <th>Cantidad</th>
-                  <th>Precio Unit.</th>
+                  <th>Cant.</th>
+                  <th>P. Unitario</th>
                   <th>Subtotal</th>
+                  <th>Servicio</th>
+                  <th>Equipo</th>
+                  <th>Rango</th>
+                  <th>Div.</th>
+                  <th>Marca</th>
+                  <th>Modelo</th>
+                  <th>Serie</th>
+                  <th>Cód. Interno</th>
+                  <th>Ubicación</th>
+                  <th>Ptos. Cal.</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,6 +150,16 @@ export default function QuoteDetailPage() {
                     <td>{item.quantity}</td>
                     <td>{formatCOP(item.unitPrice)}</td>
                     <td style={{ fontWeight: 600, color: 'var(--color-success)' }}>{formatCOP(item.subtotal)}</td>
+                    <td>{item.serviceType || '-'}</td>
+                    <td>{item.equipmentName || '-'}</td>
+                    <td>{item.measuringRange || '-'}</td>
+                    <td>{item.scaleDivision || '-'}</td>
+                    <td>{item.brand || '-'}</td>
+                    <td>{item.model || '-'}</td>
+                    <td>{item.serialNumber || '-'}</td>
+                    <td>{item.internalCode || '-'}</td>
+                    <td>{item.location || '-'}</td>
+                    <td>{item.calibrationPoints || '-'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -11,6 +11,7 @@ import { EmailRequestsModule } from './email-requests/email-requests.module';
 import { ActivityLogsModule } from './activity-logs/activity-logs.module';
 import { ExcelModule } from './common/excel/excel.module';
 import { ImportModule } from './import/import.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ImportModule } from './import/import.module';
     ActivityLogsModule,
     ExcelModule,
     ImportModule,
+    SettingsModule,
   ],
 })
 export class AppModule {}

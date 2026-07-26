@@ -125,6 +125,8 @@ export const quotesApi = {
   create: (data: any) => api.post('/quotes', data).then((r) => r.data),
   update: (id: string, data: any) => api.patch(`/quotes/${id}`, data).then((r) => r.data),
   getPdfUrl: (id: string) => `${API_URL}/quotes/${id}/pdf`,
+  getTechnicalPdfUrl: (id: string) => `${API_URL}/quotes/${id}/technical-pdf`,
+  getTechnicalExcelUrl: (id: string) => `${API_URL}/quotes/${id}/technical-excel`,
 };
 
 // ─── Equipment ────────────────────────────────────────────────────────────────

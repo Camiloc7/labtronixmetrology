@@ -3,7 +3,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { QuotesService } from './quotes.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -64,8 +64,23 @@ export class QuotesController {
 
   @Get(':id/pdf')
   @Roles('ADMIN', 'COMERCIAL')
-  @ApiOperation({ summary: 'Generar y descargar PDF de cotización' })
-  generatePdf(@Param('id') id: string, @Res() res: Response) {
-    return this.quotesService.generatePdf(id, res);
+  @ApiOperation({ summary: 'Generar PDF comercial de la cotización' })
+  @ApiResponse({ status: 200, description: 'PDF generado correctamente.' })
+  async downloadPdf(@Param('id') id: string, @Res() res: Response) {
+    await this.quotesService.generatePdf(id, res);
+  }
+
+  @Get(':id/technical-pdf')
+  @ApiOperation({ summary: 'Generar PDF técnico de la cotización' })
+  @ApiResponse({ status: 200, description: 'PDF técnico generado correctamente.' })
+  async downloadTechnicalPdf(@Param('id') id: string, @Res() res: Response) {
+    await this.quotesService.generateTechnicalPdf(id, res);
+  }
+
+  @Get(':id/technical-excel')
+  @ApiOperation({ summary: 'Generar Excel técnico de la cotización' })
+  @ApiResponse({ status: 200, description: 'Excel técnico generado correctamente.' })
+  async downloadTechnicalExcel(@Param('id') id: string, @Res() res: Response) {
+    await this.quotesService.generateTechnicalExcel(id, res);
   }
 }
