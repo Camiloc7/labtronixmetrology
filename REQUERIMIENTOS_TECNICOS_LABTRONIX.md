@@ -101,8 +101,8 @@ Se definen tres roles base para el MVP:
 
 ### 4.2 Implementación frontend
 - El frontend consume el endpoint `/api/v1/auth/me` al cargar para conocer el rol del usuario autenticado.
-- Los componentes de navegación y las rutas de Next.js se renderizan condicionalmente según el rol.
-- Las rutas protegidas usan un componente `ProtectedRoute` o middleware de Next.js que redirige a `/login` si no hay sesión válida.
+- Las rutas protegidas usan un componente `ProtectedRoute` o `proxy.ts` de Next.js que redirige a `/login` si no hay sesión válida.
+- Para el MVP, no se implementa recuperación de contraseña (se haría mediante contacto con el ADMIN).
 
 ---
 
@@ -310,9 +310,11 @@ app/
 │   │   └── [id]/page.tsx       # Detalle OT + cambio de estado + sticker
 │   ├── email-requests/
 │   │   └── page.tsx            # Bandeja de solicitudes capturadas
-│   └── users/
-│       └── page.tsx            # Gestión de usuarios (solo ADMIN)
-└── middleware.ts               # Protección de rutas con validación JWT via cookie
+│   ├── lib/
+│   │   ├── api.ts              # Cliente Axios con interceptors
+│   │   └── types.ts            # Interfaces TypeScript
+│   ├── proxy.ts                # Protección de rutas con validación JWT via cookie (antes middleware.ts)
+│   └── package.json
 ```
 
 ---

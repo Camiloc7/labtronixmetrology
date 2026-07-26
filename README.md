@@ -386,7 +386,7 @@ labtronixmetrology/
 │   │   ├── hooks/
 │   │   ├── types/
 │   │   └── utils/
-│   ├── middleware.ts
+│   ├── proxy.ts              # Middleware para protección de rutas y redirecciones
 │   ├── .env.local.example
 │   ├── next.config.ts
 │   ├── tsconfig.json
