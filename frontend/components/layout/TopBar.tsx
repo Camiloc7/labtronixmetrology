@@ -212,7 +212,6 @@ export default function TopBar({ onMenuToggle }: TopBarProps) {
                 }}>
                   Ver Dashboard Completo
                 </Link>
-              )}
             </div>
           )}
         </div>

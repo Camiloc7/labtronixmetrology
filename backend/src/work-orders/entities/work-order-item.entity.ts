@@ -5,6 +5,8 @@ import {
 import { WorkOrder } from './work-order.entity';
 import { Equipment } from '../../equipment/entities/equipment.entity';
 import { User } from '../../users/entities/user.entity';
+import { WorkOrderPhoto } from './work-order-photo.entity';
+import { OneToMany } from 'typeorm';
 
 export enum WorkOrderStatus {
   RECIBIDO = 'RECIBIDO',
@@ -74,4 +76,7 @@ export class WorkOrderItem {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @OneToMany(() => WorkOrderPhoto, (photo) => photo.workOrderItem, { eager: true })
+  photos: WorkOrderPhoto[];
 }

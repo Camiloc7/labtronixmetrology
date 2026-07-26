@@ -13,6 +13,8 @@ import { CreateWorkOrderDto, ChangeStatusDto } from './dto/work-order.dto';
 import { ExcelService } from '../common/excel/excel.service';
 import { Client } from '../clients/entities/client.entity';
 import { Equipment } from '../equipment/entities/equipment.entity';
+import { WorkOrderPhoto } from './entities/work-order-photo.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { ILike } from 'typeorm';
@@ -40,7 +42,10 @@ export class WorkOrdersService {
     private readonly clientRepo: Repository<Client>,
     @InjectRepository(Equipment)
     private readonly equipmentRepo: Repository<Equipment>,
+    @InjectRepository(WorkOrderPhoto)
+    private readonly photosRepo: Repository<WorkOrderPhoto>,
     private readonly excelService: ExcelService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   private async getLogoBase64(): Promise<string> {
@@ -379,6 +384,30 @@ export class WorkOrdersService {
       FechaDespacho: item.dispatchedAt,
     }));
     return this.excelService.exportToExcel(data, 'OrdenesTrabajo');
+  }
+
+  async addPhoto(itemId: string, file: Express.Multer.File, userId: string, description?: string): Promise<WorkOrderPhoto> {
+    const item = await this.workOrderItemsRepo.findOne({ where: { id: itemId } });
+    if (!item) throw new NotFoundException('Item no encontrado');
+
+    const uploaded = await this.cloudinaryService.uploadImage(file, 'labtronix/equipment');
+
+    const photo = this.photosRepo.create({
+      workOrderItemId: itemId,
+      publicId: uploaded.public_id,
+      capturedById: userId,
+      description,
+    });
+
+    return this.photosRepo.save(photo);
+  }
+
+  async deletePhoto(photoId: string): Promise<void> {
+    const photo = await this.photosRepo.findOne({ where: { id: photoId } });
+    if (!photo) throw new NotFoundException('Foto no encontrada');
+
+    await this.cloudinaryService.deleteImage(photo.publicId);
+    await this.photosRepo.remove(photo);
   }
 
   // Import simplified to skip for now since it needs heavy changes, we can return empty

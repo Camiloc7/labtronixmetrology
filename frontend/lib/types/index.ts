@@ -99,6 +99,7 @@ export interface WorkOrderItem {
   workOrderId: string;
   equipment: Equipment;
   equipmentId: string;
+  photos?: any[];
   assignedTo?: User;
   serviceType: ServiceType;
   status: WorkOrderStatus;

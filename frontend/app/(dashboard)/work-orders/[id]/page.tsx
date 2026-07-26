@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { ArrowLeft, Printer, ArrowsClockwise, CaretDown, CaretUp, FilePdf, FileXls } from '@phosphor-icons/react';
 import { workOrdersApi } from '@/lib/api';
 import type { WorkOrder, StatusHistory, WorkOrderStatus, WorkOrderItem } from '@/lib/types';
+import PhotoGallery from '@/components/work-orders/PhotoGallery';
 
 const STATUS_FLOW: WorkOrderStatus[] = ['RECIBIDO', 'EN_PROCESO', 'CALIBRADO', 'LISTO_ENVIO', 'DESPACHADO'];
 const OT_STATUS_LABELS: Record<WorkOrderStatus, string> = {
@@ -54,7 +55,7 @@ function WorkOrderItemCard({ item, fetchOt }: { item: WorkOrderItem, fetchOt: ()
     if (!newStatus) return;
     setChangingStatus(true);
     try {
-      await workOrdersApi.changeItemStatus(item.id, { status: newStatus, notes: statusNote });
+      await workOrdersApi.changeItemStatus(item.id, newStatus, statusNote);
       toast.success(`Estado cambiado a "${OT_STATUS_LABELS[newStatus]}"`);
       setNewStatus('');
       setStatusNote('');
@@ -196,6 +197,19 @@ function WorkOrderItemCard({ item, fetchOt }: { item: WorkOrderItem, fetchOt: ()
                 </div>
               )}
             </div>
+          </div>
+
+          <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-6">
+            <PhotoGallery 
+              itemId={item.id} 
+              photos={item.photos || []} 
+              onPhotoAdded={(newPhoto) => {
+                fetchOt();
+              }}
+              onPhotoDeleted={(photoId) => {
+                fetchOt();
+              }}
+            />
           </div>
         </div>
       )}

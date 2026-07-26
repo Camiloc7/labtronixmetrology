@@ -1,9 +1,9 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query, UseGuards, UseInterceptors, UploadedFile, Res, BadRequestException
+  Controller, Get, Post, Patch, Body, Param, Delete, Query, UseGuards, UseInterceptors, UploadedFile, Res, BadRequestException, Req
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { WorkOrdersService } from './work-orders.service';
 import { CreateWorkOrderDto, ChangeStatusDto } from './dto/work-order.dto';
 import { WorkOrderStatus } from './entities/work-order-item.entity';
@@ -102,5 +102,36 @@ export class WorkOrdersController {
     @CurrentUser('sub') userId: string,
   ) {
     return this.workOrdersService.changeItemStatus(itemId, dto, userId);
+  }
+
+  @Post('items/:itemId/photos')
+  @Roles('ADMIN', 'TECNICO')
+  @ApiOperation({ summary: 'Subir foto del equipo' })
+  @UseInterceptors(FileInterceptor('photo'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        photo: { type: 'string', format: 'binary' },
+        description: { type: 'string', nullable: true },
+      },
+    },
+  })
+  async uploadPhoto(
+    @Param('itemId') itemId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('description') description: string,
+    @Req() req: any,
+  ) {
+    if (!file) throw new BadRequestException('No se recibió la foto.');
+    return this.workOrdersService.addPhoto(itemId, file, req.user?.sub, description);
+  }
+
+  @Delete('photos/:photoId')
+  @Roles('ADMIN', 'TECNICO')
+  @ApiOperation({ summary: 'Eliminar foto del equipo' })
+  async deletePhoto(@Param('photoId') photoId: string) {
+    return this.workOrdersService.deletePhoto(photoId);
   }
 }

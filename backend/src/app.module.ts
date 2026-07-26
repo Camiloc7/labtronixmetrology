@@ -15,6 +15,7 @@ import { SettingsModule } from './settings/settings.module';
 import { RequisitionsModule } from './requisitions/requisitions.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -51,6 +52,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     SettingsModule,
     RequisitionsModule,
     DashboardModule,
+    CloudinaryModule,
   ],
 })
 export class AppModule {}

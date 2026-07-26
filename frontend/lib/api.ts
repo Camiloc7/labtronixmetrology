@@ -142,14 +142,24 @@ export const equipmentApi = {
 export const workOrdersApi = {
   getAll: (page = 1, limit = 10, search?: string) =>
     api.get('/work-orders', { params: { page, limit, search } }).then((r) => r.data),
-  getOne: (id: string) => api.get(`/work-orders/${id}`).then((r) => r.data),
+  getOne: (id: string) => api.get('/work-orders/${id}').then((r) => r.data),
   getItemHistory: (itemId: string) => api.get(`/work-orders/items/${itemId}/history`).then((r) => r.data),
   getItemStickerData: (itemId: string) => api.get(`/work-orders/items/${itemId}/sticker`).then((r) => r.data),
   getStats: () => api.get('/work-orders/stats').then((r) => r.data),
   create: (data: any) => api.post('/work-orders', data).then((r) => r.data),
   update: (id: string, data: any) => api.patch(`/work-orders/${id}`, data).then((r) => r.data),
-  changeItemStatus: (itemId: string, data: any) =>
-    api.patch(`/work-orders/items/${itemId}/status`, data).then((r) => r.data),
+  changeItemStatus: (itemId: string, status: string, notes?: string, stickerPrinted?: boolean) => 
+    api.patch(`/work-orders/items/${itemId}/status`, { status, notes, stickerPrinted }).then(res => res.data),
+  uploadItemPhoto: (itemId: string, photo: File, description?: string) => {
+    const formData = new FormData();
+    formData.append('photo', photo);
+    if (description) formData.append('description', description);
+    return api.post(`/work-orders/items/${itemId}/photos`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(res => res.data);
+  },
+  deletePhoto: (photoId: string) => 
+    api.delete(`/work-orders/photos/${photoId}`).then(res => res.data),
   getPdfUrl: (id: string) => `${API_URL}/work-orders/${id}/pdf`,
   getExcelUrl: (id: string) => `${API_URL}/work-orders/${id}/excel`,
 };
