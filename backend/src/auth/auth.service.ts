@@ -42,9 +42,32 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      throw new UnauthorizedException('Cuenta bloqueada temporalmente por múltiples intentos fallidos. Intente más tarde.');
+    }
+
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    
     if (!passwordValid) {
+      const attempts = (user.failedLoginAttempts || 0) + 1;
+      let lockedUntil: Date | null = null;
+      
+      if (attempts >= 5) {
+        // Lock for 15 minutes
+        lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+      }
+      
+      await this.usersService.updateLoginAttempts(user.id, attempts, lockedUntil);
+      
+      if (lockedUntil) {
+        throw new UnauthorizedException('Cuenta bloqueada temporalmente por múltiples intentos fallidos. Intente más tarde.');
+      }
       throw new UnauthorizedException('Credenciales inválidas');
+    }
+
+    // Reset attempts on successful login
+    if (user.failedLoginAttempts > 0 || user.lockedUntil) {
+      await this.usersService.updateLoginAttempts(user.id, 0, null);
     }
 
     const tokens = await this.getTokens(user.id, user.email, user.role, user.name);

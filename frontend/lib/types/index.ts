@@ -5,6 +5,17 @@ export type WorkOrderStatus = 'RECIBIDO' | 'EN_PROCESO' | 'CALIBRADO' | 'LISTO_E
 export type ServiceType = 'PROPIO' | 'TERCERIZADO';
 export type EmailRequestStatus = 'PENDIENTE' | 'PROCESADO' | 'DESCARTADO';
 
+// ─── Pagination ───────────────────────────────────────────────────────────────
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    lastPage: number;
+    limit: number;
+  };
+}
+
 // ─── Entities ─────────────────────────────────────────────────────────────────
 export interface User {
   id: string;

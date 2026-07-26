@@ -117,6 +117,7 @@ function LoginContent() {
                 width={56}
                 height={56}
                 style={{ objectFit: 'contain' }}
+                priority
               />
             </motion.div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em' }}>

@@ -7,6 +7,13 @@ import { Quote } from '../quotes/entities/quote.entity';
 import { ServiceTracking } from '../quotes/entities/service-tracking.entity';
 import { EquipmentReception } from '../equipment/entities/equipment-reception.entity';
 
+function normalizeNit(nit: any): string | null {
+  if (!nit) return null;
+  const str = String(nit).replace(/[.,\s]/g, '');
+  if (str === '-' || str === '') return null;
+  return str;
+}
+
 @Injectable()
 export class ImportService {
   constructor(
@@ -45,9 +52,17 @@ export class ImportService {
           const companyName = row['RAZON_SOCIAL'];
           if (!companyName) continue;
 
-          let client = await this.clientRepo.findOne({ where: { nit: row['NIT'] } });
+          let client: Client | null = null;
+          const normalizedNit = normalizeNit(row['NIT']);
+          
+          if (normalizedNit) {
+            client = await this.clientRepo.findOne({ where: { nit: normalizedNit } });
+          }
           if (!client && codCliente) {
              client = await this.clientRepo.findOne({ where: { codCliente } });
+          }
+          if (!client && companyName) {
+             client = await this.clientRepo.findOne({ where: { companyName } });
           }
 
           if (!client) {
@@ -56,7 +71,7 @@ export class ImportService {
 
           client.codCliente = codCliente;
           client.companyName = companyName;
-          client.nit = row['NIT'];
+          client.nit = normalizedNit as string;
           client.address = row['DIRECCION'];
           client.city = row['CUIDAD']; // Note the typo in excel header 'CUIDAD'
           
@@ -90,10 +105,10 @@ export class ImportService {
           if (!quoteNumber) continue;
 
           // Find client
-          const nit = row['NIT'];
+          const normalizedNit = normalizeNit(row['NIT']);
           let client: Client | null = null;
-          if (nit) {
-            client = await this.clientRepo.findOne({ where: { nit } });
+          if (normalizedNit) {
+            client = await this.clientRepo.findOne({ where: { nit: normalizedNit } });
           }
 
           let quote = await this.quoteRepo.findOne({ where: { quoteNumber } });

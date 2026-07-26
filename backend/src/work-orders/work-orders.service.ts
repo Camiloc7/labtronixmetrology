@@ -13,13 +13,16 @@ import { CreateWorkOrderDto, ChangeStatusDto } from './dto/work-order.dto';
 import { ExcelService } from '../common/excel/excel.service';
 import { Client } from '../clients/entities/client.entity';
 import { Equipment } from '../equipment/entities/equipment.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
+import { ILike } from 'typeorm';
 
 const fonts = {
   Roboto: {
-    normal: 'node_modules/pdfmake/build/vfs_fonts.js',
-    bold: 'node_modules/pdfmake/build/vfs_fonts.js',
-    italics: 'node_modules/pdfmake/build/vfs_fonts.js',
-    bolditalics: 'node_modules/pdfmake/build/vfs_fonts.js',
+    normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
+    bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
+    italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
+    bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
   },
 };
 
@@ -48,8 +51,32 @@ export class WorkOrdersService {
     return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
   }
 
-  async findAll(): Promise<WorkOrder[]> {
-    return this.workOrdersRepo.find({ order: { createdAt: 'DESC' } });
+  async findAll(paginationDto: PaginationDto): Promise<PaginatedResult<WorkOrder>> {
+    const { page = 1, limit = 10, search } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const where = search
+      ? [
+          { otNumber: ILike(`%${search}%`) },
+        ]
+      : {};
+
+    const [data, total] = await this.workOrdersRepo.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip,
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+        limit,
+      },
+    };
   }
 
   async findOne(id: string): Promise<WorkOrder> {
@@ -150,13 +177,12 @@ export class WorkOrdersService {
 
     // Use default fonts from pdfmake vfs
     const PdfPrinter = require('pdfmake');
-    const pdfMakeFonts = require('pdfmake/build/vfs_fonts.js');
     const fonts = {
       Roboto: {
-        normal: Buffer.from(pdfMakeFonts.pdfMake.vfs['Roboto-Regular.ttf'], 'base64'),
-        bold: Buffer.from(pdfMakeFonts.pdfMake.vfs['Roboto-Medium.ttf'], 'base64'),
-        italics: Buffer.from(pdfMakeFonts.pdfMake.vfs['Roboto-Italic.ttf'], 'base64'),
-        bolditalics: Buffer.from(pdfMakeFonts.pdfMake.vfs['Roboto-MediumItalic.ttf'], 'base64'),
+        normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
+        bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
+        italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
+        bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
       }
     };
     const printer = new PdfPrinter(fonts);

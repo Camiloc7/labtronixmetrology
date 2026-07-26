@@ -44,18 +44,50 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Run tests
+## Pruebas y Testing (QA)
+
+El proyecto cuenta con una suite completa de pruebas unitarias y pruebas de carga para asegurar la robustez, especialmente en escenarios de alta concurrencia.
+
+### 1. Pruebas Unitarias (Jest)
+
+Las pruebas unitarias cubren la lógica de negocio (servicios y controladores) y aseguran que los tipos e integraciones simuladas (mocks) sean correctos.
 
 ```bash
-# unit tests
+# Ejecutar todas las pruebas unitarias
 $ npm run test
 
-# e2e tests
-$ npm run test:e2e
+# Modo de escucha (watch)
+$ npm run test:watch
 
-# test coverage
+# Generar reporte de cobertura
 $ npm run test:cov
 ```
+
+### 2. Pruebas de Carga y Concurrencia (Artillery)
+
+Se han configurado pruebas de estrés utilizando [Artillery](https://www.artillery.io/) para simular cientos de peticiones simultáneas, validando escenarios como la _Generación de Códigos Consecutivos (Race Conditions)_ mediante _Optimistic Concurrency_.
+
+**Paso A: Preparar Base de Datos de Prueba**
+Las pruebas de carga ensucian la base de datos con registros simulados, por lo que usan una base de datos aislada (`labtronix_db_test`).
+
+1. Crea la base de datos vacía en PostgreSQL:
+```sql
+CREATE DATABASE labtronix_db_test;
+```
+2. Ejecuta el script Seed especial para inyectar al administrador de pruebas:
+```bash
+$ npm run seed:test
+```
+
+**Paso B: Ejecutar la prueba de estrés**
+```bash
+# 1. Levantar el servidor paralelo en entorno de pruebas (puerto 3005)
+$ npm run start:loadtest
+
+# 2. En otra terminal, disparar Artillery
+$ npx artillery run load-test.yml
+```
+Al finalizar, Artillery generará un reporte de métricas mostrando la latencia promedio (p95) y la tasa de peticiones exitosas (HTTP 201).
 
 ## Deployment
 

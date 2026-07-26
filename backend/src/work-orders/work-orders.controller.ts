@@ -11,6 +11,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Órdenes de Trabajo')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -53,8 +54,8 @@ export class WorkOrdersController {
 
   @Get()
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
-  findAll() {
-    return this.workOrdersService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.workOrdersService.findAll(paginationDto);
   }
 
   @Get('stats')

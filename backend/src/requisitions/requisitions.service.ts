@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException, StreamableFile } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { Requisition } from './entities/requisition.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { CreateRequisitionDto } from './dto/create-requisition.dto';
 import { UpdateRequisitionDto } from './dto/update-requisition.dto';
 import { SettingsService } from '../settings/settings.service';
@@ -13,10 +15,10 @@ const PdfPrinter = require('pdfmake/js/Printer.js').default;
 
 const fonts = {
   Roboto: {
-    normal: 'node_modules/pdfmake/build/vfs_fonts.js',
-    bold: 'node_modules/pdfmake/build/vfs_fonts.js',
-    italics: 'node_modules/pdfmake/build/vfs_fonts.js',
-    bolditalics: 'node_modules/pdfmake/build/vfs_fonts.js',
+    normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
+    bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
+    italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
+    bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
   },
 };
 const printer = new PdfPrinter(fonts);
@@ -34,10 +36,32 @@ export class RequisitionsService {
     return this.requisitionsRepository.save(requisition);
   }
 
-  async findAll(): Promise<Requisition[]> {
-    return this.requisitionsRepository.find({
+  async findAll(paginationDto: PaginationDto): Promise<PaginatedResult<Requisition>> {
+    const { page = 1, limit = 10, search } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const where = search
+      ? [
+          { companyName: ILike(`%${search}%`) },
+        ]
+      : {};
+
+    const [data, total] = await this.requisitionsRepository.findAndCount({
+      where,
       order: { createdAt: 'DESC' },
+      take: limit,
+      skip,
     });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+        limit,
+      },
+    };
   }
 
   async findOne(id: string): Promise<Requisition> {
@@ -64,10 +88,10 @@ export class RequisitionsService {
     const requisition = await this.findOne(id);
     const fonts = {
       Roboto: {
-        normal: 'node_modules/pdfmake/build/vfs_fonts.js',
-        bold: 'node_modules/pdfmake/build/vfs_fonts.js',
-        italics: 'node_modules/pdfmake/build/vfs_fonts.js',
-        bolditalics: 'node_modules/pdfmake/build/vfs_fonts.js',
+        normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
+        bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
+        italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
+        bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
       },
     };
     

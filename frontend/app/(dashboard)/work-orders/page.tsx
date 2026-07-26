@@ -1,8 +1,9 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Plus, ClipboardText, FilePdf, FileXls } from '@phosphor-icons/react';
+import { Plus, ClipboardText, FilePdf, FileXls, MagnifyingGlass } from '@phosphor-icons/react';
+import { Pagination } from '@/components/ui/Pagination';
 import { workOrdersApi } from '@/lib/api';
 import type { WorkOrder } from '@/lib/types';
 
@@ -10,12 +11,28 @@ export default function WorkOrdersPage() {
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    workOrdersApi.getAll()
-      .then(setOrders)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [lastPage, setLastPage] = useState(1);
+  const [search, setSearch] = useState('');
+
+  const fetchOrders = useCallback(() => {
+    setLoading(true);
+    workOrdersApi.getAll(page, limit, search || undefined)
+      .then((res) => {
+        setOrders(res.data);
+        setTotal(res.meta.total);
+        setLastPage(res.meta.lastPage);
+      })
       .catch(() => toast.error('Error al cargar órdenes'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [page, limit, search]);
+
+  useEffect(() => {
+    const t = setTimeout(fetchOrders, 300);
+    return () => clearTimeout(t);
+  }, [fetchOrders]);
 
   const handleDownloadPdf = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -39,6 +56,19 @@ export default function WorkOrdersPage() {
             <Plus size={18} weight="bold" /> Nueva OT
           </Link>
         </div>
+      </div>
+
+      <div className="search-bar" style={{ marginBottom: 24, maxWidth: 380 }}>
+        <MagnifyingGlass size={18} color="var(--color-text-muted)" />
+        <input
+          type="text"
+          placeholder="Buscar por número de OT..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+        />
       </div>
 
       <div className="card">
@@ -103,6 +133,17 @@ export default function WorkOrdersPage() {
                 ))}
               </tbody>
             </table>
+            <Pagination
+              page={page}
+              limit={limit}
+              total={total}
+              lastPage={lastPage}
+              onPageChange={setPage}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
+            />
           </div>
         )}
       </div>

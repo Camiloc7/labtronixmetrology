@@ -1,0 +1,128 @@
+config:
+  target: "http://localhost:3005/api/v1"
+  phases:
+    - duration: 60
+      arrivalRate: 4
+      name: "Sustained load (4 VUs/sec, 50 reqs each = 200 req/sec)"
+  environments:
+    local:
+      target: "http://localhost:3005/api/v1"
+
+scenarios:
+  - name: "Login and Create Equipment"
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            email: "admin@labtronix.com"
+            password: "Admin2026!"
+          capture:
+            - header: "set-cookie"
+              as: "cookie"
+            # Extraemos el clientId de la base de datos indirectamente si necesitamos asignarlo? 
+            # Equipment service requiere "brand" pero `clientId` puede ser opcional según el DTO?
+            # Si el DTO no exige clientId, podemos probar crear sin él o necesitamos sembrar un cliente
+      - loop:
+          - post:
+              url: "/equipment"
+              headers:
+                Cookie: "{{ cookie }}"
+              json:
+                brand: "LoadTestBrand"
+                clientId: "a1b2c3d4-1234-5678-90ab-cdef01234567"
+                model: "LoadTestModel-{{ $randomString() }}"
+                name: "Equipo de Prueba Artillery"
+                serialNumber: "{{ $randomString() }}"
+                location: "Laboratorio Principal"
+              expect:
+                - statusCode: 201
+        count: 50
+
+  - name: "Login and Create Quotes"
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            email: "admin@labtronix.com"
+            password: "Admin2026!"
+          capture:
+            - header: "set-cookie"
+              as: "cookie"
+      - loop:
+          - post:
+              url: "/quotes"
+              headers:
+                Cookie: "{{ cookie }}"
+              json:
+                clientId: "a1b2c3d4-1234-5678-90ab-cdef01234567"
+                status: "BORRADOR"
+                notes: "Prueba de carga masiva"
+                items:
+                  - description: "Calibración automática"
+                    quantity: 2
+                    unitPrice: 150000
+              expect:
+                - statusCode: 201
+        count: 50
+
+  - name: "Login and Create Clients"
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            email: "admin@labtronix.com"
+            password: "Admin2026!"
+          capture:
+            - header: "set-cookie"
+              as: "cookie"
+      - loop:
+          - post:
+              url: "/clients"
+              headers:
+                Cookie: "{{ cookie }}"
+              json:
+                companyName: "Empresa {{ $randomString() }}"
+                nit: "{{ $randomString() }}-{{ $randomString() }}"
+                codCliente: "C-{{ $randomString() }}"
+                email: "contacto_{{ $randomString() }}@empresa.com"
+              expect:
+                - statusCode: 201
+        count: 50
+
+  - name: "Login, Create Equipment and Work Order"
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            email: "admin@labtronix.com"
+            password: "Admin2026!"
+          capture:
+            - header: "set-cookie"
+              as: "cookie"
+      - loop:
+          - post:
+              url: "/equipment"
+              headers:
+                Cookie: "{{ cookie }}"
+              json:
+                clientId: "a1b2c3d4-1234-5678-90ab-cdef01234567"
+                brand: "LoadTestBrand"
+                model: "Model-{{ $randomString() }}"
+                name: "Equipo para OT"
+                serialNumber: "{{ $randomString() }}"
+              capture:
+                - json: "$.id"
+                  as: "equipmentId"
+          - post:
+              url: "/work-orders"
+              headers:
+                Cookie: "{{ cookie }}"
+              json:
+                otNumber: "OT-{{ $randomString() }}"
+                clientId: "a1b2c3d4-1234-5678-90ab-cdef01234567"
+                items:
+                  - equipmentId: "{{ equipmentId }}"
+                    serviceType: "PROPIO"
+              expect:
+                - statusCode: 201
+        count: 20

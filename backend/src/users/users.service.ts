@@ -38,6 +38,10 @@ export class UsersService {
     await this.usersRepo.update(id, { hashedRefreshToken: hashedToken } as any);
   }
 
+  async updateLoginAttempts(id: string, attempts: number, lockedUntil: Date | null): Promise<void> {
+    await this.usersRepo.update(id, { failedLoginAttempts: attempts, lockedUntil } as any);
+  }
+
   async create(dto: CreateUserDto): Promise<Omit<User, 'passwordHash'>> {
     const exists = await this.findByEmail(dto.email);
     if (exists) throw new ConflictException('El email ya está registrado');

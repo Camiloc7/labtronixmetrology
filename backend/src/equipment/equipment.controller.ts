@@ -10,6 +10,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Equipos')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -40,8 +41,8 @@ export class EquipmentController {
 
   @Get()
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
-  findAll(@Query('search') search?: string) {
-    return this.equipmentService.findAll(search);
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.equipmentService.findAll(paginationDto);
   }
 
   @Get(':id')

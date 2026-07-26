@@ -6,6 +6,9 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { ExcelService } from '../common/excel/excel.service';
 
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
+
 @Injectable()
 export class ClientsService {
   constructor(
@@ -14,18 +17,34 @@ export class ClientsService {
     private readonly excelService: ExcelService,
   ) {}
 
-  async findAll(search?: string): Promise<Client[]> {
-    if (search) {
-      return this.clientsRepo.find({
-        where: [
+  async findAll(paginationDto: PaginationDto): Promise<PaginatedResult<Client>> {
+    const { page = 1, limit = 10, search } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const where = search
+      ? [
           { companyName: ILike(`%${search}%`) },
           { nit: ILike(`%${search}%`) },
           { contactName: ILike(`%${search}%`) },
-        ],
-        order: { createdAt: 'DESC' },
-      });
-    }
-    return this.clientsRepo.find({ order: { createdAt: 'DESC' } });
+        ]
+      : {};
+
+    const [data, total] = await this.clientsRepo.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip,
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+        limit,
+      },
+    };
   }
 
   async findOne(id: string): Promise<Client> {

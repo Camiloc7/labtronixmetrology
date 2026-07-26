@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Res } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Res, Query } from '@nestjs/common';
 import type { Response } from 'express';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { RequisitionsService } from './requisitions.service';
 import { CreateRequisitionDto } from './dto/create-requisition.dto';
 import { UpdateRequisitionDto } from './dto/update-requisition.dto';
@@ -14,8 +15,8 @@ export class RequisitionsController {
   }
 
   @Get()
-  findAll() {
-    return this.requisitionsService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.requisitionsService.findAll(paginationDto);
   }
 
   @Get(':id')

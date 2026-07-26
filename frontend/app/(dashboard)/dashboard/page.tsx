@@ -46,19 +46,19 @@ export default function DashboardPage() {
       try {
         const [otStats, ots, clients, equips, quotes] = await Promise.all([
           workOrdersApi.getStats(),
-          workOrdersApi.getAll(),
-          clientsApi.getAll(),
-          equipmentApi.getAll(),
-          quotesApi.getAll(),
+          workOrdersApi.getAll(1, 5), // Only need a few recent ones
+          clientsApi.getAll(1, 100), // Depending on how many they need for the select, maybe 1000
+          equipmentApi.getAll(1, 1000), 
+          quotesApi.getAll(1, 1),
         ]);
         setStats(otStats);
-        setRecentOTs(ots.slice(0, 5));
-        setClientCount(clients.length);
-        setEquipmentCount(equips.length);
-        setQuoteCount(quotes.length);
+        setRecentOTs(ots.data);
+        setClientCount(clients.meta.total);
+        setEquipmentCount(equips.meta.total);
+        setQuoteCount(quotes.meta.total);
         
-        setAllClients(clients);
-        setAllEquipment(equips);
+        setAllClients(clients.data);
+        setAllEquipment(equips.data);
       } catch (err) {
         console.error(err);
       } finally {

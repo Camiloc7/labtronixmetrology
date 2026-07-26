@@ -1,6 +1,6 @@
 import {
   Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, OneToOne,
-  JoinColumn, CreateDateColumn, UpdateDateColumn,
+  JoinColumn, CreateDateColumn, UpdateDateColumn, Index
 } from 'typeorm';
 import { Client } from '../../clients/entities/client.entity';
 import { User } from '../../users/entities/user.entity';
@@ -19,7 +19,7 @@ export class Quote {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'quote_number', length: 30, unique: true })
+  @Column({ name: 'quote_number', length: 100, unique: true })
   quoteNumber: string;
 
   @ManyToOne(() => Client, { eager: true })
@@ -57,6 +57,7 @@ export class Quote {
   @OneToOne(() => ServiceTracking, (tracking) => tracking.quote, { cascade: true, eager: true })
   serviceTracking: ServiceTracking;
 
+  @Index()
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

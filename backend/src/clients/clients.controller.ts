@@ -10,6 +10,7 @@ import { UpdateClientDto } from './dto/update-client.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Clientes')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -41,9 +42,8 @@ export class ClientsController {
   @Get()
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
   @ApiOperation({ summary: 'Listar clientes' })
-  @ApiQuery({ name: 'search', required: false })
-  findAll(@Query('search') search?: string) {
-    return this.clientsService.findAll(search);
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.clientsService.findAll(paginationDto);
   }
 
   @Get(':id')

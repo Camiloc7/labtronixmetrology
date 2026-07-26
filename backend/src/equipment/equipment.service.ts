@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { Equipment } from './entities/equipment.entity';
@@ -7,9 +7,11 @@ import { PartialType } from '@nestjs/swagger';
 import { CreateEquipmentDto as UpdateEquipmentDto } from './dto/create-equipment.dto';
 import { ExcelService } from '../common/excel/excel.service';
 import { Client } from '../clients/entities/client.entity';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 
 @Injectable()
-export class EquipmentService {
+export class EquipmentService implements OnModuleInit {
   constructor(
     @InjectRepository(Equipment)
     private readonly equipmentRepo: Repository<Equipment>,
@@ -18,25 +20,59 @@ export class EquipmentService {
     private readonly excelService: ExcelService,
   ) {}
 
-  private async generateCode(): Promise<string> {
-    const year = new Date().getFullYear();
-    const count = await this.equipmentRepo.count();
-    return `EQ-${year}-${String(count + 1).padStart(4, '0')}`;
+  async onModuleInit() {
+    await this.equipmentRepo.query(`CREATE SEQUENCE IF NOT EXISTS equipment_code_seq START 1`);
+    
+    // Sincronizar la secuencia con el valor más alto existente
+    const [lastEq] = await this.equipmentRepo.find({ order: { createdAt: 'DESC' }, take: 1 });
+    if (lastEq && lastEq.internalCode) {
+      const parts = lastEq.internalCode.split('-');
+      if (parts.length === 3) {
+        const lastNum = parseInt(parts[2], 10);
+        if (!isNaN(lastNum)) {
+          // setval(sequence, value, is_called)
+          await this.equipmentRepo.query(`SELECT setval('equipment_code_seq', $1, true)`, [lastNum]);
+        }
+      }
+    }
   }
 
-  async findAll(search?: string): Promise<Equipment[]> {
-    if (search) {
-      return this.equipmentRepo.find({
-        where: [
+  private async generateCode(): Promise<string> {
+    const year = new Date().getFullYear();
+    const result = await this.equipmentRepo.query(`SELECT nextval('equipment_code_seq')`);
+    const nextNumber = result[0].nextval;
+    return `EQ-${year}-${String(nextNumber).padStart(4, '0')}`;
+  }
+
+  async findAll(paginationDto: PaginationDto): Promise<PaginatedResult<Equipment>> {
+    const { page = 1, limit = 10, search } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const where = search
+      ? [
           { brand: ILike(`%${search}%`) },
           { model: ILike(`%${search}%`) },
           { internalCode: ILike(`%${search}%`) },
           { serialNumber: ILike(`%${search}%`) },
-        ],
-        order: { createdAt: 'DESC' },
-      });
-    }
-    return this.equipmentRepo.find({ order: { createdAt: 'DESC' } });
+        ]
+      : {};
+
+    const [data, total] = await this.equipmentRepo.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip,
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+        limit,
+      },
+    };
   }
 
   async findOne(id: string): Promise<Equipment> {
@@ -46,13 +82,27 @@ export class EquipmentService {
   }
 
   async create(dto: CreateEquipmentDto, userId: string): Promise<Equipment> {
-    const internalCode = await this.generateCode();
-    const eq = this.equipmentRepo.create({
-      ...dto,
-      internalCode,
-      receivedById: userId,
-    });
-    return this.equipmentRepo.save(eq);
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        const internalCode = await this.generateCode();
+        const eq = this.equipmentRepo.create({
+          ...dto,
+          internalCode,
+          receivedById: userId,
+        });
+        return await this.equipmentRepo.save(eq);
+      } catch (error: any) {
+        if (error.code === '23505' && retries > 1) {
+          retries--;
+          // Jitter backoff (10ms to 100ms) to avoid thundering herd collisions
+          await new Promise(resolve => setTimeout(resolve, Math.random() * 90 + 10));
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw new Error('Could not generate unique internalCode');
   }
 
   async update(id: string, dto: Partial<CreateEquipmentDto>): Promise<Equipment> {

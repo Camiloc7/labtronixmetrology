@@ -110,8 +110,8 @@ export const usersApi = {
 
 // ─── Clients ──────────────────────────────────────────────────────────────────
 export const clientsApi = {
-  getAll: (search?: string) =>
-    api.get('/clients', { params: search ? { search } : {} }).then((r) => r.data),
+  getAll: (page = 1, limit = 10, search?: string) =>
+    api.get('/clients', { params: { page, limit, search } }).then((r) => r.data),
   getOne: (id: string) => api.get(`/clients/${id}`).then((r) => r.data),
   create: (data: any) => api.post('/clients', data).then((r) => r.data),
   update: (id: string, data: any) => api.patch(`/clients/${id}`, data).then((r) => r.data),
@@ -120,7 +120,8 @@ export const clientsApi = {
 
 // ─── Quotes ───────────────────────────────────────────────────────────────────
 export const quotesApi = {
-  getAll: () => api.get('/quotes').then((r) => r.data),
+  getAll: (page = 1, limit = 10, search?: string) => 
+    api.get('/quotes', { params: { page, limit, search } }).then((r) => r.data),
   getOne: (id: string) => api.get(`/quotes/${id}`).then((r) => r.data),
   create: (data: any) => api.post('/quotes', data).then((r) => r.data),
   update: (id: string, data: any) => api.patch(`/quotes/${id}`, data).then((r) => r.data),
@@ -131,16 +132,16 @@ export const quotesApi = {
 
 // ─── Equipment ────────────────────────────────────────────────────────────────
 export const equipmentApi = {
-  getAll: (search?: string) =>
-    api.get('/equipment', { params: search ? { search } : {} }).then((r) => r.data),
+  getAll: (page = 1, limit = 10, search?: string) =>
+    api.get('/equipment', { params: { page, limit, search } }).then((r) => r.data),
   getOne: (id: string) => api.get(`/equipment/${id}`).then((r) => r.data),
   create: (data: any) => api.post('/equipment', data).then((r) => r.data),
   update: (id: string, data: any) => api.patch(`/equipment/${id}`, data).then((r) => r.data),
 };
 
 export const workOrdersApi = {
-  getAll: (status?: string) =>
-    api.get('/work-orders', { params: status ? { status } : {} }).then((r) => r.data),
+  getAll: (page = 1, limit = 10, search?: string) =>
+    api.get('/work-orders', { params: { page, limit, search } }).then((r) => r.data),
   getOne: (id: string) => api.get(`/work-orders/${id}`).then((r) => r.data),
   getItemHistory: (itemId: string) => api.get(`/work-orders/items/${itemId}/history`).then((r) => r.data),
   getItemStickerData: (itemId: string) => api.get(`/work-orders/items/${itemId}/sticker`).then((r) => r.data),
@@ -161,7 +162,8 @@ export const settingsApi = {
 };
 
 export const requisitionsApi = {
-  getAll: () => api.get('/requisitions').then((r) => r.data),
+  getAll: (page = 1, limit = 10, search?: string) => 
+    api.get('/requisitions', { params: { page, limit, search } }).then((r) => r.data),
   getById: (id: string) => api.get(`/requisitions/${id}`).then((r) => r.data),
   create: (data: any) => api.post('/requisitions', data).then((r) => r.data),
   update: (id: string, data: any) => api.patch(`/requisitions/${id}`, data).then((r) => r.data),

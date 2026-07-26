@@ -10,6 +10,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @ApiTags('Cotizaciones')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -40,8 +41,8 @@ export class QuotesController {
 
   @Get()
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
-  findAll() {
-    return this.quotesService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.quotesService.findAll(paginationDto);
   }
 
   @Get(':id')
@@ -63,7 +64,7 @@ export class QuotesController {
   }
 
   @Get(':id/pdf')
-  @Roles('ADMIN', 'COMERCIAL')
+  // @Roles('ADMIN', 'COMERCIAL')
   @ApiOperation({ summary: 'Generar PDF comercial de la cotización' })
   @ApiResponse({ status: 200, description: 'PDF generado correctamente.' })
   async downloadPdf(@Param('id') id: string, @Res() res: Response) {

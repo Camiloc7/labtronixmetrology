@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { Plus, MagnifyingGlass, Wrench, Tag, Hash } from '@phosphor-icons/react';
 import { equipmentApi, excelApi } from '@/lib/api';
 import { ImportExportActions } from '@/components/ImportExportActions';
+import { Pagination } from '@/components/ui/Pagination';
 import { formatDate, formatDateTime } from '@/lib/utils/formatters';
 import type { Equipment } from '@/lib/types';
 
@@ -14,13 +15,20 @@ export default function EquipmentPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [lastPage, setLastPage] = useState(1);
+
   const fetchData = useCallback(async () => {
     try {
-      const data = await equipmentApi.getAll(search || undefined);
+      const { data, meta } = await equipmentApi.getAll(page, limit, search || undefined);
       setEquipment(data);
+      setTotal(meta.total);
+      setLastPage(meta.lastPage);
     } catch { toast.error('Error al cargar equipos'); }
     finally { setLoading(false); }
-  }, [search]);
+  }, [page, limit, search]);
 
   useEffect(() => {
     const t = setTimeout(fetchData, 300);
@@ -73,7 +81,10 @@ export default function EquipmentPage() {
           type="text"
           placeholder="Buscar por marca, modelo, código..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
         />
       </div>
 
@@ -136,6 +147,17 @@ export default function EquipmentPage() {
               </AnimatePresence>
             </tbody>
           </table>
+          <Pagination
+            page={page}
+            limit={limit}
+            total={total}
+            lastPage={lastPage}
+            onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
+          />
         </div>
       )}
     </div>

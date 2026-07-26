@@ -1,28 +1,38 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Plus, MagnifyingGlass, FilePdf, FileXls } from '@phosphor-icons/react';
 import { requisitionsApi } from '@/lib/api';
 import { Requisition } from '@/lib/types';
 import toast from 'react-hot-toast';
+import { Pagination } from '@/components/ui/Pagination';
 
 export default function RequisitionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    requisitionsApi.getAll()
-      .then(setRequisitions)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [lastPage, setLastPage] = useState(1);
+
+  const fetchData = useCallback(() => {
+    setIsLoading(true);
+    requisitionsApi.getAll(page, limit, searchTerm || undefined)
+      .then((res) => {
+        setRequisitions(res.data);
+        setTotal(res.meta.total);
+        setLastPage(res.meta.lastPage);
+      })
       .catch(() => toast.error('Error al cargar requisiciones'))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [page, limit, searchTerm]);
 
-  const filtered = requisitions.filter((r: Requisition) =>
-    r.consecutiveNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.activity.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.certificateToName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    const t = setTimeout(fetchData, 300);
+    return () => clearTimeout(t);
+  }, [fetchData]);
 
   const handleDownloadPdf = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -55,7 +65,10 @@ export default function RequisitionsPage() {
             className="input search-input"
             placeholder="Buscar por consecutivo, actividad o cliente..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
           />
         </div>
 
@@ -76,12 +89,12 @@ export default function RequisitionsPage() {
                 <tr>
                   <td colSpan={6} className="text-center py-8 text-muted">Cargando requisiciones...</td>
                 </tr>
-              ) : filtered.length === 0 ? (
+              ) : requisitions.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-8 text-muted">No se encontraron requisiciones.</td>
                 </tr>
               ) : (
-                filtered.map((req: Requisition) => (
+                requisitions.map((req: Requisition) => (
                   <tr key={req.id}>
                     <td className="font-medium">
                       <Link href={`/requisitions/${req.id}`} className="text-brand hover:underline">
@@ -115,6 +128,17 @@ export default function RequisitionsPage() {
               )}
             </tbody>
           </table>
+          <Pagination
+            page={page}
+            limit={limit}
+            total={total}
+            lastPage={lastPage}
+            onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
+          />
         </div>
       </div>
     </div>

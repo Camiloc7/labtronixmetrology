@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { Response } from 'express';
@@ -12,9 +12,12 @@ import { ExcelService } from '../common/excel/excel.service';
 import { SettingsService } from '../settings/settings.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
+import { ILike } from 'typeorm';
 
 @Injectable()
-export class QuotesService {
+export class QuotesService implements OnModuleInit {
   constructor(
     @InjectRepository(Quote)
     private readonly quotesRepo: Repository<Quote>,
@@ -26,24 +29,65 @@ export class QuotesService {
     private readonly settingsService: SettingsService,
   ) {}
 
-  private async generateQuoteNumber(): Promise<string> {
-    const year = new Date().getFullYear();
-    const count = await this.quotesRepo.count();
-    return `COT-${year}-${String(count + 1).padStart(4, '0')}`;
+  async onModuleInit() {
+    await this.quotesRepo.query(`CREATE SEQUENCE IF NOT EXISTS quote_number_seq START 1`);
+    const [lastQuote] = await this.quotesRepo.find({ order: { createdAt: 'DESC' }, take: 1 });
+    if (lastQuote && lastQuote.quoteNumber) {
+      const parts = lastQuote.quoteNumber.split('-');
+      if (parts.length === 3) {
+        const lastNum = parseInt(parts[2], 10);
+        if (!isNaN(lastNum)) {
+          await this.quotesRepo.query(`SELECT setval('quote_number_seq', $1, true)`, [lastNum]);
+        }
+      }
+    }
   }
 
-  async findAll(): Promise<Quote[]> {
-    return this.quotesRepo.find({ order: { createdAt: 'DESC' } });
+  private async generateQuoteNumber(): Promise<string> {
+    const year = new Date().getFullYear();
+    const result = await this.quotesRepo.query(`SELECT nextval('quote_number_seq')`);
+    const nextNumber = result[0].nextval;
+    return `COT-${year}-${String(nextNumber).padStart(4, '0')}`;
+  }
+
+  async findAll(paginationDto: PaginationDto): Promise<PaginatedResult<Quote>> {
+    const { page = 1, limit = 10, search } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const where = search
+      ? [
+          { quoteNumber: ILike(`%${search}%`) },
+        ]
+      : {};
+
+    const [data, total] = await this.quotesRepo.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip,
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+        limit,
+      },
+    };
   }
 
   async findOne(id: string): Promise<Quote> {
-    const quote = await this.quotesRepo.findOne({ where: { id } });
+    const quote = await this.quotesRepo.findOne({
+      where: { id },
+      relations: { items: true, client: true, createdBy: true },
+    });
     if (!quote) throw new NotFoundException(`Cotización ${id} no encontrada`);
     return quote;
   }
 
   async create(dto: CreateQuoteDto, userId: string): Promise<Quote> {
-    const quoteNumber = await this.generateQuoteNumber();
     const items = dto.items.map((item) => {
       const qi = new QuoteItem();
       qi.description = item.description;
@@ -64,17 +108,31 @@ export class QuotesService {
     });
     const totalValue = items.reduce((sum, i) => sum + Number(i.subtotal), 0);
 
-    const quote = this.quotesRepo.create({
-      quoteNumber,
-      clientId: dto.clientId,
-      createdById: userId,
-      status: dto.status,
-      notes: dto.notes,
-      validUntil: dto.validUntil ? new Date(dto.validUntil) : undefined,
-      totalValue,
-      items,
-    });
-    return this.quotesRepo.save(quote);
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        const quoteNumber = await this.generateQuoteNumber();
+        const quote = this.quotesRepo.create({
+          quoteNumber,
+          clientId: dto.clientId,
+          createdById: userId,
+          status: dto.status,
+          notes: dto.notes,
+          validUntil: dto.validUntil ? new Date(dto.validUntil) : undefined,
+          totalValue,
+          items,
+        });
+        return await this.quotesRepo.save(quote);
+      } catch (error: any) {
+        if (error.code === '23505' && retries > 1) {
+          retries--;
+          await new Promise(resolve => setTimeout(resolve, Math.random() * 90 + 10));
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw new Error('Could not generate unique quoteNumber');
   }
 
   async update(id: string, dto: Partial<CreateQuoteDto>): Promise<Quote> {
@@ -108,10 +166,10 @@ export class QuotesService {
 
     const fonts = {
       Roboto: {
-        normal: 'node_modules/pdfmake/build/vfs_fonts.js',
-        bold: 'node_modules/pdfmake/build/vfs_fonts.js',
-        italics: 'node_modules/pdfmake/build/vfs_fonts.js',
-        bolditalics: 'node_modules/pdfmake/build/vfs_fonts.js',
+        normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
+        bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
+        italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
+        bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
       },
     };
 
@@ -420,10 +478,10 @@ export class QuotesService {
 
     const fonts = {
       Roboto: {
-        normal: 'node_modules/pdfmake/build/vfs_fonts.js',
-        bold: 'node_modules/pdfmake/build/vfs_fonts.js',
-        italics: 'node_modules/pdfmake/build/vfs_fonts.js',
-        bolditalics: 'node_modules/pdfmake/build/vfs_fonts.js',
+        normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
+        bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
+        italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
+        bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
       },
     };
 

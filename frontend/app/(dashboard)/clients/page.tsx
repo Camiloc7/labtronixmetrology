@@ -9,6 +9,7 @@ import {
 } from '@phosphor-icons/react';
 import { clientsApi, excelApi } from '@/lib/api';
 import { ImportExportActions } from '@/components/ImportExportActions';
+import { Pagination } from '@/components/ui/Pagination';
 import { formatDate } from '@/lib/utils/formatters';
 import type { Client } from '@/lib/types';
 
@@ -18,16 +19,23 @@ export default function ClientsPage() {
   const [search, setSearch] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [lastPage, setLastPage] = useState(1);
+
   const fetchClients = useCallback(async () => {
     try {
-      const data = await clientsApi.getAll(search || undefined);
+      const { data, meta } = await clientsApi.getAll(page, limit, search || undefined);
       setClients(data);
+      setTotal(meta.total);
+      setLastPage(meta.lastPage);
     } catch {
       toast.error('Error al cargar clientes');
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [page, limit, search]);
 
   useEffect(() => {
     const t = setTimeout(fetchClients, 300);
@@ -96,7 +104,10 @@ export default function ClientsPage() {
           type="text"
           placeholder="Buscar por nombre, NIT o contacto..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
         />
       </div>
 
@@ -116,90 +127,93 @@ export default function ClientsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid-3">
-          <AnimatePresence>
-            {clients.map((client, i) => (
-              <motion.div
-                key={client.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: i * 0.04 }}
-              >
-                <div className="card card--hoverable" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <Buildings size={18} color="var(--color-brand)" weight="duotone" />
-                        <h3 style={{ fontSize: '0.95rem', fontWeight: 700 }}>{client.companyName}</h3>
+        <div className="table-wrapper">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>NIT</th>
+                <th>Contacto</th>
+                <th>Ciudad</th>
+                <th>Estado</th>
+                <th style={{ textAlign: 'right' }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <AnimatePresence>
+                {clients.map((client) => (
+                  <motion.tr
+                    key={client.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Buildings size={16} color="var(--color-brand)" weight="duotone" />
+                        <span style={{ fontWeight: 600 }}>{client.companyName}</span>
                       </div>
-                      {client.nit && (
-                        <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                          NIT: {client.nit}
-                        </span>
-                      )}
-                    </div>
-                    <span className={`badge ${client.isActive ? 'badge--green' : 'badge--gray'}`}>
-                      {client.isActive ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {client.contactName && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                        <Phone size={14} /> {client.contactName}
+                    </td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85em' }}>
+                      {client.nit || '-'}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: '0.85em', color: 'var(--color-text-muted)' }}>
+                        {client.contactName && <div><Phone size={12} style={{ display: 'inline', marginRight: 4 }} /> {client.contactName}</div>}
+                        {client.email && <div><Envelope size={12} style={{ display: 'inline', marginRight: 4 }} /> {client.email}</div>}
                       </div>
-                    )}
-                    {client.email && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                        <Envelope size={14} /> {client.email}
+                    </td>
+                    <td>{client.city || '-'}</td>
+                    <td>
+                      <span className={`badge ${client.isActive ? 'badge--green' : 'badge--gray'}`}>
+                        {client.isActive ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                        <Link
+                          href={`/clients/${client.id}`}
+                          className="btn btn--ghost btn--sm"
+                          style={{ padding: '5px 10px' }}
+                          title="Ver detalle"
+                        >
+                          <Eye size={15} />
+                        </Link>
+                        <Link
+                          href={`/clients/${client.id}?edit=true`}
+                          className="btn btn--secondary btn--sm"
+                          style={{ padding: '5px 10px' }}
+                          title="Editar"
+                        >
+                          <PencilSimple size={15} />
+                        </Link>
+                        <button
+                          className="btn btn--danger btn--sm"
+                          style={{ padding: '5px 10px' }}
+                          title="Desactivar"
+                          onClick={() => handleDeactivate(client.id)}
+                          disabled={deletingId === client.id}
+                        >
+                          <Trash size={15} />
+                        </button>
                       </div>
-                    )}
-                    {client.city && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                        <MapPin size={14} /> {client.city}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="divider" style={{ margin: '4px 0' }} />
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--color-text-subtle)' }}>
-                      {formatDate(client.createdAt)}
-                    </span>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <Link
-                        href={`/clients/${client.id}`}
-                        className="btn btn--ghost btn--sm"
-                        style={{ padding: '5px 10px' }}
-                        title="Ver detalle"
-                      >
-                        <Eye size={15} />
-                      </Link>
-                      <Link
-                        href={`/clients/${client.id}?edit=true`}
-                        className="btn btn--secondary btn--sm"
-                        style={{ padding: '5px 10px' }}
-                        title="Editar"
-                      >
-                        <PencilSimple size={15} />
-                      </Link>
-                      <button
-                        className="btn btn--danger btn--sm"
-                        style={{ padding: '5px 10px' }}
-                        title="Desactivar"
-                        onClick={() => handleDeactivate(client.id)}
-                        disabled={deletingId === client.id}
-                      >
-                        <Trash size={15} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                    </td>
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
+            </tbody>
+          </table>
+          <Pagination
+            page={page}
+            limit={limit}
+            total={total}
+            lastPage={lastPage}
+            onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
+          />
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -7,15 +7,33 @@ import { Plus, FileText, FilePdf, Eye } from '@phosphor-icons/react';
 import { quotesApi, excelApi } from '@/lib/api';
 import { ImportExportActions } from '@/components/ImportExportActions';
 import { formatDate, formatCOP, QUOTE_STATUS_LABELS, getQuoteStatusBadge } from '@/lib/utils/formatters';
+import { Pagination } from '@/components/ui/Pagination';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import type { Quote } from '@/lib/types';
 
 export default function QuotesPage() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [lastPage, setLastPage] = useState(1);
+  const [search, setSearch] = useState('');
+
+  const fetchQuotes = useCallback(() => {
+    setLoading(true);
+    quotesApi.getAll(page, limit, search || undefined).then((res) => {
+      setQuotes(res.data);
+      setTotal(res.meta.total);
+      setLastPage(res.meta.lastPage);
+    }).catch(() => toast.error('Error al cargar cotizaciones')).finally(() => setLoading(false));
+  }, [page, limit, search]);
+
   useEffect(() => {
-    quotesApi.getAll().then(setQuotes).catch(() => toast.error('Error al cargar cotizaciones')).finally(() => setLoading(false));
-  }, []);
+    const t = setTimeout(fetchQuotes, 300);
+    return () => clearTimeout(t);
+  }, [fetchQuotes]);
 
   const handleExport = async () => {
     await excelApi.downloadExcel('/quotes/export', 'cotizaciones.xlsx');
@@ -26,8 +44,8 @@ export default function QuotesPage() {
   };
 
   const reloadData = () => {
-    setLoading(true);
-    quotesApi.getAll().then(setQuotes).catch(() => toast.error('Error al cargar cotizaciones')).finally(() => setLoading(false));
+    setPage(1);
+    fetchQuotes();
   };
 
   const QUOTES_COLUMNS = [
@@ -56,6 +74,19 @@ export default function QuotesPage() {
             <Plus size={18} weight="bold" /> Nueva Cotización
           </Link>
         </div>
+      </div>
+
+      <div className="search-bar" style={{ marginBottom: 24, maxWidth: 380 }}>
+        <MagnifyingGlass size={18} color="var(--color-text-muted)" />
+        <input
+          type="text"
+          placeholder="Buscar por número de cotización..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+        />
       </div>
 
       {loading ? (
@@ -120,6 +151,17 @@ export default function QuotesPage() {
               </AnimatePresence>
             </tbody>
           </table>
+          <Pagination
+            page={page}
+            limit={limit}
+            total={total}
+            lastPage={lastPage}
+            onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
+          />
         </div>
       )}
     </div>
