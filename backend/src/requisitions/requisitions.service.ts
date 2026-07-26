@@ -11,14 +11,14 @@ import * as exceljs from 'exceljs';
 import * as path from 'path';
 import * as fs from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const PdfPrinter = require('pdfmake/js/Printer.js').default;
+const PdfPrinter = require('pdfmake');
 
 const fonts = {
-  Roboto: {
-    normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
-    bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
-    italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
-    bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
+  Helvetica: {
+    normal: 'Helvetica',
+    bold: 'Helvetica-Bold',
+    italics: 'Helvetica-Oblique',
+    bolditalics: 'Helvetica-BoldOblique',
   },
 };
 const printer = new PdfPrinter(fonts);
@@ -87,11 +87,11 @@ export class RequisitionsService {
   async generatePdf(id: string): Promise<Buffer> {
     const requisition = await this.findOne(id);
     const fonts = {
-      Roboto: {
-        normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
-        bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
-        italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
-        bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
+      Helvetica: {
+        normal: 'Helvetica',
+        bold: 'Helvetica-Bold',
+        italics: 'Helvetica-Oblique',
+        bolditalics: 'Helvetica-BoldOblique',
       },
     };
     
@@ -113,7 +113,7 @@ export class RequisitionsService {
       pageSize: 'A4',
       pageOrientation: 'portrait',
       pageMargins: [30, 30, 30, 30],
-      defaultStyle: { font: 'Roboto', fontSize: 9 },
+      defaultStyle: { font: 'Helvetica', fontSize: 9 },
       content: [
         {
           table: {

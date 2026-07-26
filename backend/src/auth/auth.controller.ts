@@ -4,6 +4,7 @@ import {
 import type { Response, Request } from 'express';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import ms from 'ms';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -21,13 +22,13 @@ export class AuthController {
   private setCookies(res: Response, accessToken: string, refreshToken: string) {
     const isProd = process.env.NODE_ENV === 'production';
     
-    // Access Token: 15 minutes by default or matching JWT_EXPIRES_IN (e.g., 8h)
-    const accessExpiresIn = this.configService.get<string>('JWT_EXPIRES_IN', '8h');
-    const accessMaxAge = accessExpiresIn.endsWith('h') ? parseInt(accessExpiresIn) * 60 * 60 * 1000 : 8 * 60 * 60 * 1000;
+    // Access Token: 15 minutes by default or matching JWT_EXPIRES_IN (e.g., 15m)
+    const accessExpiresIn = this.configService.get<string>('JWT_EXPIRES_IN', '15m');
+    const accessMaxAge = (ms(accessExpiresIn as any) as unknown as number) || 15 * 60 * 1000;
 
     // Refresh Token: 7 days by default
     const refreshExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d');
-    const refreshMaxAge = refreshExpiresIn.endsWith('d') ? parseInt(refreshExpiresIn) * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
+    const refreshMaxAge = (ms(refreshExpiresIn as any) as unknown as number) || 7 * 24 * 60 * 60 * 1000;
 
     res.cookie('jwt', accessToken, {
       httpOnly: true,

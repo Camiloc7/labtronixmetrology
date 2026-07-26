@@ -13,6 +13,9 @@ import { ExcelModule } from './common/excel/excel.module';
 import { ImportModule } from './import/import.module';
 import { SettingsModule } from './settings/settings.module';
 import { RequisitionsModule } from './requisitions/requisitions.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -29,8 +32,12 @@ import { RequisitionsModule } from './requisitions/requisitions.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: config.get('NODE_ENV') !== 'production',
         logging: config.get('NODE_ENV') === 'development',
+        extra: {
+          timezone: 'America/Bogota', // Asegurar horario de Colombia en la DB
+        },
       }),
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     ClientsModule,
@@ -43,6 +50,7 @@ import { RequisitionsModule } from './requisitions/requisitions.module';
     ImportModule,
     SettingsModule,
     RequisitionsModule,
+    DashboardModule,
   ],
 })
 export class AppModule {}

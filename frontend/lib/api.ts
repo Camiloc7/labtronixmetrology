@@ -184,8 +184,23 @@ export const emailRequestsApi = {
 
 // ─── Activity Logs ────────────────────────────────────────────────────────────
 export const activityLogsApi = {
-  getAll: (limit?: number) =>
-    api.get('/activity-logs', { params: { limit } }).then((r) => r.data),
+  getAll: (limit: number = 100) => api.get(`/activity-logs?limit=${limit}`).then(res => res.data),
+};
+
+export const dashboardApi = {
+  getKpis: () => api.get('/dashboard/kpis').then(res => res.data),
+  getQuotesByStatus: () => api.get('/dashboard/quotes-by-status').then(res => res.data),
+  getRevenueTimeline: (period: string) => api.get(`/dashboard/revenue?period=${period}`).then(res => res.data),
+  getAdvancedMetrics: () => api.get('/dashboard/advanced-metrics').then(res => res.data),
+  getAlerts: () => api.get('/dashboard/alerts').then(res => res.data),
+  exportDashboard: () => api.get('/dashboard/export', { responseType: 'blob' }).then(res => res.data),
+};
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export const notificationsApi = {
+  getRecent: () => api.get('/notifications').then(res => res.data),
+  markAsRead: (id: string) => api.patch(`/notifications/${id}/read`).then(res => res.data),
 };
 
 // ─── Excel Import/Export ──────────────────────────────────────────────────────

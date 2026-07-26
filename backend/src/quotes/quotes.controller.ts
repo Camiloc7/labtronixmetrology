@@ -59,15 +59,21 @@ export class QuotesController {
 
   @Patch(':id')
   @Roles('ADMIN', 'COMERCIAL')
-  update(@Param('id') id: string, @Body() dto: Partial<CreateQuoteDto>) {
-    return this.quotesService.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: Partial<CreateQuoteDto>, @CurrentUser('sub') userId: string) {
+    return this.quotesService.update(id, dto, userId);
+  }
+
+  @Get(':id/history')
+  @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
+  @ApiOperation({ summary: 'Obtener historial de cambios de la cotización' })
+  getHistory(@Param('id') id: string) {
+    return this.quotesService.getHistory(id);
   }
 
   @Get(':id/pdf')
-  // @Roles('ADMIN', 'COMERCIAL')
-  @ApiOperation({ summary: 'Generar PDF comercial de la cotización' })
-  @ApiResponse({ status: 200, description: 'PDF generado correctamente.' })
-  async downloadPdf(@Param('id') id: string, @Res() res: Response) {
+  @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
+  @ApiOperation({ summary: 'Generar PDF' })
+  async generatePdf(@Param('id') id: string, @Res() res: Response) {
     await this.quotesService.generatePdf(id, res);
   }
 

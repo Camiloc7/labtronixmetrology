@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const PdfPrinter = require('pdfmake/js/Printer.js').default;
+const PdfPrinter = require('pdfmake');
 import * as ExcelJS from 'exceljs';
 import { WorkOrder } from './entities/work-order.entity';
 import { WorkOrderItem, WorkOrderStatus } from './entities/work-order-item.entity';
@@ -18,11 +18,11 @@ import { PaginatedResult } from '../common/interfaces/paginated-result.interface
 import { ILike } from 'typeorm';
 
 const fonts = {
-  Roboto: {
-    normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
-    bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
-    italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
-    bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
+  Helvetica: {
+    normal: 'Helvetica',
+    bold: 'Helvetica-Bold',
+    italics: 'Helvetica-Oblique',
+    bolditalics: 'Helvetica-BoldOblique',
   },
 };
 
@@ -175,23 +175,13 @@ export class WorkOrdersService {
 
     const logoBase64 = await this.getLogoBase64();
 
-    // Use default fonts from pdfmake vfs
-    const PdfPrinter = require('pdfmake');
-    const fonts = {
-      Roboto: {
-        normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
-        bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
-        italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
-        bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
-      }
-    };
     const printer = new PdfPrinter(fonts);
 
     const docDefinition: any = {
       pageSize: 'A4',
       pageOrientation: 'portrait',
       pageMargins: [30, 30, 30, 30],
-      defaultStyle: { font: 'Roboto', fontSize: 9 },
+      defaultStyle: { font: 'Helvetica', fontSize: 9 },
       content: [
         {
           table: {

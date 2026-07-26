@@ -3,13 +3,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { Response } from 'express';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const PdfPrinter = require('pdfmake/js/Printer.js').default;
+const PdfPrinter = require('pdfmake');
 import { Quote, QuoteStatus } from './entities/quote.entity';
+import { QuoteHistory, QuoteHistoryAction } from './entities/quote-history.entity';
 import { QuoteItem } from './entities/quote-item.entity';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { Client } from '../clients/entities/client.entity';
 import { ExcelService } from '../common/excel/excel.service';
 import { SettingsService } from '../settings/settings.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -23,10 +26,13 @@ export class QuotesService implements OnModuleInit {
     private readonly quotesRepo: Repository<Quote>,
     @InjectRepository(QuoteItem)
     private readonly itemsRepo: Repository<QuoteItem>,
+    @InjectRepository(QuoteHistory)
+    private readonly historyRepo: Repository<QuoteHistory>,
     @InjectRepository(Client)
     private readonly clientsRepo: Repository<Client>,
     private readonly excelService: ExcelService,
     private readonly settingsService: SettingsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async onModuleInit() {
@@ -122,7 +128,20 @@ export class QuotesService implements OnModuleInit {
           totalValue,
           items,
         });
-        return await this.quotesRepo.save(quote);
+        
+        return await this.quotesRepo.manager.transaction(async (manager) => {
+          const savedQuote = await manager.save(quote);
+          
+          const history = manager.create(QuoteHistory, {
+            quoteId: savedQuote.id,
+            userId,
+            action: QuoteHistoryAction.CREATED,
+            changes: { initialTotal: totalValue, initialStatus: dto.status },
+          });
+          await manager.save(history);
+          
+          return savedQuote;
+        });
       } catch (error: any) {
         if (error.code === '23505' && retries > 1) {
           retries--;
@@ -135,24 +154,94 @@ export class QuotesService implements OnModuleInit {
     throw new Error('Could not generate unique quoteNumber');
   }
 
-  async update(id: string, dto: Partial<CreateQuoteDto>): Promise<Quote> {
+  async update(id: string, dto: Partial<CreateQuoteDto>, userId?: string): Promise<Quote> {
     const quote = await this.findOne(id);
+    
+    if (quote.status === QuoteStatus.APROBADA || quote.status === QuoteStatus.RECHAZADA) {
+      throw new Error('No se puede editar una cotización aprobada o rechazada.');
+    }
+
+    const changes: any = {};
+    if (dto.status && dto.status !== quote.status) changes.status = { old: quote.status, new: dto.status };
+    if (dto.notes !== undefined && dto.notes !== quote.notes) changes.notes = { old: quote.notes, new: dto.notes };
+    if (dto.validUntil) {
+      const newValid = new Date(dto.validUntil).toISOString().split('T')[0];
+      const oldValid = quote.validUntil ? new Date(quote.validUntil).toISOString().split('T')[0] : null;
+      if (newValid !== oldValid) changes.validUntil = { old: oldValid, new: newValid };
+    }
+
+    let newItems: QuoteItem[] = [];
     if (dto.items) {
-      await this.itemsRepo.delete({ quoteId: id });
-      const newItems = dto.items.map((item) => {
+      changes.items = { old: quote.items.length, new: dto.items.length };
+      newItems = dto.items.map((item) => {
         const qi = new QuoteItem();
         qi.description = item.description;
         qi.quantity = item.quantity;
         qi.unitPrice = item.unitPrice;
         qi.subtotal = item.quantity * item.unitPrice;
+        qi.serviceType = item.serviceType || '';
+        qi.equipmentName = item.equipmentName || '';
+        qi.measuringRange = item.measuringRange || '';
+        qi.scaleDivision = item.scaleDivision || '';
+        qi.brand = item.brand || '';
+        qi.model = item.model || '';
+        qi.serialNumber = item.serialNumber || '';
+        qi.internalCode = item.internalCode || '';
+        qi.location = item.location || '';
+        qi.calibrationPoints = item.calibrationPoints || '';
         qi.quoteId = id;
         return qi;
       });
-      await this.itemsRepo.save(newItems);
       const totalValue = newItems.reduce((s, i) => s + Number(i.subtotal), 0);
-      quote.totalValue = totalValue;
+      if (totalValue !== Number(quote.totalValue)) {
+        changes.totalValue = { old: Number(quote.totalValue), new: totalValue };
+      }
     }
-    return this.quotesRepo.save({ ...quote, ...dto, items: undefined });
+
+    if (Object.keys(changes).length === 0) return quote; // Nothing changed
+
+    return await this.quotesRepo.manager.transaction(async (manager) => {
+      if (dto.items) {
+        await manager.delete(QuoteItem, { quoteId: id });
+        await manager.save(QuoteItem, newItems);
+      }
+      
+      const updatedQuote = await manager.save(Quote, { 
+        ...quote, 
+        ...dto, 
+        totalValue: newItems.length > 0 ? newItems.reduce((s, i) => s + Number(i.subtotal), 0) : quote.totalValue,
+        items: undefined 
+      }) as Quote;
+
+      if (dto.status === QuoteStatus.APROBADA) {
+        await this.notificationsService.create({
+          type: NotificationType.QUOTE_APPROVED,
+          title: 'Cotización Aprobada',
+          message: `La cotización ${updatedQuote.quoteNumber} de ${updatedQuote.client?.companyName || 'cliente'} por ${updatedQuote.totalValue} ha sido aprobada.`,
+          referenceId: updatedQuote.id,
+        });
+      }
+
+      if (userId) {
+        const action = changes.status ? QuoteHistoryAction.STATUS_CHANGED : QuoteHistoryAction.UPDATED;
+        const history = manager.create(QuoteHistory, {
+          quoteId: id,
+          userId,
+          action,
+          changes,
+        });
+        await manager.save(history);
+      }
+
+      return updatedQuote;
+    });
+  }
+
+  async getHistory(id: string): Promise<QuoteHistory[]> {
+    return this.historyRepo.find({
+      where: { quoteId: id },
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async generatePdf(id: string, res: Response): Promise<void> {
@@ -165,14 +254,13 @@ export class QuotesService implements OnModuleInit {
     const companyCity = await this.settingsService.getValue('company_city', 'Bogotá D.C.');
 
     const fonts = {
-      Roboto: {
-        normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
-        bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
-        italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
-        bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
+      Helvetica: {
+        normal: 'Helvetica',
+        bold: 'Helvetica-Bold',
+        italics: 'Helvetica-Oblique',
+        bolditalics: 'Helvetica-BoldOblique',
       },
     };
-
     const printer = new PdfPrinter(fonts);
     
     // Attempt to load logo from frontend/public
@@ -189,7 +277,7 @@ export class QuotesService implements OnModuleInit {
     const docDefinition: any = {
       pageSize: 'A4',
       pageMargins: [30, 30, 30, 30],
-      defaultStyle: { font: 'Roboto', fontSize: 8 },
+      defaultStyle: { font: 'Helvetica', fontSize: 8 },
       content: [
         // TOP HEADER
         {
@@ -477,11 +565,11 @@ export class QuotesService implements OnModuleInit {
     const companyCity = await this.settingsService.getValue('company_city', 'Bogotá D.C.');
 
     const fonts = {
-      Roboto: {
-        normal: 'node_modules/pdfmake/fonts/Roboto/Roboto-Regular.ttf',
-        bold: 'node_modules/pdfmake/fonts/Roboto/Roboto-Medium.ttf',
-        italics: 'node_modules/pdfmake/fonts/Roboto/Roboto-Italic.ttf',
-        bolditalics: 'node_modules/pdfmake/fonts/Roboto/Roboto-MediumItalic.ttf',
+      Helvetica: {
+        normal: 'Helvetica',
+        bold: 'Helvetica-Bold',
+        italics: 'Helvetica-Oblique',
+        bolditalics: 'Helvetica-BoldOblique',
       },
     };
 
@@ -501,7 +589,7 @@ export class QuotesService implements OnModuleInit {
       pageSize: 'A4',
       pageOrientation: 'landscape', // Wide format
       pageMargins: [20, 20, 20, 20],
-      defaultStyle: { font: 'Roboto', fontSize: 6 },
+      defaultStyle: { font: 'Helvetica', fontSize: 6 },
       content: [
         {
           table: {
