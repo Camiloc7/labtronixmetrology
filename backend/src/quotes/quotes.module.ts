@@ -4,12 +4,13 @@ import { QuotesService } from './quotes.service';
 import { QuotesController } from './quotes.controller';
 import { Quote } from './entities/quote.entity';
 import { QuoteItem } from './entities/quote-item.entity';
+import { ServiceTracking } from './entities/service-tracking.entity';
 import { Client } from '../clients/entities/client.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ExcelModule } from '../common/excel/excel.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Quote, QuoteItem, Client]), JwtModule, ExcelModule],
+  imports: [TypeOrmModule.forFeature([Quote, QuoteItem, ServiceTracking, Client]), JwtModule, ExcelModule],
   providers: [QuotesService],
   controllers: [QuotesController],
   exports: [QuotesService],

@@ -1,10 +1,11 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany,
+  Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, OneToOne,
   JoinColumn, CreateDateColumn, UpdateDateColumn,
 } from 'typeorm';
 import { Client } from '../../clients/entities/client.entity';
 import { User } from '../../users/entities/user.entity';
 import { QuoteItem } from './quote-item.entity';
+import { ServiceTracking } from './service-tracking.entity';
 
 export enum QuoteStatus {
   BORRADOR = 'BORRADOR',
@@ -28,11 +29,11 @@ export class Quote {
   @Column({ name: 'client_id' })
   clientId: string;
 
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => User, { eager: true, nullable: true })
   @JoinColumn({ name: 'created_by' })
   createdBy: User;
 
-  @Column({ name: 'created_by' })
+  @Column({ name: 'created_by', nullable: true })
   createdById: string;
 
   @Column({ type: 'enum', enum: QuoteStatus, default: QuoteStatus.BORRADOR })
@@ -52,6 +53,9 @@ export class Quote {
 
   @OneToMany(() => QuoteItem, (item) => item.quote, { cascade: true, eager: true })
   items: QuoteItem[];
+
+  @OneToOne(() => ServiceTracking, (tracking) => tracking.quote, { cascade: true, eager: true })
+  serviceTracking: ServiceTracking;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

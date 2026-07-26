@@ -17,6 +17,7 @@ import {
   ChartBar,
   CaretLeft,
   CaretRight,
+  UploadSimple,
 } from '@phosphor-icons/react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { getInitials } from '@/lib/utils/formatters';
@@ -37,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Solicitudes Email', href: '/email-requests',  icon: <EnvelopeOpen size={20} weight="duotone" />, roles: ['ADMIN', 'COMERCIAL'] },
   { label: 'Usuarios',          href: '/users',           icon: <Users size={20} weight="duotone" />, roles: ['ADMIN'] },
   { label: 'Administración',    href: '/admin',           icon: <Gear size={20} weight="duotone" />, roles: ['ADMIN'] },
+  { label: 'Importar Datos',    href: '/admin/import',    icon: <UploadSimple size={20} weight="duotone" />, roles: ['ADMIN'] },
 ];
 
 interface SidebarProps {
