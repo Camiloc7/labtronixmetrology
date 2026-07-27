@@ -91,10 +91,11 @@ export class AuthService {
       throw new UnauthorizedException('Acceso denegado');
     }
 
-    const tokens = await this.getTokens(user.id, user.email, user.role, user.name);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
+    const payload = { sub: user.id, email: user.email, role: user.role, name: user.name };
+    const accessToken = await this.jwtService.signAsync(payload);
 
-    return tokens;
+    // We don't rotate the refresh token to prevent race conditions across multiple tabs
+    return { accessToken, refreshToken };
   }
 
   async validateOAuthLogin(email: string, name: string, googleId: string) {

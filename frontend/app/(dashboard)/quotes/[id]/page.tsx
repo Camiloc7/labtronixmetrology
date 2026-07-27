@@ -4,10 +4,12 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { ArrowLeft, FilePdf, DownloadSimple } from '@phosphor-icons/react';
-import { quotesApi } from '@/lib/api';
+import { ArrowLeft, FilePdf, DownloadSimple, ArrowsMerge } from '@phosphor-icons/react';
+import { quotesApi, equipmentApi } from '@/lib/api';
 import { formatDate, formatCOP, QUOTE_STATUS_LABELS, getQuoteStatusBadge } from '@/lib/utils/formatters';
 import type { Quote } from '@/lib/types';
+import QuoteTrackingPanel from '@/components/quotes/QuoteTrackingPanel';
+import QuoteReceptionsPanel from '@/components/quotes/QuoteReceptionsPanel';
 
 const STATUS_OPTIONS = ['BORRADOR', 'ENVIADA', 'APROBADA', 'RECHAZADA'] as const;
 
@@ -31,11 +33,30 @@ export default function QuoteDetailPage() {
     finally { setUpdatingStatus(false); }
   };
 
+  const handleSyncEquipments = async () => {
+    if (!id) return;
+    try {
+      await toast.promise(
+        equipmentApi.syncFromQuote(id as string),
+        {
+          loading: 'Sincronizando equipos...',
+          success: (res: any) => {
+            if (res.created > 0) return `Se registraron ${res.created} nuevos equipos en el inventario.`;
+            return 'Todos los equipos ya están en el inventario.';
+          },
+          error: 'Error al sincronizar equipos',
+        }
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}><div className="spinner spinner--lg" /></div>;
   if (!quote) return null;
 
   return (
-    <div>
+    <div className="page-container fade-in">
       <div className="page-header">
         <div>
           <Link href="/quotes" className="btn btn--ghost btn--sm" style={{ marginBottom: 12, display: 'inline-flex' }}>
@@ -81,7 +102,7 @@ export default function QuoteDetailPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 900 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         {/* Info */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card">
           <div className="grid-2">
@@ -120,9 +141,24 @@ export default function QuoteDetailPage() {
           </div>
         </motion.div>
 
+        {/* Panel de Trazabilidad */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          <QuoteTrackingPanel quoteId={id as string} />
+        </motion.div>
+
+        {/* Panel de Recepciones de Equipos */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.09 }}>
+          <QuoteReceptionsPanel quoteId={id as string} />
+        </motion.div>
+
         {/* Ítems */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card">
-          <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 20 }}>Ítems de Cotización</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Ítems de Cotización</h2>
+            <button type="button" onClick={handleSyncEquipments} className="btn btn--secondary btn--sm">
+              <ArrowsMerge size={16} weight="bold" /> Sincronizar al Inventario
+            </button>
+          </div>
           <div className="table-wrapper" style={{ border: 'none', overflowX: 'auto' }}>
             <table className="table" style={{ minWidth: 1200 }}>
               <thead>

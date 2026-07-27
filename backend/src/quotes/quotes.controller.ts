@@ -6,6 +6,7 @@ import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { QuotesService } from './quotes.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
+import { UpdateServiceTrackingDto } from './dto/update-service-tracking.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -68,6 +69,20 @@ export class QuotesController {
   @ApiOperation({ summary: 'Obtener historial de cambios de la cotización' })
   getHistory(@Param('id') id: string) {
     return this.quotesService.getHistory(id);
+  }
+
+  @Get(':id/tracking')
+  @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
+  @ApiOperation({ summary: 'Obtener trazabilidad de la cotización' })
+  getTracking(@Param('id') id: string) {
+    return this.quotesService.getTracking(id);
+  }
+
+  @Patch(':id/tracking')
+  @Roles('ADMIN', 'COMERCIAL')
+  @ApiOperation({ summary: 'Actualizar trazabilidad de la cotización' })
+  updateTracking(@Param('id') id: string, @Body() dto: UpdateServiceTrackingDto) {
+    return this.quotesService.updateTracking(id, dto);
   }
 
   @Get(':id/pdf')

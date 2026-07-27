@@ -44,8 +44,23 @@ export class ImportService {
 
     // 1. Process "Clientes"
     const sheetClientes = workbook.getWorksheet('Clientes');
+    
+    // In-memory cache for speed
+    const dbClients = await this.clientRepo.find();
+    const clientByNit = new Map<string, Client>();
+    const clientByName = new Map<string, Client>();
+    const clientByCod = new Map<string, Client>();
+    
+    for (const c of dbClients) {
+      if (c.nit) clientByNit.set(c.nit, c);
+      if (c.companyName) clientByName.set(c.companyName, c);
+      if (c.codCliente) clientByCod.set(c.codCliente, c);
+    }
+
     if (sheetClientes) {
       const rows = this.extractData(sheetClientes);
+      
+      const newClientsToSave: Client[] = [];
       for (const row of rows) {
         try {
           const codCliente = row['COD_CLIENTE'] || row['COD_CLIENTE_2'];
@@ -55,14 +70,14 @@ export class ImportService {
           let client: Client | null = null;
           const normalizedNit = normalizeNit(row['NIT']);
           
-          if (normalizedNit) {
-            client = await this.clientRepo.findOne({ where: { nit: normalizedNit } });
+          if (normalizedNit && clientByNit.has(normalizedNit)) {
+            client = clientByNit.get(normalizedNit)!;
           }
-          if (!client && codCliente) {
-             client = await this.clientRepo.findOne({ where: { codCliente } });
+          if (!client && codCliente && clientByCod.has(codCliente)) {
+             client = clientByCod.get(codCliente)!;
           }
-          if (!client && companyName) {
-             client = await this.clientRepo.findOne({ where: { companyName } });
+          if (!client && companyName && clientByName.has(companyName)) {
+             client = clientByName.get(companyName)!;
           }
 
           if (!client) {
@@ -73,7 +88,7 @@ export class ImportService {
           client.companyName = companyName;
           client.nit = normalizedNit as string;
           client.address = row['DIRECCION'];
-          client.city = row['CUIDAD']; // Note the typo in excel header 'CUIDAD'
+          client.city = row['CUIDAD'];
           
           client.contactoTecnico = row['CONTACTO_TEC'];
           client.emailTecnico = row['EMAIL_TEC'];
@@ -85,7 +100,13 @@ export class ImportService {
           
           client.notes = row['Observaciones'];
 
-          await this.clientRepo.save(client);
+          client = await this.clientRepo.save(client);
+          
+          // Update Cache
+          if (client.nit) clientByNit.set(client.nit, client);
+          if (client.companyName) clientByName.set(client.companyName, client);
+          if (client.codCliente) clientByCod.set(client.codCliente, client);
+
           result.clientesImportados++;
         } catch (e: any) {
           result.errores.push(`Error en cliente ${row['RAZON_SOCIAL']}: ${e.message}`);
@@ -97,23 +118,73 @@ export class ImportService {
 
     // 2. Process "Cotizaciones"
     const sheetCotizaciones = workbook.getWorksheet('Cotizaciones');
+    
+    // In-memory cache for Quotes and Tracking
+    const dbQuotes = await this.quoteRepo.find();
+    const quoteByNumber = new Map<string, Quote>();
+    for (const q of dbQuotes) {
+      quoteByNumber.set(q.quoteNumber, q);
+    }
+    
+    const dbTrackings = await this.trackingRepo.find();
+    const trackingByQuoteId = new Map<string, ServiceTracking>();
+    for (const t of dbTrackings) {
+      trackingByQuoteId.set(t.quoteId, t);
+    }
+
     if (sheetCotizaciones) {
       const rows = this.extractData(sheetCotizaciones);
       for (const row of rows) {
         try {
-          const quoteNumber = row['Cotizacion'] || row['ID Cotización'];
+          const rawQuoteNumber = row['Cotizacion'] || row['ID Cotización'];
+          const quoteNumber = rawQuoteNumber ? String(rawQuoteNumber).trim() : null;
           if (!quoteNumber) continue;
 
-          // Find client
-          const normalizedNit = normalizeNit(row['NIT']);
-          let client: Client | null = null;
-          if (normalizedNit) {
-            client = await this.clientRepo.findOne({ where: { nit: normalizedNit } });
+          const hasMoreData = Object.entries(row).some(([key, value]) => {
+            const k = key.trim();
+            if (k === 'Cotizacion' || k === 'ID Cotización') return false;
+            return value !== null && value !== '' && value !== undefined;
+          });
+
+          if (!hasMoreData) {
+            continue;
           }
 
-          let quote = await this.quoteRepo.findOne({ where: { quoteNumber } });
+          // Find client using cache
+          const normalizedNit = normalizeNit(row['NIT']);
+          const companyName = row['Cliente'] || row['NombreCliente'] || row['RAZON_SOCIAL'];
+          let client: Client | null = null;
+          
+          if (normalizedNit && clientByNit.has(normalizedNit)) {
+            client = clientByNit.get(normalizedNit)!;
+          }
+          if (!client && companyName && clientByName.has(companyName)) {
+            client = clientByName.get(companyName)!;
+          }
+          
+          let quote = quoteByNumber.get(quoteNumber);
           if (!quote) {
             quote = this.quoteRepo.create({ quoteNumber });
+          }
+
+          // Si el excel no trae cliente, pero la cotización ya existía con un cliente, lo usamos.
+          if (!client && quote.clientId) {
+            client = { id: quote.clientId } as Client;
+          }
+
+          // Create dummy client if not found to avoid null constraint
+          if (!client && (companyName || normalizedNit)) {
+            client = this.clientRepo.create({
+              companyName: companyName || 'Cliente Importado Sin Nombre',
+              nit: normalizedNit || 'PENDIENTE',
+            });
+            client = await this.clientRepo.save(client);
+            if (client.nit) clientByNit.set(client.nit, client);
+            if (client.companyName) clientByName.set(client.companyName, client);
+          }
+
+          if (!client) {
+            throw new Error('Falta información del cliente (NIT o Nombre) para vincular la cotización.');
           }
 
           if (client) {
@@ -127,9 +198,10 @@ export class ImportService {
           quote.notes = row['Observaciones'];
 
           quote = await this.quoteRepo.save(quote);
+          quoteByNumber.set(quoteNumber, quote); // Update cache
           
           // Service Tracking
-          let tracking = await this.trackingRepo.findOne({ where: { quoteId: quote.id } });
+          let tracking = trackingByQuoteId.get(quote.id);
           if (!tracking) {
             tracking = this.trackingRepo.create({ quoteId: quote.id });
           }
@@ -158,7 +230,9 @@ export class ImportService {
           tracking.fechaPago = this.parseDate(row['Fecha de Pago']) as any;
           tracking.comprobanteEgreso = row['Comprobante de Egreso'];
 
-          await this.trackingRepo.save(tracking);
+          tracking = await this.trackingRepo.save(tracking);
+          trackingByQuoteId.set(quote.id, tracking); // Update cache
+          
           result.cotizacionesImportadas++;
 
         } catch (e: any) {
@@ -168,28 +242,45 @@ export class ImportService {
     }
 
     // 3. Process "Recepción Equi"
-    const sheetRecepcion = workbook.getWorksheet('Recepción Equi');
+    let sheetRecepcion: ExcelJS.Worksheet | undefined;
+    workbook.eachSheet((sheet) => {
+      const name = sheet.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      if (name.includes('recepcion')) {
+        sheetRecepcion = sheet;
+      }
+    });
+    
+    // In-memory cache for Receptions
+    const dbReceptions = await this.receptionRepo.find();
+    const receptionByN = new Map<string, EquipmentReception>();
+    for (const r of dbReceptions) {
+      if (r.nRecepcion) receptionByN.set(r.nRecepcion, r);
+    }
+
     if (sheetRecepcion) {
       const rows = this.extractData(sheetRecepcion);
       for (const row of rows) {
         try {
-          const nRecepcion = row['N_Recepcion'];
-          const quoteNumber = row['Cotizacion'];
+          const rawNRecepcion = row['N_Recepcion'];
+          const nRecepcion = rawNRecepcion ? String(rawNRecepcion).trim() : null;
+          
+          const rawQuoteNumber = row['Cotizacion'];
+          const quoteNumber = rawQuoteNumber ? String(rawQuoteNumber).trim() : null;
           
           let quote: Quote | null = null;
           if (quoteNumber) {
-            quote = await this.quoteRepo.findOne({ where: { quoteNumber } });
+            quote = quoteByNumber.get(quoteNumber) || null;
           }
 
           let reception: EquipmentReception | null = null;
           if (nRecepcion) {
-             reception = await this.receptionRepo.findOne({ where: { nRecepcion } });
+             reception = receptionByN.get(nRecepcion) || null;
           }
           if (!reception) {
              reception = this.receptionRepo.create();
           }
 
-          reception.nRecepcion = nRecepcion;
+          reception.nRecepcion = nRecepcion as any;
           if (quote) {
              reception.quoteId = quote.id;
              reception.clientId = quote.clientId;
@@ -208,7 +299,9 @@ export class ImportService {
           reception.fechaEnvioCertificado = this.parseDate(row['Fecha de envio de Certificado']) as any;
           reception.noCertificado = row['No. Certificado'];
 
-          await this.receptionRepo.save(reception);
+          reception = await this.receptionRepo.save(reception);
+          if (nRecepcion) receptionByN.set(nRecepcion, reception); // Update cache
+          
           result.recepcionesImportadas++;
         } catch (e: any) {
            result.errores.push(`Error en recepción ${row['N_Recepcion']}: ${e.message}`);
@@ -225,7 +318,7 @@ export class ImportService {
 
     worksheet.eachRow((row, rowNumber) => {
       if (rowNumber === 1) {
-        headers = (row.values as any[]).slice(1).map((h) => String(h).trim());
+        headers = (row.values as any[]).slice(1).map((h) => String(h).replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim());
       } else {
         const rowData: any = {};
         const values = (row.values as any[]).slice(1);
@@ -237,6 +330,9 @@ export class ImportService {
             rowData[header] = val.text;
           } else if (val && typeof val === 'object' && 'hyperlink' in val) {
             rowData[header] = val.text || val.hyperlink;
+          } else if (val && typeof val === 'object' && !(val instanceof Date)) {
+            // Ignore unhandled objects like unresolved formulas
+            rowData[header] = null;
           } else {
             rowData[header] = val !== undefined ? val : null;
           }

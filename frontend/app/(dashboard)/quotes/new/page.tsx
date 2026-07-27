@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Plus, Trash, FloppyDisk } from '@phosphor-icons/react';
-import { quotesApi, clientsApi } from '@/lib/api';
+import { quotesApi } from '@/lib/api';
 import { formatCOP } from '@/lib/utils/formatters';
-import type { Client, CreateQuoteDto, CreateQuoteItemDto } from '@/lib/types';
+import type { CreateQuoteDto, CreateQuoteItemDto } from '@/lib/types';
+import ClientSelector from '@/components/ui/ClientSelector';
 
 const EMPTY_ITEM: CreateQuoteItemDto = { 
   description: '', 
@@ -28,15 +29,10 @@ const EMPTY_ITEM: CreateQuoteItemDto = {
 export default function NewQuotePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [clients, setClients] = useState<Client[]>([]);
   const [clientId, setClientId] = useState('');
   const [notes, setNotes] = useState('');
   const [validUntil, setValidUntil] = useState('');
   const [items, setItems] = useState<CreateQuoteItemDto[]>([{ ...EMPTY_ITEM }]);
-
-  useEffect(() => {
-    clientsApi.getAll().then(setClients).catch(() => toast.error('Error al cargar clientes'));
-  }, []);
 
   const updateItem = (index: number, field: keyof CreateQuoteItemDto, value: string | number) => {
     setItems((prev) => {
@@ -67,7 +63,7 @@ export default function NewQuotePage() {
   };
 
   return (
-    <div>
+    <div className="page-container fade-in">
       <div className="page-header">
         <div>
           <Link href="/quotes" className="btn btn--ghost btn--sm" style={{ marginBottom: 12, display: 'inline-flex' }}>
@@ -79,17 +75,14 @@ export default function NewQuotePage() {
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 900 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Info general */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card">
             <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 20 }}>Información General</h2>
             <div className="grid-2">
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label className="form-label">Cliente *</label>
-                <select className="form-input" value={clientId} onChange={(e) => setClientId(e.target.value)} required>
-                  <option value="">Seleccionar cliente...</option>
-                  {clients.map((c) => <option key={c.id} value={c.id}>{c.companyName}{c.nit ? ` (${c.nit})` : ''}</option>)}
-                </select>
+                <ClientSelector value={clientId} onChange={setClientId} required />
               </div>
               <div className="form-group">
                 <label className="form-label">Válida hasta</label>

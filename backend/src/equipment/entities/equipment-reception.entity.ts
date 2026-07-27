@@ -24,7 +24,7 @@ export class EquipmentReception {
   @Column({ name: 'client_id', nullable: true })
   clientId: string;
 
-  @Column({ name: 'n_recepcion', length: 150, nullable: true })
+  @Column({ name: 'n_recepcion', type: 'text', nullable: true })
   nRecepcion: string;
 
   @Column({ name: 'fecha_recepcion', type: 'date', nullable: true })
@@ -33,13 +33,13 @@ export class EquipmentReception {
   @Column({ type: 'int', default: 1 })
   cantidad: number;
 
-  @Column({ length: 200, nullable: true })
+  @Column({ type: 'text', nullable: true })
   magnitud: string;
 
-  @Column({ length: 200, nullable: true })
+  @Column({ type: 'text', nullable: true })
   acreditacion: string;
 
-  @Column({ name: 'lugar_calibracion', length: 255, nullable: true })
+  @Column({ name: 'lugar_calibracion', type: 'text', nullable: true })
   lugarCalibracion: string;
 
   @Column({ type: 'text', nullable: true })
@@ -48,10 +48,10 @@ export class EquipmentReception {
   @Column({ name: 'fecha_devolucion', type: 'date', nullable: true })
   fechaDevolucion: Date;
 
-  @Column({ name: 'consecutivo_entrega', length: 150, nullable: true })
+  @Column({ name: 'consecutivo_entrega', type: 'text', nullable: true })
   consecutivoEntrega: string;
 
-  @Column({ name: 'entregado_por', length: 255, nullable: true })
+  @Column({ name: 'entregado_por', type: 'text', nullable: true })
   entregadoPor: string;
 
   @Column({ name: 'fecha_calibracion', type: 'date', nullable: true })
@@ -60,7 +60,7 @@ export class EquipmentReception {
   @Column({ name: 'fecha_envio_certificado', type: 'date', nullable: true })
   fechaEnvioCertificado: Date;
 
-  @Column({ name: 'no_certificado', length: 150, nullable: true })
+  @Column({ name: 'no_certificado', type: 'text', nullable: true })
   noCertificado: string;
 
   @CreateDateColumn({ name: 'created_at' })

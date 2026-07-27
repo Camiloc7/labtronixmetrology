@@ -57,10 +57,10 @@ api.interceptors.response.use(
         await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
         processQueue(null);
         return api(originalRequest);
-      } catch (err) {
+      } catch (err: any) {
         processQueue(err, null);
-        // Falló el refresh token (expiro o invalido), forzar login
-        if (typeof window !== 'undefined') {
+        // Solo forzamos el login si el backend explícitamente rechaza el refresh (401)
+        if (err.response?.status === 401 && typeof window !== 'undefined') {
           const currentPath = window.location.pathname;
           if (currentPath !== '/login') {
             window.location.href = '/login';
@@ -128,6 +128,8 @@ export const quotesApi = {
   getPdfUrl: (id: string) => `${API_URL}/quotes/${id}/pdf`,
   getTechnicalPdfUrl: (id: string) => `${API_URL}/quotes/${id}/technical-pdf`,
   getTechnicalExcelUrl: (id: string) => `${API_URL}/quotes/${id}/technical-excel`,
+  getTracking: (id: string) => api.get(`/quotes/${id}/tracking`).then(res => res.data),
+  updateTracking: (id: string, data: any) => api.patch(`/quotes/${id}/tracking`, data).then(res => res.data),
 };
 
 // ─── Equipment ────────────────────────────────────────────────────────────────
@@ -137,6 +139,8 @@ export const equipmentApi = {
   getOne: (id: string) => api.get(`/equipment/${id}`).then((r) => r.data),
   create: (data: any) => api.post('/equipment', data).then((r) => r.data),
   update: (id: string, data: any) => api.patch(`/equipment/${id}`, data).then((r) => r.data),
+  getReceptionsByQuote: (quoteId: string) => api.get(`/equipment/receptions/quote/${quoteId}`).then((r) => r.data),
+  syncFromQuote: (quoteId: string) => api.post(`/equipment/sync-from-quote/${quoteId}`).then((r) => r.data),
 };
 
 export const workOrdersApi = {

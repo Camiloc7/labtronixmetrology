@@ -7,6 +7,7 @@ const PdfPrinter = require('pdfmake');
 import { Quote, QuoteStatus } from './entities/quote.entity';
 import { QuoteHistory, QuoteHistoryAction } from './entities/quote-history.entity';
 import { QuoteItem } from './entities/quote-item.entity';
+import { ServiceTracking } from './entities/service-tracking.entity';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { Client } from '../clients/entities/client.entity';
 import { ExcelService } from '../common/excel/excel.service';
@@ -30,6 +31,8 @@ export class QuotesService implements OnModuleInit {
     private readonly historyRepo: Repository<QuoteHistory>,
     @InjectRepository(Client)
     private readonly clientsRepo: Repository<Client>,
+    @InjectRepository(ServiceTracking)
+    private readonly trackingRepo: Repository<ServiceTracking>,
     private readonly excelService: ExcelService,
     private readonly settingsService: SettingsService,
     private readonly notificationsService: NotificationsService,
@@ -242,6 +245,26 @@ export class QuotesService implements OnModuleInit {
       where: { quoteId: id },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async getTracking(id: string): Promise<ServiceTracking> {
+    const tracking = await this.trackingRepo.findOne({ where: { quoteId: id } });
+    if (!tracking) {
+      // Si no existe, lo creamos para evitar errores 404
+      const newTracking = this.trackingRepo.create({ quoteId: id });
+      return this.trackingRepo.save(newTracking);
+    }
+    return tracking;
+  }
+
+  async updateTracking(id: string, dto: any): Promise<ServiceTracking> {
+    let tracking = await this.trackingRepo.findOne({ where: { quoteId: id } });
+    if (!tracking) {
+      tracking = this.trackingRepo.create({ quoteId: id });
+    }
+    
+    Object.assign(tracking, dto);
+    return this.trackingRepo.save(tracking);
   }
 
   async generatePdf(id: string, res: Response): Promise<void> {
@@ -513,9 +536,18 @@ export class QuotesService implements OnModuleInit {
     let created = 0;
     let updated = 0;
 
+    const parseDate = (val: any): Date | undefined => {
+      if (!val) return undefined;
+      if (val instanceof Date) return val;
+      const parsed = new Date(val);
+      return isNaN(parsed.getTime()) ? undefined : parsed;
+    };
+
     for (const row of data) {
       const quoteNumber = row['Cotizacion'] ? String(row['Cotizacion']).trim() : null;
-      const nitCliente = row['NITCliente'] ? String(row['NITCliente']).trim() : null;
+      const nitCliente = row['NIT'] ? String(row['NIT']).trim() : null; // According to header in prompt
+
+      if (!quoteNumber) continue;
 
       let clientId: string | null = null;
       if (nitCliente) {
@@ -523,33 +555,74 @@ export class QuotesService implements OnModuleInit {
         if (client) clientId = client.id;
       }
 
-      let qt: Quote | null = null;
-      if (quoteNumber) {
-        qt = await this.quotesRepo.findOne({ where: { quoteNumber } });
-      }
+      let qt = await this.quotesRepo.findOne({ where: { quoteNumber } });
 
-      const status = (row['Estado'] as QuoteStatus) || qt?.status || QuoteStatus.BORRADOR;
+      let status = QuoteStatus.BORRADOR;
+      const aprobado = String(row['Aprobado']).trim().toLowerCase();
+      if (aprobado === 'si') status = QuoteStatus.APROBADA;
+      else if (aprobado === 'no') status = QuoteStatus.RECHAZADA;
+      else if (aprobado === 'pendiente') status = QuoteStatus.ENVIADA;
+
+      let totalValue = 0;
+      if (row['Valor']) {
+        const valStr = String(row['Valor']).replace(/[^0-9.-]+/g, "");
+        totalValue = parseFloat(valStr) || 0;
+      }
 
       if (qt) {
         await this.quotesRepo.save({
           ...qt,
           clientId: clientId || qt.clientId || undefined,
-          status,
-          notes: row['Notas'] || qt.notes || undefined,
+          status: status !== QuoteStatus.BORRADOR ? status : qt.status,
+          notes: row['Observaciones'] || qt.notes || undefined,
+          totalValue: totalValue > 0 ? totalValue : qt.totalValue,
         });
         updated++;
-      } else if (quoteNumber) {
-        const newQt = this.quotesRepo.create({
+      } else {
+        qt = this.quotesRepo.create({
           quoteNumber,
           clientId: clientId || undefined,
           createdById: userId,
           status,
-          notes: row['Notas'] || undefined,
-          totalValue: 0,
+          notes: row['Observaciones'] || undefined,
+          totalValue,
         });
-        await this.quotesRepo.save(newQt);
+        qt = await this.quotesRepo.save(qt);
         created++;
       }
+
+      // Now handle ServiceTracking
+      let tracking = await this.trackingRepo.findOne({ where: { quoteId: qt.id } });
+      if (!tracking) {
+        tracking = this.trackingRepo.create({ quoteId: qt.id });
+      }
+
+      // Map Tracking fields
+      tracking.fechaPactadaServicio = parseDate(row['Fecha pactada de la Prestación del Servicio']) || tracking.fechaPactadaServicio;
+      tracking.idOrdenTrabajo = row['ID Orden de Trabajo'] ? String(row['ID Orden de Trabajo']).trim() : tracking.idOrdenTrabajo;
+      tracking.idRequisicion = row['ID Requisición'] ? String(row['ID Requisición']).trim() : tracking.idRequisicion;
+      tracking.fechaReporte = parseDate(row['Fecha de Reporte']) || tracking.fechaReporte;
+      tracking.idReporteServicio = row['ID Reporte de Servicio'] ? String(row['ID Reporte de Servicio']).trim() : tracking.idReporteServicio;
+      tracking.fechaRecepcionEquipos = parseDate(row['Fecha de Recepción de Equipos']) || tracking.fechaRecepcionEquipos;
+      tracking.idRecepcionEquipos = row['ID Recepción de Equipos'] ? String(row['ID Recepción de Equipos']).trim() : tracking.idRecepcionEquipos;
+      tracking.fechaEntregaOc = parseDate(row['Fecha de entrega OC']) || tracking.fechaEntregaOc;
+      tracking.idOrdenCompra = row['ID Orden de Compra'] ? String(row['ID Orden de Compra']).trim() : tracking.idOrdenCompra;
+      tracking.fechaIngresoLabExterno = parseDate(row['Fecha de Ingreso a Lab. Externo']) || tracking.fechaIngresoLabExterno;
+      tracking.laboratorioExterno = row['Laboratorio Externo'] ? String(row['Laboratorio Externo']).trim() : tracking.laboratorioExterno;
+      tracking.fechaEntregaEquipoLabExterno = parseDate(row['Fecha de Entrega del Equipo Lab Externo']) || tracking.fechaEntregaEquipoLabExterno;
+      tracking.fechaRecogerEquipo = parseDate(row['Fecha de Recoger el Equipo']) || tracking.fechaRecogerEquipo;
+      tracking.fechaEntregaEquipoCliente = parseDate(row['Fecha de Entrega del Equipo al Cliente']) || tracking.fechaEntregaEquipoCliente;
+      tracking.idReporteEntregaServicios = row['ID Reporte Entrega de Servicios'] ? String(row['ID Reporte Entrega de Servicios']).trim() : tracking.idReporteEntregaServicios;
+      tracking.fechaReporteEntregaServicio = parseDate(row['Fecha de Reporte Entrega de Servicio']) || tracking.fechaReporteEntregaServicio;
+      tracking.fechaEmisionCertificado = parseDate(row['Fecha de Emisión del Certificado']) || tracking.fechaEmisionCertificado;
+      tracking.idCertificado = row['ID Certificado'] ? String(row['ID Certificado']).trim() : tracking.idCertificado;
+      tracking.fechaEntregaCertificado = parseDate(row['Fecha de Entrega Certificado']) || tracking.fechaEntregaCertificado;
+      tracking.idFactura = row['ID Factura'] ? String(row['ID Factura']).trim() : tracking.idFactura;
+      tracking.fechaFactura = parseDate(row['Fecha de Factura']) || tracking.fechaFactura;
+      tracking.fechaPago = parseDate(row['Fecha de Pago']) || tracking.fechaPago;
+      tracking.comprobanteEgreso = row['Comprobante de Egreso'] ? String(row['Comprobante de Egreso']).trim() : tracking.comprobanteEgreso;
+
+      await this.trackingRepo.save(tracking);
     }
 
     return { total: data.length, created, updated };

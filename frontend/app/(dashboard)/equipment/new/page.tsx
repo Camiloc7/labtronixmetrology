@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { ArrowLeft, FloppyDisk } from '@phosphor-icons/react';
-import { equipmentApi, clientsApi } from '@/lib/api';
-import type { Client, CreateEquipmentDto } from '@/lib/types';
+import { equipmentApi } from '@/lib/api';
+import type { CreateEquipmentDto } from '@/lib/types';
+import ClientSelector from '@/components/ui/ClientSelector';
 
 export default function NewEquipmentPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [clients, setClients] = useState<Client[]>([]);
   const [form, setForm] = useState<CreateEquipmentDto>({
     clientId: '',
     name: '',
@@ -22,10 +22,6 @@ export default function NewEquipmentPage() {
     location: '',
     notes: '',
   });
-
-  useEffect(() => {
-    clientsApi.getAll().then(setClients).catch(() => toast.error('Error al cargar clientes'));
-  }, []);
 
   const set = (field: keyof CreateEquipmentDto, value: string) =>
     setForm((p) => ({ ...p, [field]: value }));
@@ -56,22 +52,16 @@ export default function NewEquipmentPage() {
         </div>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card" style={{ maxWidth: 700 }}>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card">
         <form onSubmit={handleSubmit}>
           <div className="grid-2">
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label className="form-label">Cliente *</label>
-              <select
-                className="form-input"
-                value={form.clientId}
-                onChange={(e) => set('clientId', e.target.value)}
-                required
-              >
-                <option value="">Seleccionar cliente...</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.companyName} {c.nit ? `(${c.nit})` : ''}</option>
-                ))}
-              </select>
+              <ClientSelector 
+                value={form.clientId} 
+                onChange={(val) => set('clientId', val)} 
+                required 
+              />
             </div>
 
             {[

@@ -48,7 +48,7 @@ export default function RequisitionDetailPage() {
   }
 
   return (
-    <div className="page-container fade-in" style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div className="page-container fade-in">
       <header className="page-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
           <Link href="/requisitions" className="btn btn-secondary btn-sm" style={{ padding: 8 }}>

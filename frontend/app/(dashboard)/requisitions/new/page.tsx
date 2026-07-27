@@ -1,11 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash, ArrowLeft, FloppyDisk } from '@phosphor-icons/react';
+import { Plus, Trash, ArrowLeft, FloppyDisk, FileText, ListNumbers, PenNib } from '@phosphor-icons/react';
 import { requisitionsApi } from '@/lib/api';
 import { CreateRequisitionDto, CreateRequisitionItemDto } from '@/lib/types';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import ClientSelector from '@/components/ui/ClientSelector';
 
 const EMPTY_ITEM: CreateRequisitionItemDto = {
   description: '',
@@ -54,25 +55,46 @@ export default function NewRequisitionPage() {
   };
 
   return (
-    <div className="page-container fade-in" style={{ maxWidth: 1000, margin: '0 auto' }}>
-      <header className="page-header" style={{ marginBottom: 'var(--spacing-md)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
-          <Link href="/requisitions" className="btn btn-secondary btn-sm" style={{ padding: 8 }}>
+    <div className="page-container fade-in">
+      <datalist id="units">
+        <option value="Und" />
+        <option value="kg" />
+        <option value="g" />
+        <option value="mg" />
+        <option value="L" />
+        <option value="mL" />
+        <option value="°C" />
+        <option value="%HR" />
+        <option value="kPa" />
+        <option value="psi" />
+        <option value="V" />
+        <option value="A" />
+        <option value="Hz" />
+      </datalist>
+
+      <header className="page-header" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <Link href="/requisitions" className="btn btn-secondary" style={{ padding: '10px', borderRadius: '50%' }}>
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="page-title">Nueva Requisición</h1>
+            <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '2rem' }}>
+              Nueva Requisición
+            </h1>
             <p className="page-description">Crea una nueva requisición de compras o servicios</p>
           </div>
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem', position: 'relative' }}>
         {/* INFO GENERAL */}
-        <section>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: 'var(--spacing-md)', color: 'var(--color-text)' }}>
-            Información General
-          </h2>
+        <section className="card" style={{ padding: '2rem', borderTop: '4px solid var(--color-brand)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+            <FileText size={28} color="var(--color-brand)" weight="duotone" />
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>
+              Información General
+            </h2>
+          </div>
           <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--spacing-md)' }}>
             <div className="form-group">
               <label className="form-label">Consecutivo</label>
@@ -109,9 +131,14 @@ export default function NewRequisitionPage() {
         </section>
 
         {/* ITEMS */}
-        <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-text)' }}>Ítems</h2>
+        <section className="card" style={{ padding: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <ListNumbers size={28} color="var(--color-brand)" weight="duotone" />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>
+                Ítems a Requerir
+              </h2>
+            </div>
             <button
               type="button"
               className="btn btn-secondary btn-sm"
@@ -122,9 +149,9 @@ export default function NewRequisitionPage() {
             </button>
           </div>
 
-          <div className="table-wrapper" style={{ border: 'none', overflowX: 'auto' }}>
-            <table className="table" style={{ minWidth: 600 }}>
-              <thead>
+          <div className="table-wrapper" style={{ borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+            <table className="table" style={{ minWidth: 600, margin: 0 }}>
+              <thead style={{ background: 'var(--color-surface-2)' }}>
                 <tr>
                   <th style={{ width: 80 }}>Cantidad</th>
                   <th style={{ width: 100 }}>U. Medida</th>
@@ -154,6 +181,7 @@ export default function NewRequisitionPage() {
                         type="text"
                         className="input"
                         required
+                        list="units"
                         value={item.unitOfMeasure}
                         onChange={(e) => {
                           const newItems = [...formData.items];
@@ -197,20 +225,29 @@ export default function NewRequisitionPage() {
         </section>
 
         {/* OBSERVACIONES Y FIRMAS */}
-        <section>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: 'var(--spacing-md)', color: 'var(--color-text)' }}>
-            Observaciones y Firmas
-          </h2>
+        <section className="card" style={{ padding: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+            <PenNib size={28} color="var(--color-brand)" weight="duotone" />
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>
+              Observaciones y Firmas
+            </h2>
+          </div>
           <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--spacing-md)' }}>
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
               <label className="form-label">Los certificados debe salir a nombre de:</label>
-              <input
-                type="text"
-                className="input"
+              <ClientSelector
+                allowFreeText
+                placeholder="Ej. LABORATORIOS REMO S.A.S."
                 required
                 value={formData.certificateToName}
-                onChange={(e) => setFormData({ ...formData, certificateToName: e.target.value })}
-                placeholder="Ej. LABORATORIOS REMO S.A.S."
+                onChange={(val, client) => {
+                  const name = client ? client.companyName : val;
+                  if (client && !formData.certificateAddress) {
+                    setFormData({ ...formData, certificateToName: name, certificateAddress: client.address || '' });
+                  } else {
+                    setFormData({ ...formData, certificateToName: name });
+                  }
+                }}
               />
             </div>
             <div className="form-group">
@@ -280,14 +317,17 @@ export default function NewRequisitionPage() {
           </div>
         </section>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-lg)' }}>
-          <Link href="/requisitions" className="btn btn-secondary">
+        <div style={{ 
+          display: 'flex', justifyContent: 'flex-end', gap: '1rem', 
+          marginTop: '2rem', padding: '1.25rem 0'
+        }}>
+          <Link href="/requisitions" className="btn btn-secondary" style={{ padding: '0.75rem 1.5rem', fontSize: '1rem' }}>
             Cancelar
           </Link>
-          <button type="submit" className="btn btn-primary" disabled={isPending}>
+          <button type="submit" className="btn btn-primary" disabled={isPending} style={{ padding: '0.75rem 1.5rem', fontSize: '1rem' }}>
             {isPending ? 'Guardando...' : (
               <>
-                <FloppyDisk size={20} />
+                <FloppyDisk size={22} weight="fill" />
                 Guardar Requisición
               </>
             )}

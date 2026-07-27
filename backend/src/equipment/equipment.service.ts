@@ -2,11 +2,13 @@ import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { Equipment } from './entities/equipment.entity';
+import { EquipmentReception } from './entities/equipment-reception.entity';
 import { CreateEquipmentDto } from './dto/create-equipment.dto';
 import { PartialType } from '@nestjs/swagger';
 import { CreateEquipmentDto as UpdateEquipmentDto } from './dto/create-equipment.dto';
 import { ExcelService } from '../common/excel/excel.service';
 import { Client } from '../clients/entities/client.entity';
+import { Quote } from '../quotes/entities/quote.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 
@@ -15,8 +17,12 @@ export class EquipmentService implements OnModuleInit {
   constructor(
     @InjectRepository(Equipment)
     private readonly equipmentRepo: Repository<Equipment>,
+    @InjectRepository(EquipmentReception)
+    private readonly receptionRepo: Repository<EquipmentReception>,
     @InjectRepository(Client)
     private readonly clientRepo: Repository<Client>,
+    @InjectRepository(Quote)
+    private readonly quoteRepo: Repository<Quote>,
     private readonly excelService: ExcelService,
   ) {}
 
@@ -173,5 +179,63 @@ export class EquipmentService implements OnModuleInit {
     }
 
     return { total: data.length, created, updated };
+  }
+
+  async getReceptionsByQuoteId(quoteId: string): Promise<EquipmentReception[]> {
+    return this.receptionRepo.find({
+      where: { quoteId },
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async syncFromQuote(quoteId: string, userId: string): Promise<{ created: number }> {
+    const quote = await this.quoteRepo.findOne({
+      where: { id: quoteId },
+      relations: { items: true },
+    });
+
+    if (!quote) {
+      throw new NotFoundException(`Cotización ${quoteId} no encontrada`);
+    }
+
+    let created = 0;
+
+    for (const item of quote.items) {
+      // Intentar buscar si el equipo ya existe por internalCode o serialNumber (para este cliente)
+      let existingEq = null;
+
+      if (item.internalCode) {
+        existingEq = await this.equipmentRepo.findOne({ where: { internalCode: item.internalCode } });
+      }
+
+      if (!existingEq && item.serialNumber) {
+        existingEq = await this.equipmentRepo.findOne({
+          where: { serialNumber: item.serialNumber, clientId: quote.clientId },
+        });
+      }
+
+      // Si no existe, crearlo
+      if (!existingEq) {
+        const internalCode = item.internalCode || await this.generateCode();
+        
+        const newEq = this.equipmentRepo.create({
+          clientId: quote.clientId,
+          internalCode,
+          name: item.equipmentName || item.description || 'Equipo Importado',
+          brand: item.brand,
+          model: item.model,
+          serialNumber: item.serialNumber,
+          capacity: item.measuringRange || item.scaleDivision,
+          location: item.location,
+          notes: item.calibrationPoints ? `Puntos de calibración: ${item.calibrationPoints}` : undefined,
+          receivedById: userId,
+        });
+
+        await this.equipmentRepo.save(newEq);
+        created++;
+      }
+    }
+
+    return { created };
   }
 }

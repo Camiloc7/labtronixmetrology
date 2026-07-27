@@ -45,10 +45,24 @@ export class EquipmentController {
     return this.equipmentService.findAll(paginationDto);
   }
 
+  @Get('receptions/quote/:quoteId')
+  @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
+  @ApiOperation({ summary: 'Obtener recepciones de equipos por ID de cotización' })
+  getReceptionsByQuoteId(@Param('quoteId') quoteId: string) {
+    return this.equipmentService.getReceptionsByQuoteId(quoteId);
+  }
+
   @Get(':id')
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
   findOne(@Param('id') id: string) {
     return this.equipmentService.findOne(id);
+  }
+
+  @Post('sync-from-quote/:quoteId')
+  @Roles('ADMIN', 'COMERCIAL')
+  @ApiOperation({ summary: 'Registrar equipos en el inventario desde una cotización' })
+  syncFromQuote(@Param('quoteId') quoteId: string, @CurrentUser('sub') userId: string) {
+    return this.equipmentService.syncFromQuote(quoteId, userId);
   }
 
   @Post()

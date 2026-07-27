@@ -4,13 +4,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { Plus, Trash, ArrowLeft, FloppyDisk } from '@phosphor-icons/react';
-import { workOrdersApi, equipmentApi, clientsApi, quotesApi, usersApi } from '@/lib/api';
+import { workOrdersApi, equipmentApi, quotesApi, usersApi } from '@/lib/api';
 import type { Client, Equipment, User, Quote, CreateWorkOrderDto } from '@/lib/types';
+import ClientSelector from '@/components/ui/ClientSelector';
 
 export default function NewWorkOrderPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [clients, setClients] = useState<Client[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [technicians, setTechnicians] = useState<User[]>([]);
@@ -35,9 +35,8 @@ export default function NewWorkOrderPage() {
   });
 
   useEffect(() => {
-    Promise.all([clientsApi.getAll(), equipmentApi.getAll(), quotesApi.getAll(), usersApi.getAll()])
-      .then(([c, e, q, u]) => {
-        setClients(c);
+    Promise.all([equipmentApi.getAll(), quotesApi.getAll(), usersApi.getAll()])
+      .then(([e, q, u]) => {
         setEquipments(e);
         setQuotes(q);
         setTechnicians(u.filter((user: User) => user.role === 'TECNICO' || user.role === 'ADMIN'));
@@ -81,9 +80,8 @@ export default function NewWorkOrderPage() {
     }));
   };
 
-  const handleClientChange = (clientId: string) => {
+  const handleClientChange = (clientId: string, client?: any) => {
     set('clientId', clientId);
-    const client = clients.find(c => c.id === clientId);
     if (client) {
       setForm(prev => ({
         ...prev,
@@ -142,10 +140,7 @@ export default function NewWorkOrderPage() {
             </div>
             <div className="form-group">
               <label className="form-label">Cliente *</label>
-              <select className="form-input" value={form.clientId} onChange={e => handleClientChange(e.target.value)} required>
-                <option value="">Seleccionar cliente...</option>
-                {clients.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
-              </select>
+              <ClientSelector value={form.clientId} onChange={handleClientChange} required />
             </div>
             <div className="form-group">
               <label className="form-label">Oferta / Cotización Asociada</label>
