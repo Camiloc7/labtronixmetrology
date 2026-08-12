@@ -6,6 +6,7 @@ import { Plus, ClipboardText, FilePdf, FileXls, MagnifyingGlass } from '@phospho
 import { Pagination } from '@/components/ui/Pagination';
 import { workOrdersApi } from '@/lib/api';
 import type { WorkOrder } from '@/lib/types';
+import { subscribeToWorkOrderEvents } from '@/lib/work-order-realtime';
 
 export default function WorkOrdersPage() {
   const [orders, setOrders] = useState<WorkOrder[]>([]);
@@ -33,6 +34,8 @@ export default function WorkOrdersPage() {
     const t = setTimeout(fetchOrders, 300);
     return () => clearTimeout(t);
   }, [fetchOrders]);
+
+  useEffect(() => subscribeToWorkOrderEvents(fetchOrders), [fetchOrders]);
 
   const handleDownloadPdf = (id: string, e: React.MouseEvent) => {
     e.preventDefault();

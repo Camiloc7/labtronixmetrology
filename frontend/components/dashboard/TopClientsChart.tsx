@@ -40,7 +40,7 @@ export function TopClientsChart({ data }: { data: TopClientData[] }) {
               <XAxis type="number" tickFormatter={formatCurrency} stroke="var(--color-text-muted)" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis dataKey="name" type="category" width={100} stroke="var(--color-text-muted)" fontSize={11} tickLine={false} axisLine={false} />
               <Tooltip 
-                formatter={(value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(value)}
+                formatter={(value) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(Number(value ?? 0))}
                 contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)', boxShadow: 'var(--shadow-md)' }}
               />
               <Bar dataKey="total" radius={[0, 4, 4, 0]}>

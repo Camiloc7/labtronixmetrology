@@ -7,6 +7,7 @@ import { Quote } from '../quotes/entities/quote.entity';
 import { ServiceTracking } from '../quotes/entities/service-tracking.entity';
 import { EquipmentReception } from '../equipment/entities/equipment-reception.entity';
 import { Equipment } from '../equipment/entities/equipment.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { Equipment } from '../equipment/entities/equipment.entity';
       EquipmentReception,
       Equipment
     ]),
+    AuthModule,
   ],
   controllers: [ImportController],
   providers: [ImportService],

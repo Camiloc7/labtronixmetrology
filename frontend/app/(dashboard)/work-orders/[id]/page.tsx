@@ -7,6 +7,7 @@ import { ArrowLeft, Printer, ArrowsClockwise, CaretDown, CaretUp, FilePdf, FileX
 import { workOrdersApi } from '@/lib/api';
 import type { WorkOrder, StatusHistory, WorkOrderStatus, WorkOrderItem } from '@/lib/types';
 import PhotoGallery from '@/components/work-orders/PhotoGallery';
+import { subscribeToWorkOrderEvents } from '@/lib/work-order-realtime';
 
 const STATUS_FLOW: WorkOrderStatus[] = ['RECIBIDO', 'EN_PROCESO', 'CALIBRADO', 'LISTO_ENVIO', 'DESPACHADO'];
 const OT_STATUS_LABELS: Record<WorkOrderStatus, string> = {
@@ -234,6 +235,13 @@ export default function WorkOrderDetailPage() {
   };
 
   useEffect(() => { fetchData(); }, [id]);
+
+  useEffect(() =>
+    subscribeToWorkOrderEvents((event) => {
+      if (event.workOrderId === id) {
+        fetchData();
+      }
+    }), [id]);
 
   if (loading) return <div className="text-center py-12"><div className="spinner w-8 h-8 border-4 mx-auto mb-4"></div><p className="text-muted">Cargando...</p></div>;
   if (!ot) return null;

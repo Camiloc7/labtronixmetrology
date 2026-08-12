@@ -1,5 +1,17 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, UseInterceptors, UploadedFile, Res, BadRequestException
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  Res,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
@@ -11,6 +23,10 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import {
+  assertExcelUpload,
+  excelUploadOptions,
+} from '../common/file-validation/upload-validation';
 
 @ApiTags('Clientes')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,7 +40,8 @@ export class ClientsController {
   async exportExcel(@Res() res: Response) {
     const buffer = await this.clientsService.exportToExcel();
     res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': 'attachment; filename="clientes.xlsx"',
     });
     res.send(buffer);
@@ -33,9 +50,9 @@ export class ClientsController {
   @Post('import')
   @Roles('ADMIN', 'COMERCIAL')
   @ApiOperation({ summary: 'Importar clientes desde Excel' })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', excelUploadOptions))
   async importExcel(@UploadedFile() file: Express.Multer.File) {
-    if (!file) throw new BadRequestException('Archivo no proporcionado');
+    assertExcelUpload(file);
     return this.clientsService.importFromExcel(file.buffer);
   }
 

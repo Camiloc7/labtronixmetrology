@@ -20,19 +20,24 @@ export class NotificationsCron {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'America/Bogota' })
   async checkExpiringQuotes() {
     this.logger.log('Revisando cotizaciones por expirar...');
-    
+
     const expiringQuotes = await this.quotesRepo
       .createQueryBuilder('quote')
       .leftJoinAndSelect('quote.client', 'client')
-      .where('quote.status IN (:...statuses)', { statuses: [QuoteStatus.BORRADOR, QuoteStatus.ENVIADA] })
+      .where('quote.status IN (:...statuses)', {
+        statuses: [QuoteStatus.BORRADOR, QuoteStatus.ENVIADA],
+      })
       .andWhere("quote.valid_until BETWEEN NOW() AND NOW() + INTERVAL '7 days'")
       .getMany();
 
     let created = 0;
     for (const quote of expiringQuotes) {
       // Calcular días
-      const daysLeft = Math.ceil((new Date(quote.validUntil).getTime() - Date.now()) / (1000 * 3600 * 24));
-      
+      const daysLeft = Math.ceil(
+        (new Date(quote.validUntil).getTime() - Date.now()) /
+          (1000 * 3600 * 24),
+      );
+
       // Evitar crear la misma notificación repetidamente el mismo día
       // Creamos la alerta "por vencer"
       await this.notifService.create({

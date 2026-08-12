@@ -1,5 +1,16 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, UseInterceptors, UploadedFile, Res, BadRequestException
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  Res,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
@@ -10,6 +21,10 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import {
+  assertExcelUpload,
+  excelUploadOptions,
+} from '../common/file-validation/upload-validation';
 
 @ApiTags('Usuarios')
 @ApiBearerAuth()
@@ -24,7 +39,8 @@ export class UsersController {
   async exportExcel(@Res() res: Response) {
     const buffer = await this.usersService.exportToExcel();
     res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': 'attachment; filename="usuarios.xlsx"',
     });
     res.send(buffer);
@@ -32,9 +48,9 @@ export class UsersController {
 
   @Post('import')
   @ApiOperation({ summary: 'Importar usuarios desde Excel' })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', excelUploadOptions))
   async importExcel(@UploadedFile() file: Express.Multer.File) {
-    if (!file) throw new BadRequestException('Archivo no proporcionado');
+    assertExcelUpload(file);
     return this.usersService.importFromExcel(file.buffer);
   }
 

@@ -1,9 +1,24 @@
-import { Controller, Post, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImportService } from './import.service';
 import { ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import {
+  assertExcelUpload,
+  excelUploadOptions,
+} from '../common/file-validation/upload-validation';
 
 @ApiTags('Import')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
 @Controller('import')
 export class ImportController {
   constructor(private readonly importService: ImportService) {}
@@ -21,15 +36,9 @@ export class ImportController {
       },
     },
   })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', excelUploadOptions))
   async uploadExcel(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('Archivo no proporcionado');
-    }
-
-    if (!file.originalname.match(/\.(xlsx)$/)) {
-      throw new BadRequestException('Solo se permiten archivos de Excel (.xlsx)');
-    }
+    assertExcelUpload(file);
 
     const result = await this.importService.processExcel(file.buffer);
     return {

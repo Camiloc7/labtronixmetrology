@@ -16,6 +16,13 @@ const AppDataSource = new DataSource({
 });
 
 async function seed() {
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+  const commercialPassword = process.env.SEED_COMERCIAL_PASSWORD;
+  const technicianPassword = process.env.SEED_TECNICO_PASSWORD;
+  if (!adminPassword || !commercialPassword || !technicianPassword) {
+    throw new Error('Defina SEED_ADMIN_PASSWORD, SEED_COMERCIAL_PASSWORD y SEED_TECNICO_PASSWORD antes de ejecutar el seed');
+  }
+
   await AppDataSource.initialize();
   console.log('✅ Conectado a la base de datos');
 
@@ -25,21 +32,21 @@ async function seed() {
     {
       name: 'Administrador Labtronix',
       email: 'admin@labtronix.com',
-      passwordHash: await bcrypt.hash('Admin2026!', 10),
+      passwordHash: await bcrypt.hash(adminPassword, 10),
       role: 'ADMIN',
       isActive: true,
     },
     {
       name: 'Asesor Comercial',
       email: 'comercial@labtronix.com',
-      passwordHash: await bcrypt.hash('Comercial2026!', 10),
+      passwordHash: await bcrypt.hash(commercialPassword, 10),
       role: 'COMERCIAL',
       isActive: true,
     },
     {
       name: 'Técnico Calibración',
       email: 'tecnico@labtronix.com',
-      passwordHash: await bcrypt.hash('Tecnico2026!', 10),
+      passwordHash: await bcrypt.hash(technicianPassword, 10),
       role: 'TECNICO',
       isActive: true,
     },
@@ -59,9 +66,7 @@ async function seed() {
   console.log('─────────────────────────────────────────');
   console.log('  Email                     | Contraseña');
   console.log('─────────────────────────────────────────');
-  console.log('  admin@labtronix.com       | Admin2026!');
-  console.log('  comercial@labtronix.com   | Comercial2026!');
-  console.log('  tecnico@labtronix.com     | Tecnico2026!');
+  console.log('  Contraseñas configuradas por variables de entorno (no se muestran).');
   console.log('─────────────────────────────────────────');
 
   await AppDataSource.destroy();

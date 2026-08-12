@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -19,11 +16,20 @@ export class AuthService {
 
   async getTokens(userId: string, email: string, role: string, name: string) {
     const payload = { sub: userId, email, role, name };
+    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    if (!refreshSecret && this.configService.get('NODE_ENV') === 'production') {
+      throw new Error('JWT_REFRESH_SECRET es obligatorio en producción');
+    }
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload),
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET', 'dev-refresh-secret'),
-        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d') as any,
+        secret:
+          refreshSecret ||
+          'local-development-refresh-secret-not-for-production',
+        expiresIn: this.configService.get<string>(
+          'JWT_REFRESH_EXPIRES_IN',
+          '7d',
+        ) as any,
       }),
     ]);
 
@@ -43,24 +49,32 @@ export class AuthService {
     }
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
-      throw new UnauthorizedException('Cuenta bloqueada temporalmente por múltiples intentos fallidos. Intente más tarde.');
+      throw new UnauthorizedException(
+        'Cuenta bloqueada temporalmente por múltiples intentos fallidos. Intente más tarde.',
+      );
     }
 
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
-    
+
     if (!passwordValid) {
       const attempts = (user.failedLoginAttempts || 0) + 1;
       let lockedUntil: Date | null = null;
-      
+
       if (attempts >= 5) {
         // Lock for 15 minutes
         lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
       }
-      
-      await this.usersService.updateLoginAttempts(user.id, attempts, lockedUntil);
-      
+
+      await this.usersService.updateLoginAttempts(
+        user.id,
+        attempts,
+        lockedUntil,
+      );
+
       if (lockedUntil) {
-        throw new UnauthorizedException('Cuenta bloqueada temporalmente por múltiples intentos fallidos. Intente más tarde.');
+        throw new UnauthorizedException(
+          'Cuenta bloqueada temporalmente por múltiples intentos fallidos. Intente más tarde.',
+        );
       }
       throw new UnauthorizedException('Credenciales inválidas');
     }
@@ -70,10 +84,23 @@ export class AuthService {
       await this.usersService.updateLoginAttempts(user.id, 0, null);
     }
 
-    const tokens = await this.getTokens(user.id, user.email, user.role, user.name);
+    const tokens = await this.getTokens(
+      user.id,
+      user.email,
+      user.role,
+      user.name,
+    );
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-    return { ...tokens, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
+    return {
+      ...tokens,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    };
   }
 
   async logout(userId: string) {
@@ -86,12 +113,20 @@ export class AuthService {
       throw new UnauthorizedException('Acceso denegado');
     }
 
-    const refreshTokenMatches = await bcrypt.compare(refreshToken, user.hashedRefreshToken);
+    const refreshTokenMatches = await bcrypt.compare(
+      refreshToken,
+      user.hashedRefreshToken,
+    );
     if (!refreshTokenMatches) {
       throw new UnauthorizedException('Acceso denegado');
     }
 
-    const payload = { sub: user.id, email: user.email, role: user.role, name: user.name };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+    };
     const accessToken = await this.jwtService.signAsync(payload);
 
     // We don't rotate the refresh token to prevent race conditions across multiple tabs
@@ -113,7 +148,12 @@ export class AuthService {
       throw new UnauthorizedException('Usuario inactivo');
     }
 
-    const tokens = await this.getTokens(user.id, user.email, user.role, user.name);
+    const tokens = await this.getTokens(
+      user.id,
+      user.email,
+      user.role,
+      user.name,
+    );
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
     return tokens;

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -15,6 +15,7 @@ import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { formatDateTime, OT_STATUS_LABELS, formatCOP } from '@/lib/utils/formatters';
 import type { WorkOrder, Client, Equipment, Quote, OtStats } from '@/lib/types';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { subscribeToWorkOrderEvents } from '@/lib/work-order-realtime';
 
 const STATUS_COLORS: Record<string, string> = {
   RECIBIDO:    '#3b82f6',
@@ -55,37 +56,40 @@ export default function DashboardPage() {
   const [advancedMetrics, setAdvancedMetrics] = useState<any>(null);
   const [exporting, setExporting] = useState(false);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const [otStats, ots, clients, equips, quotes, kpiRes, statusRes, advRes] = await Promise.all([
-          workOrdersApi.getStats(),
-          workOrdersApi.getAll(1, 5), 
-          clientsApi.getAll(1, 100), 
-          equipmentApi.getAll(1, 1000), 
-          quotesApi.getAll(1, 1),
-          dashboardApi.getKpis(),
-          dashboardApi.getQuotesByStatus(),
-          dashboardApi.getAdvancedMetrics(),
-        ]);
-        setStats(otStats);
-        setRecentOTs(ots.data);
-        setClientCount(clients.meta.total);
-        setEquipmentCount(equips.meta.total);
-        setQuoteCount(quotes.meta.total);
-        setAllClients(clients.data);
-        setAllEquipment(equips.data);
-        setKpis({ ...kpiRes, wipValue: advRes.wipValue });
-        setStatusData(statusRes);
-        setAdvancedMetrics(advRes);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAll();
+  const fetchAll = useCallback(async () => {
+    try {
+      const [otStats, ots, clients, equips, quotes, kpiRes, statusRes, advRes] = await Promise.all([
+        workOrdersApi.getStats(),
+        workOrdersApi.getAll(1, 5),
+        clientsApi.getAll(1, 100),
+        equipmentApi.getAll(1, 1000),
+        quotesApi.getAll(1, 1),
+        dashboardApi.getKpis(),
+        dashboardApi.getQuotesByStatus(),
+        dashboardApi.getAdvancedMetrics(),
+      ]);
+      setStats(otStats);
+      setRecentOTs(ots.data);
+      setClientCount(clients.meta.total);
+      setEquipmentCount(equips.meta.total);
+      setQuoteCount(quotes.meta.total);
+      setAllClients(clients.data);
+      setAllEquipment(equips.data);
+      setKpis({ ...kpiRes, wipValue: advRes.wipValue });
+      setStatusData(statusRes);
+      setAdvancedMetrics(advRes);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
+
+  useEffect(() => subscribeToWorkOrderEvents(fetchAll), [fetchAll]);
 
   useEffect(() => {
     dashboardApi.getRevenueTimeline(revenuePeriod).then(setRevenueData).catch(console.error);
@@ -180,7 +184,7 @@ export default function DashboardPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
         <div>
           <h1 className="page-header__title">
-            Bienvenido, {user?.firstName || 'Administrador'} <span style={{ animation: 'wave 2s infinite', display: 'inline-block' }}>👋</span>
+            Bienvenido, {user?.name || 'Administrador'} <span style={{ animation: 'wave 2s infinite', display: 'inline-block' }}>👋</span>
           </h1>
           <p className="page-header__subtitle">
             Aquí está el resumen del sistema &middot; {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}

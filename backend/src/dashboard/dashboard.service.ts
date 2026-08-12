@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Quote, QuoteStatus } from '../quotes/entities/quote.entity';
-import { WorkOrderItem, WorkOrderStatus } from '../work-orders/entities/work-order-item.entity';
+import {
+  WorkOrderItem,
+  WorkOrderStatus,
+} from '../work-orders/entities/work-order-item.entity';
 import { WorkOrder } from '../work-orders/entities/work-order.entity';
 
 @Injectable()
@@ -18,15 +21,18 @@ export class DashboardService {
 
   async getKpis() {
     const totalQuotes = await this.quotesRepo.count();
-    const approvedQuotes = await this.quotesRepo.count({ where: { status: QuoteStatus.APROBADA } });
-    
+    const approvedQuotes = await this.quotesRepo.count({
+      where: { status: QuoteStatus.APROBADA },
+    });
+
     const { totalRevenue } = await this.quotesRepo
       .createQueryBuilder('quote')
       .select('SUM(quote.total_value)', 'totalRevenue')
       .where('quote.status = :status', { status: QuoteStatus.APROBADA })
       .getRawOne();
 
-    const conversionRate = totalQuotes > 0 ? (approvedQuotes / totalQuotes) * 100 : 0;
+    const conversionRate =
+      totalQuotes > 0 ? (approvedQuotes / totalQuotes) * 100 : 0;
 
     return {
       totalQuotes,
@@ -44,15 +50,17 @@ export class DashboardService {
       .groupBy('quote.status')
       .getRawMany();
 
-    return data.map(item => ({
+    return data.map((item) => ({
       status: item.status,
       count: Number(item.count),
     }));
   }
 
-  async getRevenueTimeline(period: 'day' | 'month' | 'quarter' | 'year' = 'month') {
+  async getRevenueTimeline(
+    period: 'day' | 'month' | 'quarter' | 'year' = 'month',
+  ) {
     let dateTruncExpr = '';
-    
+
     switch (period) {
       case 'day':
         dateTruncExpr = "date_trunc('day', quote.created_at)";
@@ -80,7 +88,7 @@ export class DashboardService {
       .orderBy('date', 'ASC')
       .getRawMany();
 
-    return data.map(item => ({
+    return data.map((item) => ({
       date: item.date,
       revenue: Number(item.revenue || 0),
       quotesCount: Number(item.quotesCount || 0),
@@ -91,7 +99,10 @@ export class DashboardService {
     // 1. Lead Time (Días promedio desde creación hasta DESPACHADO)
     const { leadTime } = await this.woiRepo
       .createQueryBuilder('item')
-      .select('AVG(EXTRACT(EPOCH FROM (item.updated_at - item.created_at))/86400)', 'leadTime')
+      .select(
+        'AVG(EXTRACT(EPOCH FROM (item.updated_at - item.created_at))/86400)',
+        'leadTime',
+      )
       .where('item.status = :status', { status: WorkOrderStatus.DESPACHADO })
       .getRawOne();
 
@@ -116,23 +127,29 @@ export class DashboardService {
       .createQueryBuilder('quote')
       .select('SUM(quote.total_value)', 'wipValue')
       .where('quote.status = :status', { status: QuoteStatus.APROBADA })
-      .andWhere(`EXISTS (
+      .andWhere(
+        `EXISTS (
         SELECT 1 FROM work_orders w
         JOIN work_order_items i ON i.work_order_id = w.id
         WHERE w.quote_id = quote.id AND i.status != :despachado
-      )`, { despachado: WorkOrderStatus.DESPACHADO })
+      )`,
+        { despachado: WorkOrderStatus.DESPACHADO },
+      )
       .getRawOne();
 
     return {
       leadTimeDays: Number(leadTime || 0).toFixed(1),
-      topClients: topClients.map(c => ({ name: c.name, total: Number(c.total) })),
-      alerts: alerts.map(a => ({
+      topClients: topClients.map((c) => ({
+        name: c.name,
+        total: Number(c.total),
+      })),
+      alerts: alerts.map((a) => ({
         id: a.id,
         quoteNumber: a.quoteNumber,
         clientName: a.client.companyName,
         totalValue: Number(a.totalValue),
         validUntil: a.validUntil,
-        status: a.status
+        status: a.status,
       })),
       wipValue: Number(wipValue || 0),
     };
@@ -142,7 +159,9 @@ export class DashboardService {
     return this.quotesRepo
       .createQueryBuilder('quote')
       .leftJoinAndSelect('quote.client', 'client')
-      .where('quote.status IN (:...statuses)', { statuses: [QuoteStatus.BORRADOR, QuoteStatus.ENVIADA] })
+      .where('quote.status IN (:...statuses)', {
+        statuses: [QuoteStatus.BORRADOR, QuoteStatus.ENVIADA],
+      })
       .andWhere("quote.valid_until BETWEEN NOW() AND NOW() + INTERVAL '7 days'")
       .orderBy('quote.valid_until', 'ASC')
       .getMany();
@@ -161,11 +180,23 @@ export class DashboardService {
       { header: 'Valor', key: 'value', width: 20 },
     ];
     sheet1.addRow({ metric: 'Total Cotizaciones', value: kpis.totalQuotes });
-    sheet1.addRow({ metric: 'Cotizaciones Aprobadas', value: kpis.approvedQuotes });
-    sheet1.addRow({ metric: 'Tasa de Conversión (%)', value: kpis.conversionRate });
-    sheet1.addRow({ metric: 'Ingresos Totales (Aprobadas)', value: kpis.totalRevenue });
+    sheet1.addRow({
+      metric: 'Cotizaciones Aprobadas',
+      value: kpis.approvedQuotes,
+    });
+    sheet1.addRow({
+      metric: 'Tasa de Conversión (%)',
+      value: kpis.conversionRate,
+    });
+    sheet1.addRow({
+      metric: 'Ingresos Totales (Aprobadas)',
+      value: kpis.totalRevenue,
+    });
     sheet1.addRow({ metric: 'Dinero Atrapado (WIP)', value: metrics.wipValue });
-    sheet1.addRow({ metric: 'Eficiencia (Lead Time Días)', value: metrics.leadTimeDays });
+    sheet1.addRow({
+      metric: 'Eficiencia (Lead Time Días)',
+      value: metrics.leadTimeDays,
+    });
 
     // Hoja 2: Top Clientes
     const sheet2 = workbook.addWorksheet('Top Clientes');
@@ -173,7 +204,7 @@ export class DashboardService {
       { header: 'Cliente', key: 'name', width: 40 },
       { header: 'Ingresos Totales', key: 'total', width: 20 },
     ];
-    metrics.topClients.forEach(c => sheet2.addRow(c));
+    metrics.topClients.forEach((c) => sheet2.addRow(c));
 
     // Hoja 3: Alertas de Cotizaciones
     const sheet3 = workbook.addWorksheet('Cotizaciones por Vencer');
@@ -184,7 +215,7 @@ export class DashboardService {
       { header: 'Estado', key: 'status', width: 15 },
       { header: 'Vence el', key: 'validUntil', width: 15 },
     ];
-    metrics.alerts.forEach(a => sheet3.addRow(a));
+    metrics.alerts.forEach((a) => sheet3.addRow(a));
 
     const buffer = await workbook.xlsx.writeBuffer();
     return buffer as Buffer;

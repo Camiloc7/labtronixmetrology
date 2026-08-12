@@ -27,17 +27,25 @@ export class EquipmentService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.equipmentRepo.query(`CREATE SEQUENCE IF NOT EXISTS equipment_code_seq START 1`);
-    
+    await this.equipmentRepo.query(
+      `CREATE SEQUENCE IF NOT EXISTS equipment_code_seq START 1`,
+    );
+
     // Sincronizar la secuencia con el valor más alto existente
-    const [lastEq] = await this.equipmentRepo.find({ order: { createdAt: 'DESC' }, take: 1 });
+    const [lastEq] = await this.equipmentRepo.find({
+      order: { createdAt: 'DESC' },
+      take: 1,
+    });
     if (lastEq && lastEq.internalCode) {
       const parts = lastEq.internalCode.split('-');
       if (parts.length === 3) {
         const lastNum = parseInt(parts[2], 10);
         if (!isNaN(lastNum)) {
           // setval(sequence, value, is_called)
-          await this.equipmentRepo.query(`SELECT setval('equipment_code_seq', $1, true)`, [lastNum]);
+          await this.equipmentRepo.query(
+            `SELECT setval('equipment_code_seq', $1, true)`,
+            [lastNum],
+          );
         }
       }
     }
@@ -45,12 +53,16 @@ export class EquipmentService implements OnModuleInit {
 
   private async generateCode(): Promise<string> {
     const year = new Date().getFullYear();
-    const result = await this.equipmentRepo.query(`SELECT nextval('equipment_code_seq')`);
+    const result = await this.equipmentRepo.query(
+      `SELECT nextval('equipment_code_seq')`,
+    );
     const nextNumber = result[0].nextval;
     return `EQ-${year}-${String(nextNumber).padStart(4, '0')}`;
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<PaginatedResult<Equipment>> {
+  async findAll(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<Equipment>> {
     const { page = 1, limit = 10, search } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -102,7 +114,9 @@ export class EquipmentService implements OnModuleInit {
         if (error.code === '23505' && retries > 1) {
           retries--;
           // Jitter backoff (10ms to 100ms) to avoid thundering herd collisions
-          await new Promise(resolve => setTimeout(resolve, Math.random() * 90 + 10));
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 90 + 10),
+          );
           continue;
         }
         throw error;
@@ -111,14 +125,20 @@ export class EquipmentService implements OnModuleInit {
     throw new Error('Could not generate unique internalCode');
   }
 
-  async update(id: string, dto: Partial<CreateEquipmentDto>): Promise<Equipment> {
+  async update(
+    id: string,
+    dto: Partial<CreateEquipmentDto>,
+  ): Promise<Equipment> {
     const eq = await this.findOne(id);
     return this.equipmentRepo.save({ ...eq, ...dto });
   }
 
   async exportToExcel(): Promise<Buffer> {
-    const equipment = await this.equipmentRepo.find({ relations: { client: true }, order: { createdAt: 'DESC' } });
-    const data = equipment.map(eq => ({
+    const equipment = await this.equipmentRepo.find({
+      relations: { client: true },
+      order: { createdAt: 'DESC' },
+    });
+    const data = equipment.map((eq) => ({
       CodigoInterno: eq.internalCode,
       NITCliente: eq.client?.nit || '',
       NombreCliente: eq.client?.companyName || '',
@@ -133,18 +153,27 @@ export class EquipmentService implements OnModuleInit {
     return this.excelService.exportToExcel(data, 'Equipos');
   }
 
-  async importFromExcel(buffer: Buffer, userId: string): Promise<{ total: number; created: number; updated: number }> {
+  async importFromExcel(
+    buffer: Buffer,
+    userId: string,
+  ): Promise<{ total: number; created: number; updated: number }> {
     const data = await this.excelService.importFromExcel(buffer);
     let created = 0;
     let updated = 0;
 
     for (const row of data) {
-      const internalCode = row['CodigoInterno'] ? String(row['CodigoInterno']).trim() : null;
-      const nitCliente = row['NITCliente'] ? String(row['NITCliente']).trim() : null;
-      
+      const internalCode = row['CodigoInterno']
+        ? String(row['CodigoInterno']).trim()
+        : null;
+      const nitCliente = row['NITCliente']
+        ? String(row['NITCliente']).trim()
+        : null;
+
       let clientId: string | null = null;
       if (nitCliente) {
-        const client = await this.clientRepo.findOne({ where: { nit: nitCliente } });
+        const client = await this.clientRepo.findOne({
+          where: { nit: nitCliente },
+        });
         if (client) clientId = client.id;
       }
 
@@ -157,7 +186,9 @@ export class EquipmentService implements OnModuleInit {
         clientId: clientId || eq?.clientId || undefined,
         brand: row['Marca'] || undefined,
         model: row['Modelo'] || undefined,
-        serialNumber: row['NumeroSerie'] ? String(row['NumeroSerie']) : undefined,
+        serialNumber: row['NumeroSerie']
+          ? String(row['NumeroSerie'])
+          : undefined,
         capacity: row['Capacidad'] || undefined,
         location: row['Ubicacion'] || undefined,
         notes: row['Notas'] || undefined,
@@ -167,7 +198,7 @@ export class EquipmentService implements OnModuleInit {
         await this.equipmentRepo.save({ ...eq, ...payload });
         updated++;
       } else {
-        const newCode = internalCode || await this.generateCode();
+        const newCode = internalCode || (await this.generateCode());
         const newEq = this.equipmentRepo.create({
           ...payload,
           internalCode: newCode,
@@ -188,7 +219,10 @@ export class EquipmentService implements OnModuleInit {
     });
   }
 
-  async syncFromQuote(quoteId: string, userId: string): Promise<{ created: number }> {
+  async syncFromQuote(
+    quoteId: string,
+    userId: string,
+  ): Promise<{ created: number }> {
     const quote = await this.quoteRepo.findOne({
       where: { id: quoteId },
       relations: { items: true },
@@ -202,10 +236,12 @@ export class EquipmentService implements OnModuleInit {
 
     for (const item of quote.items) {
       // Intentar buscar si el equipo ya existe por internalCode o serialNumber (para este cliente)
-      let existingEq = null;
+      let existingEq: Equipment | null = null;
 
       if (item.internalCode) {
-        existingEq = await this.equipmentRepo.findOne({ where: { internalCode: item.internalCode } });
+        existingEq = await this.equipmentRepo.findOne({
+          where: { internalCode: item.internalCode },
+        });
       }
 
       if (!existingEq && item.serialNumber) {
@@ -216,8 +252,8 @@ export class EquipmentService implements OnModuleInit {
 
       // Si no existe, crearlo
       if (!existingEq) {
-        const internalCode = item.internalCode || await this.generateCode();
-        
+        const internalCode = item.internalCode || (await this.generateCode());
+
         const newEq = this.equipmentRepo.create({
           clientId: quote.clientId,
           internalCode,
@@ -227,7 +263,9 @@ export class EquipmentService implements OnModuleInit {
           serialNumber: item.serialNumber,
           capacity: item.measuringRange || item.scaleDivision,
           location: item.location,
-          notes: item.calibrationPoints ? `Puntos de calibración: ${item.calibrationPoints}` : undefined,
+          notes: item.calibrationPoints
+            ? `Puntos de calibración: ${item.calibrationPoints}`
+            : undefined,
           receivedById: userId,
         });
 

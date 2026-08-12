@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { PassportModule } from '@nestjs/passport';
 import { UsersModule } from '../users/users.module';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { LoginRateLimitGuard } from '../common/guards/login-rate-limit.guard';
 
 @Module({
   imports: [
@@ -13,14 +14,20 @@ import { GoogleStrategy } from './strategies/google.strategy';
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_SECRET', 'dev-secret-change-me'),
-        signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '8h') },
-      }),
+      useFactory: (config: ConfigService) => {
+        const secret = config.get<string>('JWT_SECRET');
+        if (!secret && config.get('NODE_ENV') === 'production') {
+          throw new Error('JWT_SECRET es obligatorio en producción');
+        }
+        return {
+          secret: secret || 'local-development-secret-not-for-production',
+          signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '8h') },
+        };
+      },
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleStrategy],
+  providers: [AuthService, GoogleStrategy, LoginRateLimitGuard],
   exports: [JwtModule],
 })
 export class AuthModule {}

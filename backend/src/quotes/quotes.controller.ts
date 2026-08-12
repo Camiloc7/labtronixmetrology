@@ -1,5 +1,16 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query, UseGuards, Res, UseInterceptors, UploadedFile, BadRequestException
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Res,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
@@ -12,6 +23,10 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import {
+  assertExcelUpload,
+  excelUploadOptions,
+} from '../common/file-validation/upload-validation';
 
 @ApiTags('Cotizaciones')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -25,7 +40,8 @@ export class QuotesController {
   async exportExcel(@Res() res: Response) {
     const buffer = await this.quotesService.exportToExcel();
     res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': 'attachment; filename="cotizaciones.xlsx"',
     });
     res.send(buffer);
@@ -34,9 +50,12 @@ export class QuotesController {
   @Post('import')
   @Roles('ADMIN', 'COMERCIAL')
   @ApiOperation({ summary: 'Importar cotizaciones desde Excel' })
-  @UseInterceptors(FileInterceptor('file'))
-  async importExcel(@UploadedFile() file: Express.Multer.File, @CurrentUser('sub') userId: string) {
-    if (!file) throw new BadRequestException('Archivo no proporcionado');
+  @UseInterceptors(FileInterceptor('file', excelUploadOptions))
+  async importExcel(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser('sub') userId: string,
+  ) {
+    assertExcelUpload(file);
     return this.quotesService.importFromExcel(file.buffer, userId);
   }
 
@@ -60,7 +79,11 @@ export class QuotesController {
 
   @Patch(':id')
   @Roles('ADMIN', 'COMERCIAL')
-  update(@Param('id') id: string, @Body() dto: Partial<CreateQuoteDto>, @CurrentUser('sub') userId: string) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: Partial<CreateQuoteDto>,
+    @CurrentUser('sub') userId: string,
+  ) {
     return this.quotesService.update(id, dto, userId);
   }
 
@@ -81,7 +104,10 @@ export class QuotesController {
   @Patch(':id/tracking')
   @Roles('ADMIN', 'COMERCIAL')
   @ApiOperation({ summary: 'Actualizar trazabilidad de la cotización' })
-  updateTracking(@Param('id') id: string, @Body() dto: UpdateServiceTrackingDto) {
+  updateTracking(
+    @Param('id') id: string,
+    @Body() dto: UpdateServiceTrackingDto,
+  ) {
     return this.quotesService.updateTracking(id, dto);
   }
 
@@ -93,15 +119,23 @@ export class QuotesController {
   }
 
   @Get(':id/technical-pdf')
+  @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
   @ApiOperation({ summary: 'Generar PDF técnico de la cotización' })
-  @ApiResponse({ status: 200, description: 'PDF técnico generado correctamente.' })
+  @ApiResponse({
+    status: 200,
+    description: 'PDF técnico generado correctamente.',
+  })
   async downloadTechnicalPdf(@Param('id') id: string, @Res() res: Response) {
     await this.quotesService.generateTechnicalPdf(id, res);
   }
 
   @Get(':id/technical-excel')
+  @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
   @ApiOperation({ summary: 'Generar Excel técnico de la cotización' })
-  @ApiResponse({ status: 200, description: 'Excel técnico generado correctamente.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Excel técnico generado correctamente.',
+  })
   async downloadTechnicalExcel(@Param('id') id: string, @Res() res: Response) {
     await this.quotesService.generateTechnicalExcel(id, res);
   }

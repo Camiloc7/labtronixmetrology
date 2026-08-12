@@ -1,5 +1,18 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Delete, Query, UseGuards, UseInterceptors, UploadedFile, Res, BadRequestException, Req
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  Res,
+  BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
@@ -12,6 +25,12 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import {
+  assertExcelUpload,
+  assertImageUpload,
+  excelUploadOptions,
+  imageUploadOptions,
+} from '../common/file-validation/upload-validation';
 
 @ApiTags('Órdenes de Trabajo')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -37,7 +56,8 @@ export class WorkOrdersController {
   async generateExcel(@Param('id') id: string, @Res() res: Response) {
     const buffer = await this.workOrdersService.generateExcel(id);
     res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename="ot-${id}.xlsx"`,
     });
     res.send(buffer);
@@ -46,9 +66,12 @@ export class WorkOrdersController {
   @Post('import')
   @Roles('ADMIN', 'TECNICO')
   @ApiOperation({ summary: 'Importar OTs desde Excel' })
-  @UseInterceptors(FileInterceptor('file'))
-  async importExcel(@UploadedFile() file: Express.Multer.File, @CurrentUser('sub') userId: string) {
-    if (!file) throw new BadRequestException('Archivo no proporcionado');
+  @UseInterceptors(FileInterceptor('file', excelUploadOptions))
+  async importExcel(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser('sub') userId: string,
+  ) {
+    assertExcelUpload(file);
     return this.workOrdersService.importFromExcel(file.buffer, userId);
   }
 
@@ -107,7 +130,7 @@ export class WorkOrdersController {
   @Post('items/:itemId/photos')
   @Roles('ADMIN', 'TECNICO')
   @ApiOperation({ summary: 'Subir foto del equipo' })
-  @UseInterceptors(FileInterceptor('photo'))
+  @UseInterceptors(FileInterceptor('photo', imageUploadOptions))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -125,7 +148,13 @@ export class WorkOrdersController {
     @Req() req: any,
   ) {
     if (!file) throw new BadRequestException('No se recibió la foto.');
-    return this.workOrdersService.addPhoto(itemId, file, req.user?.sub, description);
+    assertImageUpload(file);
+    return this.workOrdersService.addPhoto(
+      itemId,
+      file,
+      req.user?.sub,
+      description,
+    );
   }
 
   @Delete('photos/:photoId')

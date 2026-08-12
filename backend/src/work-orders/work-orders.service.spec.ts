@@ -7,6 +7,9 @@ import { StatusHistory } from './entities/status-history.entity';
 import { Client } from '../clients/entities/client.entity';
 import { Equipment } from '../equipment/entities/equipment.entity';
 import { ExcelService } from '../common/excel/excel.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { WorkOrderPhoto } from './entities/work-order-photo.entity';
+import { WorkOrdersGateway } from './work-orders.gateway';
 import { NotFoundException } from '@nestjs/common';
 import { ILike } from 'typeorm';
 import * as fs from 'fs';
@@ -46,6 +49,12 @@ const mockExcelService = {
   exportToExcel: jest.fn(),
 };
 
+const mockCloudinaryService = {};
+const mockGateway = {
+  emitWorkOrderCreated: jest.fn(),
+  emitItemStatusChanged: jest.fn(),
+};
+
 describe('WorkOrdersService', () => {
   let service: WorkOrdersService;
 
@@ -58,7 +67,10 @@ describe('WorkOrdersService', () => {
         { provide: getRepositoryToken(StatusHistory), useValue: mockHistoryRepo },
         { provide: getRepositoryToken(Client), useValue: mockClientRepo },
         { provide: getRepositoryToken(Equipment), useValue: mockEquipmentRepo },
+        { provide: getRepositoryToken(WorkOrderPhoto), useValue: {} },
         { provide: ExcelService, useValue: mockExcelService },
+        { provide: CloudinaryService, useValue: mockCloudinaryService },
+        { provide: WorkOrdersGateway, useValue: mockGateway },
       ],
     }).compile();
 
@@ -120,6 +132,7 @@ describe('WorkOrdersService', () => {
         items: [{}, {}]
       }));
       expect(mockWorkOrdersRepo.save).toHaveBeenCalled();
+      expect(mockGateway.emitWorkOrderCreated).toHaveBeenCalledWith('1');
       expect(result.id).toBe('1');
     });
     
@@ -163,6 +176,12 @@ describe('WorkOrdersService', () => {
         workOrderItemId: 'item1'
       }));
       expect(mockHistoryRepo.save).toHaveBeenCalled();
+      expect(mockGateway.emitItemStatusChanged).toHaveBeenCalledWith(
+        undefined,
+        'item1',
+        WorkOrderStatus.RECIBIDO,
+        WorkOrderStatus.EN_PROCESO,
+      );
     });
 
     it('should throw NotFoundException if item does not exist', async () => {

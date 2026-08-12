@@ -3,11 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const PdfPrinter = require('pdfmake');
 import * as ExcelJS from 'exceljs';
 import { WorkOrder } from './entities/work-order.entity';
-import { WorkOrderItem, WorkOrderStatus } from './entities/work-order-item.entity';
+import {
+  WorkOrderItem,
+  WorkOrderStatus,
+} from './entities/work-order-item.entity';
 import { StatusHistory } from './entities/status-history.entity';
 import { CreateWorkOrderDto, ChangeStatusDto } from './dto/work-order.dto';
 import { ExcelService } from '../common/excel/excel.service';
@@ -18,6 +21,7 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { ILike } from 'typeorm';
+import { WorkOrdersGateway } from './work-orders.gateway';
 
 const fonts = {
   Helvetica: {
@@ -27,7 +31,6 @@ const fonts = {
     bolditalics: 'Helvetica-BoldOblique',
   },
 };
-
 
 @Injectable()
 export class WorkOrdersService {
@@ -46,25 +49,26 @@ export class WorkOrdersService {
     private readonly photosRepo: Repository<WorkOrderPhoto>,
     private readonly excelService: ExcelService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly workOrdersGateway: WorkOrdersGateway,
   ) {}
 
   private async getLogoBase64(): Promise<string> {
     const logoPath = path.join(process.cwd(), '../frontend/public/logo.png');
     if (fs.existsSync(logoPath)) {
-      return 'data:image/png;base64,' + fs.readFileSync(logoPath).toString('base64');
+      return (
+        'data:image/png;base64,' + fs.readFileSync(logoPath).toString('base64')
+      );
     }
     return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<PaginatedResult<WorkOrder>> {
+  async findAll(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<WorkOrder>> {
     const { page = 1, limit = 10, search } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const where = search
-      ? [
-          { otNumber: ILike(`%${search}%`) },
-        ]
-      : {};
+    const where = search ? [{ otNumber: ILike(`%${search}%`) }] : {};
 
     const [data, total] = await this.workOrdersRepo.findAndCount({
       where,
@@ -91,15 +95,21 @@ export class WorkOrdersService {
   }
 
   async create(dto: CreateWorkOrderDto): Promise<WorkOrder> {
-    const items = dto.items?.map(item => this.workOrderItemsRepo.create(item)) || [];
+    const items =
+      dto.items?.map((item) => this.workOrderItemsRepo.create(item)) || [];
     const ot = this.workOrdersRepo.create({
       ...dto,
       items,
     });
-    return this.workOrdersRepo.save(ot);
+    const created = await this.workOrdersRepo.save(ot);
+    this.workOrdersGateway.emitWorkOrderCreated(created.id);
+    return created;
   }
 
-  async update(id: string, dto: Partial<CreateWorkOrderDto>): Promise<WorkOrder> {
+  async update(
+    id: string,
+    dto: Partial<CreateWorkOrderDto>,
+  ): Promise<WorkOrder> {
     const ot = await this.findOne(id);
     return this.workOrdersRepo.save({ ...ot, ...dto });
   }
@@ -109,8 +119,11 @@ export class WorkOrdersService {
     dto: ChangeStatusDto,
     userId: string,
   ): Promise<WorkOrderItem> {
-    const item = await this.workOrderItemsRepo.findOne({ where: { id: itemId } });
-    if (!item) throw new NotFoundException(`WorkOrderItem ${itemId} no encontrado`);
+    const item = await this.workOrderItemsRepo.findOne({
+      where: { id: itemId },
+    });
+    if (!item)
+      throw new NotFoundException(`WorkOrderItem ${itemId} no encontrado`);
 
     const previousStatus = item.status;
 
@@ -129,7 +142,14 @@ export class WorkOrdersService {
     if (dto.status === WorkOrderStatus.DESPACHADO) {
       item.dispatchedAt = new Date();
     }
-    return this.workOrderItemsRepo.save(item);
+    const updated = await this.workOrderItemsRepo.save(item);
+    this.workOrdersGateway.emitItemStatusChanged(
+      updated.workOrderId,
+      updated.id,
+      previousStatus,
+      updated.status,
+    );
+    return updated;
   }
 
   async getItemHistory(itemId: string): Promise<StatusHistory[]> {
@@ -140,11 +160,12 @@ export class WorkOrdersService {
   }
 
   async getStickerData(itemId: string) {
-    const item = await this.workOrderItemsRepo.findOne({ 
-      where: { id: itemId }, 
-      relations: { workOrder: { client: true }, equipment: true } 
+    const item = await this.workOrderItemsRepo.findOne({
+      where: { id: itemId },
+      relations: { workOrder: { client: true }, equipment: true },
     });
-    if (!item) throw new NotFoundException(`WorkOrderItem ${itemId} no encontrado`);
+    if (!item)
+      throw new NotFoundException(`WorkOrderItem ${itemId} no encontrado`);
 
     await this.workOrderItemsRepo.save({ ...item, stickerPrinted: true });
     return {
@@ -193,55 +214,118 @@ export class WorkOrdersService {
             widths: ['40%', '*', '15%', '20%'],
             body: [
               [
-                { image: logoBase64, width: 120, rowSpan: 2, alignment: 'center', margin: [0, 5, 0, 0] },
-                { text: 'ORDEN DE TRABAJO', bold: true, colSpan: 3, alignment: 'center', fontSize: 14, margin: [0, 5, 0, 0] },
-                '', ''
+                {
+                  image: logoBase64,
+                  width: 120,
+                  rowSpan: 2,
+                  alignment: 'center',
+                  margin: [0, 5, 0, 0],
+                },
+                {
+                  text: 'ORDEN DE TRABAJO',
+                  bold: true,
+                  colSpan: 3,
+                  alignment: 'center',
+                  fontSize: 14,
+                  margin: [0, 5, 0, 0],
+                },
+                '',
+                '',
               ],
               [
                 '',
-                { text: 'Código CL-FR-04 Versión 01 de 2020-11-28', colSpan: 3, alignment: 'center', fontSize: 8 },
-                '', ''
+                {
+                  text: 'Código CL-FR-04 Versión 01 de 2020-11-28',
+                  colSpan: 3,
+                  alignment: 'center',
+                  fontSize: 8,
+                },
+                '',
+                '',
               ],
               [
-                { text: `CLIENTE:      ${ot.client?.companyName || ''}`, colSpan: 2, margin: [0, 5, 0, 0] },
+                {
+                  text: `CLIENTE:      ${ot.client?.companyName || ''}`,
+                  colSpan: 2,
+                  margin: [0, 5, 0, 0],
+                },
                 '',
                 { text: 'ORDEN No.', bold: true, alignment: 'right' },
-                { text: ot.otNumber, alignment: 'center' }
+                { text: ot.otNumber, alignment: 'center' },
               ],
               [
-                { text: `DIRECCIÓN:    ${ot.client?.address || ''}`, colSpan: 2, margin: [0, 2, 0, 0] },
+                {
+                  text: `DIRECCIÓN:    ${ot.client?.address || ''}`,
+                  colSpan: 2,
+                  margin: [0, 2, 0, 0],
+                },
                 '',
                 { text: 'FECHA DE SOLICITUD:', bold: true, alignment: 'right' },
-                { text: ot.requestDate ? new Date(ot.requestDate).toISOString().split('T')[0] : '', alignment: 'center' }
+                {
+                  text: ot.requestDate
+                    ? new Date(ot.requestDate).toISOString().split('T')[0]
+                    : '',
+                  alignment: 'center',
+                },
               ],
               [
-                { text: `TELEFONO:     ${ot.client?.phone || ''}`, colSpan: 2, margin: [0, 2, 0, 0] },
+                {
+                  text: `TELEFONO:     ${ot.client?.phone || ''}`,
+                  colSpan: 2,
+                  margin: [0, 2, 0, 0],
+                },
                 '',
-                { text: 'FECHA PRESTACIÓN SERVICIO:', bold: true, alignment: 'right' },
-                { text: ot.serviceDate ? new Date(ot.serviceDate).toISOString().split('T')[0] : '', alignment: 'center' }
+                {
+                  text: 'FECHA PRESTACIÓN SERVICIO:',
+                  bold: true,
+                  alignment: 'right',
+                },
+                {
+                  text: ot.serviceDate
+                    ? new Date(ot.serviceDate).toISOString().split('T')[0]
+                    : '',
+                  alignment: 'center',
+                },
               ],
               [
-                { text: `CIUDAD:       ${ot.client?.city || ''}`, colSpan: 2, margin: [0, 2, 0, 0] },
+                {
+                  text: `CIUDAD:       ${ot.client?.city || ''}`,
+                  colSpan: 2,
+                  margin: [0, 2, 0, 0],
+                },
                 '',
                 { text: 'OFERTA No.', bold: true, alignment: 'right' },
-                { text: ot.quote?.quoteNumber || '', alignment: 'center', fillColor: '#d9d9d9' }
+                {
+                  text: ot.quote?.quoteNumber || '',
+                  alignment: 'center',
+                  fillColor: '#d9d9d9',
+                },
               ],
               [
-                { text: `CONTACTO:     ${ot.client?.contactName || ''}`, colSpan: 4, margin: [0, 2, 0, 0] }
+                {
+                  text: `CONTACTO:     ${ot.client?.contactName || ''}`,
+                  colSpan: 4,
+                  margin: [0, 2, 0, 0],
+                },
               ],
               [
-                { text: `ACTIVIDAD:    ${ot.activity || 'Calibración equipos de pesaje'}`, colSpan: 4, margin: [0, 2, 0, 5] }
-              ]
-            ]
+                {
+                  text: `ACTIVIDAD:    ${ot.activity || 'Calibración equipos de pesaje'}`,
+                  colSpan: 4,
+                  margin: [0, 2, 0, 5],
+                },
+              ],
+            ],
           },
           layout: {
             hLineWidth: (i: number) => 1,
-            vLineWidth: (i: number) => (i === 1 || i === 2 || i === 3) ? 1 : 1,
+            vLineWidth: (i: number) => (i === 1 || i === 2 || i === 3 ? 1 : 1),
             hLineColor: (i: number) => '#0000ff',
             vLineColor: (i: number) => '#0000ff',
-            vLineStyle: (i: number) => (i > 0 && i < 4) ? { dash: { length: 4, space: 4 } } : null
+            vLineStyle: (i: number) =>
+              i > 0 && i < 4 ? { dash: { length: 4, space: 4 } } : null,
           },
-          margin: [0, 0, 0, 10]
+          margin: [0, 0, 0, 10],
         },
         {
           table: {
@@ -249,30 +333,62 @@ export class WorkOrdersService {
             widths: ['auto', 'auto', '*'],
             body: [
               [
-                { text: 'ITEM No.', bold: true, alignment: 'center', fillColor: '#b30000', color: 'white' },
-                { text: 'CANTIDAD', bold: true, alignment: 'center', fillColor: '#b30000', color: 'white' },
-                { text: 'DESCRIPCIÓN\n(Características técnicas)', bold: true, alignment: 'center', fillColor: '#b30000', color: 'white' }
+                {
+                  text: 'ITEM No.',
+                  bold: true,
+                  alignment: 'center',
+                  fillColor: '#b30000',
+                  color: 'white',
+                },
+                {
+                  text: 'CANTIDAD',
+                  bold: true,
+                  alignment: 'center',
+                  fillColor: '#b30000',
+                  color: 'white',
+                },
+                {
+                  text: 'DESCRIPCIÓN\n(Características técnicas)',
+                  bold: true,
+                  alignment: 'center',
+                  fillColor: '#b30000',
+                  color: 'white',
+                },
               ],
               ...(ot.items?.map((item, index) => [
-                { text: (index + 1).toString(), alignment: 'center', margin: [0, 5] },
+                {
+                  text: (index + 1).toString(),
+                  alignment: 'center',
+                  margin: [0, 5],
+                },
                 { text: '1', alignment: 'center', margin: [0, 5] },
-                { text: `${item.technicalNotes || 'Calibración con acreditación:'}\n${item.equipment?.brand || ''} ${item.equipment?.model || ''} - S/N: ${item.equipment?.serialNumber || ''} - Cod: ${item.equipment?.internalCode || ''}`, margin: [0, 5] }
+                {
+                  text: `${item.technicalNotes || 'Calibración con acreditación:'}\n${item.equipment?.brand || ''} ${item.equipment?.model || ''} - S/N: ${item.equipment?.serialNumber || ''} - Cod: ${item.equipment?.internalCode || ''}`,
+                  margin: [0, 5],
+                },
               ]) || []),
               // Add empty rows to match format
-              ...Array.from({ length: Math.max(0, 15 - (ot.items?.length || 0)) }).map((_, i) => [
-                { text: ((ot.items?.length || 0) + i + 1).toString(), alignment: 'center' },
-                '', ''
-              ])
-            ]
+              ...Array.from({
+                length: Math.max(0, 15 - (ot.items?.length || 0)),
+              }).map((_, i) => [
+                {
+                  text: ((ot.items?.length || 0) + i + 1).toString(),
+                  alignment: 'center',
+                },
+                '',
+                '',
+              ]),
+            ],
           },
           layout: {
             hLineWidth: (i: number) => 1,
             vLineWidth: (i: number) => 1,
             hLineColor: (i: number) => '#0000ff',
             vLineColor: (i: number) => '#0000ff',
-            vLineStyle: (i: number) => (i > 0 && i < 3) ? { dash: { length: 4, space: 4 } } : null
+            vLineStyle: (i: number) =>
+              i > 0 && i < 3 ? { dash: { length: 4, space: 4 } } : null,
           },
-          margin: [0, 0, 0, 10]
+          margin: [0, 0, 0, 10],
         },
         {
           table: {
@@ -286,28 +402,47 @@ export class WorkOrdersService {
                     `                               Dirección:                            ${ot.certificateAddress || ''}\n`,
                     `                               Contacto:                             ${ot.certificateContact || ''}\n`,
                     `                               Teléfono:                             ${ot.certificatePhone || ''}\n`,
-                    `                               Ciudad:                               ${ot.certificateCity || ''}\n`
+                    `                               Ciudad:                               ${ot.certificateCity || ''}\n`,
                   ],
-                  margin: [0, 5, 0, 20]
-                }
-              ]
-            ]
+                  margin: [0, 5, 0, 20],
+                },
+              ],
+            ],
           },
-          layout: { hLineWidth: () => 1, vLineWidth: () => 1, hLineColor: () => '#0000ff', vLineColor: () => '#0000ff' }
+          layout: {
+            hLineWidth: () => 1,
+            vLineWidth: () => 1,
+            hLineColor: () => '#0000ff',
+            vLineColor: () => '#0000ff',
+          },
         },
         {
           table: {
             widths: ['50%', '50%'],
             body: [
               [
-                { text: 'Solicitante\n\n\n\n\n' + (ot.requesterName || '') + '\n' + (ot.requesterRole || ''), bold: true },
-                { text: 'Autorizado\n\n\n\n\n' + (ot.authorizerName || '') + '\n' + (ot.authorizerRole || ''), bold: true }
-              ]
-            ]
+                {
+                  text:
+                    'Solicitante\n\n\n\n\n' +
+                    (ot.requesterName || '') +
+                    '\n' +
+                    (ot.requesterRole || ''),
+                  bold: true,
+                },
+                {
+                  text:
+                    'Autorizado\n\n\n\n\n' +
+                    (ot.authorizerName || '') +
+                    '\n' +
+                    (ot.authorizerRole || ''),
+                  bold: true,
+                },
+              ],
+            ],
           },
-          layout: 'noBorders'
-        }
-      ]
+          layout: 'noBorders',
+        },
+      ],
     };
 
     return new Promise((resolve, reject) => {
@@ -333,11 +468,11 @@ export class WorkOrdersService {
     // Just some basic styling matching PDF
     worksheet.mergeCells('A1:C2');
     worksheet.getCell('A1').value = 'Logo'; // placeholder
-    
+
     worksheet.mergeCells('D1:E1');
     worksheet.getCell('D1').value = 'ORDEN DE TRABAJO';
     worksheet.getCell('D1').font = { bold: true, size: 14 };
-    
+
     worksheet.mergeCells('D2:E2');
     worksheet.getCell('D2').value = 'Código CL-FR-04 Versión 01 de 2020-11-28';
 
@@ -349,17 +484,20 @@ export class WorkOrdersService {
     worksheet.getCell('A5').value = 'DIRECCIÓN:';
     worksheet.getCell('B5').value = ot.client?.address || '';
     worksheet.getCell('D5').value = 'FECHA DE SOLICITUD:';
-    worksheet.getCell('E5').value = ot.requestDate ? new Date(ot.requestDate).toISOString().split('T')[0] : '';
+    worksheet.getCell('E5').value = ot.requestDate
+      ? new Date(ot.requestDate).toISOString().split('T')[0]
+      : '';
 
     worksheet.getCell('A10').value = 'ITEM No.';
     worksheet.getCell('B10').value = 'CANTIDAD';
     worksheet.getCell('C10').value = 'DESCRIPCIÓN';
-    
+
     let currentRow = 11;
     (ot.items || []).forEach((item, index) => {
       worksheet.getCell(`A${currentRow}`).value = index + 1;
       worksheet.getCell(`B${currentRow}`).value = 1;
-      worksheet.getCell(`C${currentRow}`).value = `${item.technicalNotes || ''} - ${item.equipment?.brand || ''} ${item.equipment?.model || ''}`;
+      worksheet.getCell(`C${currentRow}`).value =
+        `${item.technicalNotes || ''} - ${item.equipment?.brand || ''} ${item.equipment?.model || ''}`;
       currentRow++;
     });
 
@@ -368,11 +506,11 @@ export class WorkOrdersService {
   }
 
   async exportToExcel(): Promise<Buffer> {
-    const items = await this.workOrderItemsRepo.find({ 
-      relations: { workOrder: { client: true }, equipment: true }, 
-      order: { createdAt: 'DESC' } 
+    const items = await this.workOrderItemsRepo.find({
+      relations: { workOrder: { client: true }, equipment: true },
+      order: { createdAt: 'DESC' },
     });
-    const data = items.map(item => ({
+    const data = items.map((item) => ({
       OT: item.workOrder?.otNumber,
       NITCliente: item.workOrder?.client?.nit || '',
       NombreCliente: item.workOrder?.client?.companyName || '',
@@ -386,11 +524,21 @@ export class WorkOrdersService {
     return this.excelService.exportToExcel(data, 'OrdenesTrabajo');
   }
 
-  async addPhoto(itemId: string, file: Express.Multer.File, userId: string, description?: string): Promise<WorkOrderPhoto> {
-    const item = await this.workOrderItemsRepo.findOne({ where: { id: itemId } });
+  async addPhoto(
+    itemId: string,
+    file: Express.Multer.File,
+    userId: string,
+    description?: string,
+  ): Promise<WorkOrderPhoto> {
+    const item = await this.workOrderItemsRepo.findOne({
+      where: { id: itemId },
+    });
     if (!item) throw new NotFoundException('Item no encontrado');
 
-    const uploaded = await this.cloudinaryService.uploadImage(file, 'labtronix/equipment');
+    const uploaded = await this.cloudinaryService.uploadImage(
+      file,
+      'labtronix/equipment',
+    );
 
     const photo = this.photosRepo.create({
       workOrderItemId: itemId,
@@ -411,7 +559,10 @@ export class WorkOrdersService {
   }
 
   // Import simplified to skip for now since it needs heavy changes, we can return empty
-  async importFromExcel(buffer: Buffer, userId: string): Promise<{ total: number; created: number; updated: number }> {
+  async importFromExcel(
+    buffer: Buffer,
+    userId: string,
+  ): Promise<{ total: number; created: number; updated: number }> {
     return { total: 0, created: 0, updated: 0 };
   }
 }

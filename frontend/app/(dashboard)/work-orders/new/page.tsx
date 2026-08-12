@@ -37,9 +37,9 @@ export default function NewWorkOrderPage() {
   useEffect(() => {
     Promise.all([equipmentApi.getAll(), quotesApi.getAll(), usersApi.getAll()])
       .then(([e, q, u]) => {
-        setEquipments(e);
-        setQuotes(q);
-        setTechnicians(u.filter((user: User) => user.role === 'TECNICO' || user.role === 'ADMIN'));
+        setEquipments(e.data || e);
+        setQuotes(q.data || q);
+        setTechnicians((Array.isArray(u) ? u : u.data || []).filter((user: User) => user.role === 'TECNICO' || user.role === 'ADMIN'));
         
         // Auto-generate OT Number (in a real app, backend would generate this)
         const year = new Date().getFullYear().toString().slice(-2);

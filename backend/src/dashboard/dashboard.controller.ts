@@ -26,12 +26,17 @@ export class DashboardController {
 
   @Get('revenue')
   @ApiOperation({ summary: 'Obtener ingresos a través del tiempo' })
-  getRevenueTimeline(@Query('period') period: 'day' | 'month' | 'quarter' | 'year') {
+  getRevenueTimeline(
+    @Query('period') period: 'day' | 'month' | 'quarter' | 'year',
+  ) {
     return this.dashboardService.getRevenueTimeline(period || 'month');
   }
 
   @Get('advanced-metrics')
-  @ApiOperation({ summary: 'Obtener métricas gerenciales avanzadas (Lead time, WIP, Pareto, Alertas)' })
+  @ApiOperation({
+    summary:
+      'Obtener métricas gerenciales avanzadas (Lead time, WIP, Pareto, Alertas)',
+  })
   getAdvancedMetrics() {
     return this.dashboardService.getAdvancedMetrics();
   }
@@ -47,7 +52,8 @@ export class DashboardController {
   async exportDashboard(@Res() res) {
     const buffer = await this.dashboardService.exportDashboardToExcel();
     res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': 'attachment; filename="dashboard_gerencial.xlsx"',
       'Content-Length': buffer.length,
     });

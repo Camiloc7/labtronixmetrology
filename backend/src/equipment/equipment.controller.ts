@@ -1,5 +1,16 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query, UseGuards, UseInterceptors, UploadedFile, Res, BadRequestException
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  Res,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
@@ -11,6 +22,10 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import {
+  assertExcelUpload,
+  excelUploadOptions,
+} from '../common/file-validation/upload-validation';
 
 @ApiTags('Equipos')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,7 +39,8 @@ export class EquipmentController {
   async exportExcel(@Res() res: Response) {
     const buffer = await this.equipmentService.exportToExcel();
     res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': 'attachment; filename="equipos.xlsx"',
     });
     res.send(buffer);
@@ -33,9 +49,12 @@ export class EquipmentController {
   @Post('import')
   @Roles('ADMIN', 'COMERCIAL')
   @ApiOperation({ summary: 'Importar equipos desde Excel' })
-  @UseInterceptors(FileInterceptor('file'))
-  async importExcel(@UploadedFile() file: Express.Multer.File, @CurrentUser('sub') userId: string) {
-    if (!file) throw new BadRequestException('Archivo no proporcionado');
+  @UseInterceptors(FileInterceptor('file', excelUploadOptions))
+  async importExcel(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser('sub') userId: string,
+  ) {
+    assertExcelUpload(file);
     return this.equipmentService.importFromExcel(file.buffer, userId);
   }
 
@@ -47,7 +66,9 @@ export class EquipmentController {
 
   @Get('receptions/quote/:quoteId')
   @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
-  @ApiOperation({ summary: 'Obtener recepciones de equipos por ID de cotización' })
+  @ApiOperation({
+    summary: 'Obtener recepciones de equipos por ID de cotización',
+  })
   getReceptionsByQuoteId(@Param('quoteId') quoteId: string) {
     return this.equipmentService.getReceptionsByQuoteId(quoteId);
   }
@@ -60,8 +81,13 @@ export class EquipmentController {
 
   @Post('sync-from-quote/:quoteId')
   @Roles('ADMIN', 'COMERCIAL')
-  @ApiOperation({ summary: 'Registrar equipos en el inventario desde una cotización' })
-  syncFromQuote(@Param('quoteId') quoteId: string, @CurrentUser('sub') userId: string) {
+  @ApiOperation({
+    summary: 'Registrar equipos en el inventario desde una cotización',
+  })
+  syncFromQuote(
+    @Param('quoteId') quoteId: string,
+    @CurrentUser('sub') userId: string,
+  ) {
     return this.equipmentService.syncFromQuote(quoteId, userId);
   }
 

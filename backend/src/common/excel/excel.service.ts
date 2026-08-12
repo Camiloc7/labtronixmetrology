@@ -17,10 +17,10 @@ export class ExcelService {
         const row = headers.map((header) => {
           const value = item[header];
           if (value instanceof Date) {
-             return value.toISOString();
+            return value.toISOString();
           }
           if (typeof value === 'object' && value !== null) {
-             return JSON.stringify(value);
+            return JSON.stringify(value);
           }
           return value;
         });
@@ -43,7 +43,7 @@ export class ExcelService {
       if (buffer) {
         await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
       }
-      
+
       const worksheet = workbook.worksheets[0]; // Take first sheet
       if (!worksheet) {
         throw new BadRequestException('El archivo Excel está vacío');
@@ -60,7 +60,7 @@ export class ExcelService {
           // Map values to headers
           const rowData: any = {};
           const values = (row.values as any[]).slice(1);
-          
+
           headers.forEach((header, index) => {
             let val = values[index];
             // Handle formulas
@@ -76,7 +76,7 @@ export class ExcelService {
               rowData[header] = val !== undefined ? val : null;
             }
           });
-          
+
           // Check if row is not completely empty
           if (Object.values(rowData).some((v) => v !== null && v !== '')) {
             rows.push(rowData);
@@ -86,7 +86,9 @@ export class ExcelService {
 
       return rows;
     } catch (error) {
-      throw new BadRequestException(`Error al procesar archivo Excel: ${error.message}`);
+      throw new BadRequestException(
+        `Error al procesar archivo Excel: ${error.message}`,
+      );
     }
   }
 }

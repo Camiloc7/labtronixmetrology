@@ -12,15 +12,26 @@ export class SettingsService implements OnModuleInit {
 
   // Some default keys
   private readonly defaultSettings = [
-    { key: 'company_address', value: 'Carrera 106 # 15 - 25 Manzana 14 - Bodega 92 zona franca Fontibón', description: 'Dirección principal' },
-    { key: 'company_phones', value: '3115111439 / 4238000 EXT: 33373 - 33374 - 33320 - 33324 - 33290', description: 'Teléfonos de contacto' },
+    {
+      key: 'company_address',
+      value:
+        'Carrera 106 # 15 - 25 Manzana 14 - Bodega 92 zona franca Fontibón',
+      description: 'Dirección principal',
+    },
+    {
+      key: 'company_phones',
+      value: '3115111439 / 4238000 EXT: 33373 - 33374 - 33320 - 33324 - 33290',
+      description: 'Teléfonos de contacto',
+    },
     { key: 'company_city', value: 'Bogotá D.C.', description: 'Ciudad' },
   ];
 
   async onModuleInit() {
     // Seed default settings if they don't exist
     for (const setting of this.defaultSettings) {
-      const exists = await this.settingsRepo.findOne({ where: { key: setting.key } });
+      const exists = await this.settingsRepo.findOne({
+        where: { key: setting.key },
+      });
       if (!exists) {
         await this.settingsRepo.save(setting);
       }
@@ -36,7 +47,11 @@ export class SettingsService implements OnModuleInit {
     return this.settingsRepo.find();
   }
 
-  async set(key: string, value: string, description?: string): Promise<Setting> {
+  async set(
+    key: string,
+    value: string,
+    description?: string,
+  ): Promise<Setting> {
     let setting = await this.settingsRepo.findOne({ where: { key } });
     if (setting) {
       setting.value = value;

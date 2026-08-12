@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { EmailRequest, EmailRequestStatus } from './entities/email-request.entity';
+import {
+  EmailRequest,
+  EmailRequestStatus,
+} from './entities/email-request.entity';
 import { ExcelService } from '../common/excel/excel.service';
 
 @Injectable()
@@ -30,9 +33,20 @@ export class EmailRequestsService {
 
   private extractEquipments(content: string): string[] {
     const equipmentKeywords = [
-      'balanza', 'báscula', 'termómetro', 'manómetro', 'calibrador',
-      'micrómetro', 'vernier', 'cronómetro', 'voltímetro', 'amperímetro',
-      'multímetro', 'transductor', 'sensor', 'higrómetro',
+      'balanza',
+      'báscula',
+      'termómetro',
+      'manómetro',
+      'calibrador',
+      'micrómetro',
+      'vernier',
+      'cronómetro',
+      'voltímetro',
+      'amperímetro',
+      'multímetro',
+      'transductor',
+      'sensor',
+      'higrómetro',
     ];
     const found: string[] = [];
     for (const kw of equipmentKeywords) {
@@ -51,7 +65,11 @@ export class EmailRequestsService {
     return this.emailRequestsRepo.save(req);
   }
 
-  async process(id: string, userId: string, clientId?: string): Promise<EmailRequest> {
+  async process(
+    id: string,
+    userId: string,
+    clientId?: string,
+  ): Promise<EmailRequest> {
     const req = await this.emailRequestsRepo.findOne({ where: { id } });
     if (!req) throw new NotFoundException('Solicitud no encontrada');
     req.status = EmailRequestStatus.PROCESADO;
@@ -69,8 +87,10 @@ export class EmailRequestsService {
   }
 
   async exportToExcel(): Promise<Buffer> {
-    const requests = await this.emailRequestsRepo.find({ order: { createdAt: 'DESC' } });
-    const data = requests.map(req => ({
+    const requests = await this.emailRequestsRepo.find({
+      order: { createdAt: 'DESC' },
+    });
+    const data = requests.map((req) => ({
       ID: req.id,
       ContenidoOriginal: req.rawContent,
       EmailsExtraidos: req.extractedData?.emails?.join(', ') || '',
@@ -81,7 +101,9 @@ export class EmailRequestsService {
     return this.excelService.exportToExcel(data, 'SolicitudesEmail');
   }
 
-  async importFromExcel(buffer: Buffer): Promise<{ total: number; created: number; updated: number }> {
+  async importFromExcel(
+    buffer: Buffer,
+  ): Promise<{ total: number; created: number; updated: number }> {
     const data = await this.excelService.importFromExcel(buffer);
     let created = 0;
     let updated = 0;
@@ -92,7 +114,7 @@ export class EmailRequestsService {
       if (!rawContent) continue;
 
       let req: EmailRequest | null = null;
-      if (id && id.length === 36) { 
+      if (id && id.length === 36) {
         req = await this.emailRequestsRepo.findOne({ where: { id } });
       }
 

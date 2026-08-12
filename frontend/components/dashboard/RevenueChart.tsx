@@ -69,8 +69,8 @@ export function RevenueChart({ data, period, setPeriod }: RevenueChartProps) {
               <XAxis dataKey="date" tickFormatter={formatDate} stroke="var(--color-text-muted)" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis tickFormatter={formatCurrency} stroke="var(--color-text-muted)" fontSize={12} tickLine={false} axisLine={false} />
               <Tooltip 
-                formatter={(value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(value)}
-                labelFormatter={formatDate}
+                formatter={(value) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(Number(value ?? 0))}
+                labelFormatter={(label) => formatDate(String(label ?? ''))}
                 contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)', boxShadow: 'var(--shadow-md)' }}
               />
               <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />

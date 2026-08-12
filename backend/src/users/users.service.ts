@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -15,9 +19,13 @@ export class UsersService {
     private readonly excelService: ExcelService,
   ) {}
 
-  async findAll(): Promise<Omit<User, 'passwordHash'>[]> {
+  async findAll(): Promise<
+    Omit<User, 'passwordHash' | 'hashedRefreshToken'>[]
+  > {
     const users = await this.usersRepo.find({ order: { createdAt: 'DESC' } });
-    return users.map(({ passwordHash: _, ...rest }) => rest as any);
+    return users.map(
+      ({ passwordHash: _, hashedRefreshToken: __, ...rest }) => rest as any,
+    );
   }
 
   async findOne(id: string): Promise<User> {
@@ -34,15 +42,27 @@ export class UsersService {
     return this.usersRepo.findOne({ where: { googleId } });
   }
 
-  async updateRefreshToken(id: string, hashedToken: string | null): Promise<void> {
-    await this.usersRepo.update(id, { hashedRefreshToken: hashedToken } as any);
+  async updateRefreshToken(
+    id: string,
+    hashedToken: string | null,
+  ): Promise<void> {
+    await this.usersRepo.update(id, { hashedRefreshToken: hashedToken });
   }
 
-  async updateLoginAttempts(id: string, attempts: number, lockedUntil: Date | null): Promise<void> {
-    await this.usersRepo.update(id, { failedLoginAttempts: attempts, lockedUntil } as any);
+  async updateLoginAttempts(
+    id: string,
+    attempts: number,
+    lockedUntil: Date | null,
+  ): Promise<void> {
+    await this.usersRepo.update(id, {
+      failedLoginAttempts: attempts,
+      lockedUntil,
+    });
   }
 
-  async create(dto: CreateUserDto): Promise<Omit<User, 'passwordHash'>> {
+  async create(
+    dto: CreateUserDto,
+  ): Promise<Omit<User, 'passwordHash' | 'hashedRefreshToken'>> {
     const exists = await this.findByEmail(dto.email);
     if (exists) throw new ConflictException('El email ya está registrado');
 
@@ -52,11 +72,15 @@ export class UsersService {
     }
     const user = this.usersRepo.create({ ...dto, passwordHash });
     const saved = await this.usersRepo.save(user);
-    const { passwordHash: _, ...result } = saved;
-    return result as any;
+    const { passwordHash: _, hashedRefreshToken: __, ...result } = saved;
+    return result;
   }
 
-  async createGoogleUser(email: string, name: string, googleId: string): Promise<User> {
+  async createGoogleUser(
+    email: string,
+    name: string,
+    googleId: string,
+  ): Promise<User> {
     const user = this.usersRepo.create({
       email,
       name,
@@ -67,15 +91,18 @@ export class UsersService {
     return this.usersRepo.save(user);
   }
 
-  async update(id: string, dto: UpdateUserDto): Promise<Omit<User, 'passwordHash'>> {
+  async update(
+    id: string,
+    dto: UpdateUserDto,
+  ): Promise<Omit<User, 'passwordHash' | 'hashedRefreshToken'>> {
     const user = await this.findOne(id);
     if (dto.password) {
       (dto as any).passwordHash = await bcrypt.hash(dto.password, 10);
       delete dto.password;
     }
     const updated = await this.usersRepo.save({ ...user, ...dto });
-    const { passwordHash: _, ...result } = updated;
-    return result as any;
+    const { passwordHash: _, hashedRefreshToken: __, ...result } = updated;
+    return result;
   }
 
   async deactivate(id: string): Promise<{ message: string }> {
@@ -86,7 +113,7 @@ export class UsersService {
 
   async exportToExcel(): Promise<Buffer> {
     const users = await this.usersRepo.find({ order: { createdAt: 'DESC' } });
-    const data = users.map(user => ({
+    const data = users.map((user) => ({
       Nombre: user.name,
       Email: user.email,
       Rol: user.role,
@@ -96,7 +123,9 @@ export class UsersService {
     return this.excelService.exportToExcel(data, 'Usuarios');
   }
 
-  async importFromExcel(buffer: Buffer): Promise<{ total: number; created: number; updated: number }> {
+  async importFromExcel(
+    buffer: Buffer,
+  ): Promise<{ total: number; created: number; updated: number }> {
     const data = await this.excelService.importFromExcel(buffer);
     let created = 0;
     let updated = 0;
@@ -106,7 +135,7 @@ export class UsersService {
       if (!email) continue;
 
       const user = await this.findByEmail(email);
-      const role = row['Rol'] as UserRole || UserRole.COMERCIAL;
+      const role = (row['Rol'] as UserRole) || UserRole.COMERCIAL;
 
       const payload = {
         name: row['Nombre'] || user?.name || 'Sin Nombre',
