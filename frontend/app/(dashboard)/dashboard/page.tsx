@@ -58,32 +58,43 @@ export default function DashboardPage() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [otStats, ots, clients, equips, quotes, kpiRes, statusRes, advRes] = await Promise.all([
+      const isPrivileged = user?.role === 'ADMIN';
+      const promises: any[] = [
         workOrdersApi.getStats(),
         workOrdersApi.getAll(1, 5),
         clientsApi.getAll(1, 100),
         equipmentApi.getAll(1, 1000),
         quotesApi.getAll(1, 1),
-        dashboardApi.getKpis(),
-        dashboardApi.getQuotesByStatus(),
-        dashboardApi.getAdvancedMetrics(),
-      ]);
-      setStats(otStats);
-      setRecentOTs(ots.data);
-      setClientCount(clients.meta.total);
-      setEquipmentCount(equips.meta.total);
-      setQuoteCount(quotes.meta.total);
-      setAllClients(clients.data);
-      setAllEquipment(equips.data);
-      setKpis({ ...kpiRes, wipValue: advRes.wipValue });
-      setStatusData(statusRes);
-      setAdvancedMetrics(advRes);
+      ];
+
+      if (isPrivileged) {
+        promises.push(
+          dashboardApi.getKpis(),
+          dashboardApi.getQuotesByStatus(),
+          dashboardApi.getAdvancedMetrics(),
+        );
+      }
+
+      const results = await Promise.all(promises);
+      setStats(results[0]);
+      setRecentOTs(results[1].data);
+      setClientCount(results[2].meta.total);
+      setEquipmentCount(results[3].meta.total);
+      setQuoteCount(results[4].meta.total);
+      setAllClients(results[2].data);
+      setAllEquipment(results[3].data);
+
+      if (isPrivileged) {
+        setKpis({ ...results[5], wipValue: results[7].wipValue });
+        setStatusData(results[6]);
+        setAdvancedMetrics(results[7]);
+      }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.role]);
 
   useEffect(() => {
     fetchAll();
@@ -92,8 +103,10 @@ export default function DashboardPage() {
   useEffect(() => subscribeToWorkOrderEvents(fetchAll), [fetchAll]);
 
   useEffect(() => {
-    dashboardApi.getRevenueTimeline(revenuePeriod).then(setRevenueData).catch(console.error);
-  }, [revenuePeriod]);
+    if (user?.role === 'ADMIN') {
+      dashboardApi.getRevenueTimeline(revenuePeriod).then(setRevenueData).catch(console.error);
+    }
+  }, [revenuePeriod, user?.role]);
 
   const handleExport = async () => {
     try {
@@ -190,21 +203,23 @@ export default function DashboardPage() {
             Aquí está el resumen del sistema &middot; {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
-        <div>
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            className="btn btn--primary"
-            style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-          >
-            {exporting ? (
-              <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
-            ) : (
-              <DownloadSimple size={20} weight="bold" />
-            )}
-            {exporting ? 'Exportando...' : 'Exportar Reporte'}
-          </button>
-        </div>
+        {user?.role === 'ADMIN' && (
+          <div>
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="btn btn--primary"
+              style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+            >
+              {exporting ? (
+                <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
+              ) : (
+                <DownloadSimple size={20} weight="bold" />
+              )}
+              {exporting ? 'Exportando...' : 'Exportar Reporte'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Tabs Navigation */}
@@ -223,20 +238,22 @@ export default function DashboardPage() {
         >
           Operaciones y Flujo
         </button>
-        <button
-          onClick={() => setActiveTab('finanzas')}
-          style={{
-            padding: '12px 24px',
-            fontSize: '1rem',
-            fontWeight: 600,
-            color: activeTab === 'finanzas' ? 'var(--color-brand)' : 'var(--color-text-muted)',
-            borderBottom: activeTab === 'finanzas' ? '3px solid var(--color-brand)' : '3px solid transparent',
-            background: 'transparent',
-            transition: 'all 0.2s',
-          }}
-        >
-          Finanzas y Cotizaciones
-        </button>
+        {user?.role === 'ADMIN' && (
+          <button
+            onClick={() => setActiveTab('finanzas')}
+            style={{
+              padding: '12px 24px',
+              fontSize: '1rem',
+              fontWeight: 600,
+              color: activeTab === 'finanzas' ? 'var(--color-brand)' : 'var(--color-text-muted)',
+              borderBottom: activeTab === 'finanzas' ? '3px solid var(--color-brand)' : '3px solid transparent',
+              background: 'transparent',
+              transition: 'all 0.2s',
+            }}
+          >
+            Finanzas y Cotizaciones
+          </button>
+        )}
       </div>
 
       {activeTab === 'operaciones' && (
