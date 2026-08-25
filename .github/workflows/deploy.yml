@@ -1,0 +1,24 @@
+name: Deploy to VPS (Docker)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Ir al directorio del repositorio (asume que está en el home del usuario)
+            cd ~/labtronixmetrology
+            
+            # Ejecutamos el script de despliegue que usa Docker Compose
+            bash scripts/deploy.sh
