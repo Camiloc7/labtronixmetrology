@@ -6,48 +6,45 @@ services:
     container_name: labtronix_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: labtronix_db
-      POSTGRES_USER: labtronix_user
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-labtronix_dev_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-labtronix_db}
+      POSTGRES_USER: ${POSTGRES_USER:-labtronix_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - labtronix_internal
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U labtronix_user -d labtronix_db']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-labtronix_user} -d ${POSTGRES_DB:-labtronix_db}']
       interval: 10s
       timeout: 5s
       retries: 5
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: labtronix_backend
+  redis:
+    image: redis:7-alpine
+    container_name: labtronix_redis
     restart: unless-stopped
-    env_file:
-      - ./backend/.env
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
     ports:
-      - '3001:3001'
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - '127.0.0.1:6379:6379'
     volumes:
-      - ./backend/uploads:/app/uploads
+      - redis_data:/data
+    networks:
+      - labtronix_internal
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: labtronix_frontend
-    restart: unless-stopped
-    env_file:
-      - ./frontend/.env.local
-    ports:
-      - '3000:3000'
-    depends_on:
-      - backend
+networks:
+  labtronix_internal:
+    driver: bridge
+    internal: false
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
     driver: local

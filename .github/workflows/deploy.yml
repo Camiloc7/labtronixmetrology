@@ -1,4 +1,4 @@
-name: Deploy to VPS (Docker)
+name: Deploy to VPS
 
 on:
   push:
@@ -17,8 +17,5 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # Ir al directorio del repositorio (asume que está en el home del usuario)
             cd ~/labtronixmetrology
-            
-            # Ejecutamos el script de despliegue que usa Docker Compose
             bash scripts/deploy.sh
