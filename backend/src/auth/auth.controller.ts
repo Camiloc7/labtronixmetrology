@@ -31,6 +31,7 @@ export class AuthController {
 
   private setCookies(res: Response, accessToken: string, refreshToken: string) {
     const isProd = process.env.NODE_ENV === 'production';
+    const cookieSecure = process.env.COOKIE_SECURE !== 'false';
 
     // Access Token: 15 minutes by default or matching JWT_EXPIRES_IN (e.g., 15m)
     const accessExpiresIn = this.configService.get<string>(
@@ -51,16 +52,16 @@ export class AuthController {
 
     res.cookie('jwt', accessToken, {
       httpOnly: true,
-      secure: isProd,
+      secure: isProd && cookieSecure,
       sameSite: isProd ? 'strict' : 'lax',
       maxAge: accessMaxAge,
     });
 
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: isProd,
+      secure: isProd && cookieSecure,
       sameSite: isProd ? 'strict' : 'lax',
-      path: '/api/v1/auth/refresh', // Solo se envía en esta ruta para mayor seguridad
+      path: '/api/v1/auth/refresh',
       maxAge: refreshMaxAge,
     });
   }
