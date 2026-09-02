@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Ensure PATH and environment variables are loaded for non-interactive SSH sessions (e.g., Docker, NVM, PM2)
+source ~/.profile 2>/dev/null || true
+source ~/.bashrc 2>/dev/null || true
+source ~/.bash_profile 2>/dev/null || true
+export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/snap/bin:~/.npm-global/bin
+
 # Directorio de la aplicacion
 cd "$(dirname "$0")/.."
 APP_DIR=$(pwd)
