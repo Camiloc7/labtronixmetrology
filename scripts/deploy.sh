@@ -46,13 +46,13 @@ done
 # 3. Build del Backend
 echo "[3/5] Construyendo Backend..."
 cd "$APP_DIR/backend"
-npm install --omit=dev
+npm install
 npm run build
 
 # 4. Build del Frontend
 echo "[4/5] Construyendo Frontend..."
 cd "$APP_DIR/frontend"
-npm install --omit=dev
+npm install
 npm run build
 
 # 5. Recargar PM2
