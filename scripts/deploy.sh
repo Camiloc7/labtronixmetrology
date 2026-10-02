@@ -52,6 +52,7 @@ npm run build
 # 4. Build del Frontend
 echo "[4/5] Construyendo Frontend..."
 cd "$APP_DIR/frontend"
+rm -rf .next
 npm install --include=dev
 npm run build
 
