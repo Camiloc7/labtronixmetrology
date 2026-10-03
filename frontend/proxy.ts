@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = ['/login', '/', '/sobre-nosotros', '/images'];
+const EXACT_PUBLIC_PATHS = ['/'];
+const PREFIX_PUBLIC_PATHS = ['/login', '/sobre-nosotros', '/images'];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Permitir rutas públicas
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  if (EXACT_PUBLIC_PATHS.includes(pathname) || PREFIX_PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
