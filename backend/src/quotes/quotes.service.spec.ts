@@ -3,12 +3,24 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { QuotesService } from './quotes.service';
 import { Quote, QuoteStatus } from './entities/quote.entity';
 import { QuoteItem } from './entities/quote-item.entity';
+import { QuoteHistory } from './entities/quote-history.entity';
+import { ServiceTracking } from './entities/service-tracking.entity';
 import { Client } from '../clients/entities/client.entity';
 import { ExcelService } from '../common/excel/excel.service';
 import { SettingsService } from '../settings/settings.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { NotFoundException } from '@nestjs/common';
 import { ILike } from 'typeorm';
 import { Response } from 'express';
+
+const mockManager = {
+  save: jest.fn((entity: any, data?: any) =>
+    Promise.resolve(data !== undefined ? data : entity),
+  ),
+  create: jest.fn((entity: any, data: any) => ({ ...data })),
+  delete: jest.fn(() => Promise.resolve()),
+  transaction: jest.fn(async (cb: any) => cb(mockManager)),
+};
 
 const mockQuotesRepo = {
   findAndCount: jest.fn(),
@@ -16,6 +28,8 @@ const mockQuotesRepo = {
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),
+  query: jest.fn(),
+  manager: mockManager,
 };
 
 const mockItemsRepo = {
@@ -37,6 +51,20 @@ const mockSettingsService = {
   getValue: jest.fn(),
 };
 
+const mockHistoryRepo = {
+  create: jest.fn(),
+  save: jest.fn(),
+  find: jest.fn(),
+};
+
+const mockTrackingRepo = {
+  findOne: jest.fn(),
+  save: jest.fn(),
+  create: jest.fn(),
+};
+
+const mockNotificationsService = {};
+
 describe('QuotesService', () => {
   let service: QuotesService;
 
@@ -46,9 +74,12 @@ describe('QuotesService', () => {
         QuotesService,
         { provide: getRepositoryToken(Quote), useValue: mockQuotesRepo },
         { provide: getRepositoryToken(QuoteItem), useValue: mockItemsRepo },
+        { provide: getRepositoryToken(QuoteHistory), useValue: mockHistoryRepo },
         { provide: getRepositoryToken(Client), useValue: mockClientsRepo },
+        { provide: getRepositoryToken(ServiceTracking), useValue: mockTrackingRepo },
         { provide: ExcelService, useValue: mockExcelService },
         { provide: SettingsService, useValue: mockSettingsService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
 
@@ -105,42 +136,48 @@ describe('QuotesService', () => {
   });
 
   describe('create', () => {
-    it('should generate next ID correctly when previous quote exists', async () => {
-      mockQuotesRepo.findOne.mockResolvedValue({ quoteNumber: 'COT-2023-0100' });
-      mockQuotesRepo.create.mockImplementation((entity) => ({ id: 'new-id', ...entity }));
+    beforeEach(() => {
+      mockQuotesRepo.query.mockResolvedValue([{ nextval: 101 }]);
+      mockQuotesRepo.create.mockImplementation((entity) => ({
+        id: 'new-id',
+        ...entity,
+      }));
       mockQuotesRepo.save.mockImplementation((entity) => Promise.resolve(entity));
+    });
 
-      const dto = { clientId: 'client-id', status: QuoteStatus.BORRADOR, items: [] };
+    it('should generate the next quote number from the sequence', async () => {
+      const dto = {
+        clientId: 'client-id',
+        status: QuoteStatus.BORRADOR,
+        items: [],
+      };
       const result = await service.create(dto as any, 'user-id');
-      
+
+      expect(mockQuotesRepo.query).toHaveBeenCalledWith(
+        `SELECT nextval('quote_number_seq')`,
+      );
       expect(result.quoteNumber).toBe(`COT-${new Date().getFullYear()}-0101`);
     });
 
-    it('should generate ID 0001 when no previous quote exists', async () => {
-      mockQuotesRepo.findOne.mockResolvedValue(null);
-      mockQuotesRepo.create.mockImplementation((entity) => ({ id: 'new-id', ...entity }));
-      mockQuotesRepo.save.mockImplementation((entity) => Promise.resolve(entity));
-
-      const dto = { clientId: 'client-id', status: QuoteStatus.BORRADOR, items: [] };
-      const result = await service.create(dto as any, 'user-id');
-      
+    it('should zero-pad the sequence value to 4 digits', async () => {
+      mockQuotesRepo.query.mockResolvedValue([{ nextval: 1 }]);
+      const result = await service.create(
+        { clientId: 'client', items: [] } as any,
+        'user',
+      );
       expect(result.quoteNumber).toBe(`COT-${new Date().getFullYear()}-0001`);
     });
 
-    it('should fallback to 0001 if last quote number has invalid format', async () => {
-      mockQuotesRepo.findOne.mockResolvedValue({ quoteNumber: 'INVALID-FORMAT' });
-      mockQuotesRepo.create.mockImplementation((entity) => ({ id: 'new-id', ...entity }));
-      mockQuotesRepo.save.mockImplementation((entity) => Promise.resolve(entity));
-
-      const result = await service.create({ clientId: 'client', items: [] } as any, 'user');
-      expect(result.quoteNumber).toBe(`COT-${new Date().getFullYear()}-0001`);
+    it('should not truncate sequence values over 9999', async () => {
+      mockQuotesRepo.query.mockResolvedValue([{ nextval: 12345 }]);
+      const result = await service.create(
+        { clientId: 'client', items: [] } as any,
+        'user',
+      );
+      expect(result.quoteNumber).toBe(`COT-${new Date().getFullYear()}-12345`);
     });
 
     it('should calculate totalValue correctly based on items', async () => {
-      mockQuotesRepo.findOne.mockResolvedValue(null);
-      mockQuotesRepo.create.mockImplementation(e => e);
-      mockQuotesRepo.save.mockImplementation(e => e);
-
       const dto = {
         clientId: 'client-id',
         items: [
@@ -150,39 +187,46 @@ describe('QuotesService', () => {
       };
 
       const result = await service.create(dto as any, 'user-id');
-      expect(result.totalValue).toBe(250); 
+      expect(result.totalValue).toBe(250);
       expect(result.items).toHaveLength(2);
       expect(result.items[0].subtotal).toBe(200);
     });
   });
 
   describe('update', () => {
+    const baseQuote = {
+      id: '1',
+      status: QuoteStatus.BORRADOR,
+      totalValue: 1000,
+      notes: undefined,
+      items: [],
+      client: { companyName: 'Test' },
+      quoteNumber: 'COT-1',
+    };
+
     it('should update basic fields without modifying items if items not provided', async () => {
-      mockQuotesRepo.findOne.mockResolvedValue({ id: '1', totalValue: 1000 });
-      mockQuotesRepo.save.mockImplementation(e => e);
+      mockQuotesRepo.findOne.mockResolvedValue({ ...baseQuote });
 
       const result = await service.update('1', { notes: 'New notes' });
-      
+
       expect(mockItemsRepo.delete).not.toHaveBeenCalled();
       expect(result.notes).toBe('New notes');
       expect(result.totalValue).toBe(1000); // Should remain unchanged
     });
 
     it('should delete old items and insert new ones if items are provided', async () => {
-      mockQuotesRepo.findOne.mockResolvedValue({ id: '1', totalValue: 1000 });
-      mockQuotesRepo.save.mockImplementation(e => e);
-      mockItemsRepo.save.mockResolvedValue([]);
+      mockQuotesRepo.findOne.mockResolvedValue({ ...baseQuote });
 
       const dto = {
-        items: [
-          { description: 'New item', quantity: 1, unitPrice: 200 }
-        ]
+        items: [{ description: 'New item', quantity: 1, unitPrice: 200 }],
       };
 
       const result = await service.update('1', dto as any);
-      
-      expect(mockItemsRepo.delete).toHaveBeenCalledWith({ quoteId: '1' });
-      expect(mockItemsRepo.save).toHaveBeenCalled();
+
+      expect(mockManager.delete).toHaveBeenCalledWith(QuoteItem, {
+        quoteId: '1',
+      });
+      expect(mockManager.save).toHaveBeenCalledWith(QuoteItem, expect.any(Array));
       expect(result.totalValue).toBe(200); // Should be recalculated
     });
   });
@@ -224,6 +268,9 @@ describe('QuotesService', () => {
       
       mockQuotesRepo.create.mockImplementation(e => e);
       mockQuotesRepo.save.mockResolvedValue({});
+      mockTrackingRepo.findOne.mockResolvedValue(null);
+      mockTrackingRepo.create.mockImplementation((data) => ({ ...data }));
+      mockTrackingRepo.save.mockResolvedValue({});
 
       const result = await service.importFromExcel(Buffer.from(''), 'user1');
       
