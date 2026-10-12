@@ -127,7 +127,7 @@ export class AuthService {
 
   async refreshTokens(userId: string, refreshToken: string) {
     const user = await this.usersService.findOne(userId);
-    if (!user || !user.hashedRefreshToken) {
+    if (!user || !user.isActive || !user.hashedRefreshToken) {
       throw new UnauthorizedException('Acceso denegado');
     }
 

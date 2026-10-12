@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
 import { ImportController } from './import.controller';
 import { ImportService } from './import.service';
 
@@ -17,6 +18,12 @@ describe('ImportController', () => {
           useValue: { verifyAsync: jest.fn(), signAsync: jest.fn() },
         },
         { provide: ConfigService, useValue: { get: jest.fn() } },
+        {
+          provide: DataSource,
+          useValue: {
+            getRepository: jest.fn(() => ({ findOne: jest.fn() })),
+          },
+        },
       ],
     }).compile();
 
