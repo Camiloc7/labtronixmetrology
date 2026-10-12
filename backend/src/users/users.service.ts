@@ -143,11 +143,17 @@ export class UsersService {
     >
   > {
     const user = await this.findOne(id);
+    let passwordChanged = false;
     if (dto.password) {
       (dto as any).passwordHash = await bcrypt.hash(dto.password, 10);
       delete dto.password;
+      passwordChanged = true;
     }
     const updated = await this.usersRepo.save({ ...user, ...dto });
+    // Un cambio de password invalida todas las sesiones activas.
+    if (passwordChanged) {
+      await this.revokeRefreshTokens(id);
+    }
     const {
       passwordHash: _,
       hashedRefreshToken: __,
@@ -160,6 +166,7 @@ export class UsersService {
   async deactivate(id: string): Promise<{ message: string }> {
     const user = await this.findOne(id);
     await this.usersRepo.save({ ...user, isActive: false });
+    await this.revokeRefreshTokens(id);
     return { message: 'Usuario desactivado correctamente' };
   }
 

@@ -28,11 +28,24 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  // Cabeceras de seguridad. CSP se mantiene desactivado de momento porque la UI
-  // de Swagger usa scripts inline; se puede endurecer al definir la política.
+  // Cabeceras de seguridad. La UI de Swagger usa scripts/styles inline, por eso
+  // script-src/style-src permiten 'unsafe-inline'; el resto queda restringido.
   app.use(
     helmet({
-      contentSecurityPolicy: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:'],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'", 'data:'],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+          frameAncestors: ["'none'"],
+        },
+      },
       crossOriginEmbedderPolicy: false,
       strictTransportSecurity:
         process.env.NODE_ENV === 'production'

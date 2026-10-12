@@ -90,6 +90,41 @@ describe('UsersService (persistencia de refresh tokens)', () => {
     });
   });
 
+  describe('update', () => {
+    beforeEach(() => {
+      mockUserRepo.findOne.mockResolvedValue({ id: 'u-1', name: 'Demo' });
+    });
+
+    it('revoca las sesiones cuando el password cambia', async () => {
+      mockUserRepo.save.mockImplementation((e) => Promise.resolve(e));
+      const result = await service.update('u-1', { password: 'Nuevo2026!' });
+      expect(result).toBeDefined();
+      expect(mockUserRepo.update).toHaveBeenCalledWith('u-1', {
+        hashedRefreshToken: null,
+        previousHashedRefreshToken: null,
+      });
+    });
+
+    it('no revoca sesiones si el password no cambia', async () => {
+      mockUserRepo.save.mockImplementation((e) => Promise.resolve(e));
+      await service.update('u-1', { name: 'Demo 2' });
+      expect(mockUserRepo.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deactivate', () => {
+    it('revoca las sesiones del usuario desactivado', async () => {
+      mockUserRepo.findOne.mockResolvedValue({ id: 'u-1', name: 'Demo' });
+      mockUserRepo.save.mockImplementation((e) => Promise.resolve(e));
+      const result = await service.deactivate('u-1');
+      expect(result).toEqual({ message: 'Usuario desactivado correctamente' });
+      expect(mockUserRepo.update).toHaveBeenCalledWith('u-1', {
+        hashedRefreshToken: null,
+        previousHashedRefreshToken: null,
+      });
+    });
+  });
+
   describe('importFromExcel', () => {
     beforeEach(() => {
       mockExcelService.importFromExcel.mockResolvedValue([
