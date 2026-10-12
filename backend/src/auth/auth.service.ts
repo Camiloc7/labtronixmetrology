@@ -14,6 +14,17 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
+  /**
+   * Hash del refresh token para almacenamiento.
+   * Se usa SHA-256 (del token completo) y no bcrypt: bcrypt trunca la entrada a
+   * 72 bytes y los JWT (~350 chars) tienen los bytes que diferencian un token
+   * de otro (jti, firma) siempre más allá de ese límite, así que dos tokens
+   * distintos del mismo usuario colisionarían bajo bcrypt.compare.
+   */
+  private hashRefreshToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+
   async getTokens(userId: string, email: string, role: string, name: string) {
     const payload = { sub: userId, email, role, name };
     const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
@@ -30,6 +41,11 @@ export class AuthService {
           'JWT_REFRESH_EXPIRES_IN',
           '7d',
         ) as any,
+        // jti aleatorio: garantiza que cada refresh token sea único, aunque se
+        // emita en el mismo segundo que otro (el iat solo tiene resolución en
+        // segundos). Sin esto, dos tokens idénticos romperían la detección de
+        // reutilización durante la rotación.
+        jwtid: crypto.randomUUID(),
       }),
     ]);
 
@@ -37,8 +53,10 @@ export class AuthService {
   }
 
   async updateRefreshToken(userId: string, refreshToken: string) {
-    const hashedToken = await bcrypt.hash(refreshToken, 10);
-    await this.usersService.updateRefreshToken(userId, hashedToken);
+    await this.usersService.updateRefreshToken(
+      userId,
+      this.hashRefreshToken(refreshToken),
+    );
   }
 
   async login(dto: LoginDto) {
@@ -113,16 +131,29 @@ export class AuthService {
       throw new UnauthorizedException('Acceso denegado');
     }
 
-    const matchesCurrent = await bcrypt.compare(
-      refreshToken,
-      user.hashedRefreshToken,
-    );
+    const presentedHash = this.hashRefreshToken(refreshToken);
+    const matchesCurrent = user.hashedRefreshToken
+      ? presentedHash === user.hashedRefreshToken
+      : false;
     const matchesPrevious = user.previousHashedRefreshToken
-      ? await bcrypt.compare(refreshToken, user.previousHashedRefreshToken)
+      ? presentedHash === user.previousHashedRefreshToken
       : false;
 
-    if (!matchesCurrent && !matchesPrevious) {
-      throw new UnauthorizedException('Acceso denegado');
+    // Token actual válido: rotación normal.
+    if (matchesCurrent) {
+      const tokens = await this.getTokens(
+        user.id,
+        user.email,
+        user.role,
+        user.name,
+      );
+      const newRefreshHash = this.hashRefreshToken(tokens.refreshToken);
+      await this.usersService.rotateRefreshToken(
+        user.id,
+        user.hashedRefreshToken,
+        newRefreshHash,
+      );
+      return tokens;
     }
 
     // Reutilización de un refresh token ya rotado: posible token robado.
@@ -134,22 +165,7 @@ export class AuthService {
       );
     }
 
-    // Rotación: el token usado pasa a ser el "anterior" y se emite uno nuevo.
-    // El anterior solo sobrevive para detectar reutilizaciones.
-    const tokens = await this.getTokens(
-      user.id,
-      user.email,
-      user.role,
-      user.name,
-    );
-    const newRefreshHash = await bcrypt.hash(tokens.refreshToken, 10);
-    await this.usersService.rotateRefreshToken(
-      user.id,
-      user.hashedRefreshToken,
-      newRefreshHash,
-    );
-
-    return tokens;
+    throw new UnauthorizedException('Acceso denegado');
   }
 
   async validateOAuthLogin(email: string, name: string, googleId: string) {
