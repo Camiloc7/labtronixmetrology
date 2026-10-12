@@ -14,6 +14,7 @@ import type { Response, Request } from 'express';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import ms from 'ms';
+import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -27,6 +28,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
   ) {}
 
   private setCookies(res: Response, accessToken: string, refreshToken: string) {
@@ -93,30 +95,27 @@ export class AuthController {
       throw new UnauthorizedException('No refresh token');
     }
 
-    // El JWT payload sub es el userId. Necesitamos decodificar el token para sacar el userId o que la app valide el JWT.
-    // Como jwtService ya lo valida en el método de estrategia, podemos decodificarlo o pasarlo al service para que lo valide con try/catch.
-    // Para simplificar, leemos el userId asumiendo que es válido, pero el AuthService lanzará excepción si no lo es o no matchea.
-
-    // Mejor que AuthService lo decodifique (el JWT_REFRESH_SECRET):
-    // Pero espera, no estamos usando un RefreshStrategy. Hagamos que el AuthService verifique y retorne tokens.
-    // Extraemos el sub del payload
-    const jwt = require('jsonwebtoken');
+    // El refresh token se verifica con JWT_REFRESH_SECRET mediante JwtService
+    // (ayudante de @nestjs/jwt), sin depender de 'jsonwebtoken' como dependencia directa.
+    // Del payload solo se extrae 'sub' (userId); AuthService.refreshTokens vuelve a
+    // comprobar el hash en BD y rota el token (ver rotación en auth.service.ts).
+    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    if (!refreshSecret && this.configService.get('NODE_ENV') === 'production') {
+      throw new Error('JWT_REFRESH_SECRET es obligatorio en producción');
+    }
     try {
-      const refreshSecret =
-        this.configService.get<string>('JWT_REFRESH_SECRET');
-      if (
-        !refreshSecret &&
-        this.configService.get('NODE_ENV') === 'production'
-      ) {
-        throw new Error('JWT_REFRESH_SECRET es obligatorio en producción');
-      }
-      const decoded = jwt.verify(
+      const payload = await this.jwtService.verifyAsync<{ sub: string }>(
         refreshToken,
-        refreshSecret || 'local-development-refresh-secret-not-for-production',
+        {
+          secret:
+            refreshSecret ||
+            'local-development-refresh-secret-not-for-production',
+        },
       );
-      const userId = decoded.sub;
-
-      const tokens = await this.authService.refreshTokens(userId, refreshToken);
+      const tokens = await this.authService.refreshTokens(
+        payload.sub,
+        refreshToken,
+      );
       this.setCookies(res, tokens.accessToken, tokens.refreshToken);
       return { message: 'Token refrescado' };
     } catch (err) {

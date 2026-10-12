@@ -245,6 +245,7 @@ Base URL: `http://localhost:3001/api/v1`
 | POST | `/auth/login` | Iniciar sesión |
 | POST | `/auth/logout` | Cerrar sesión |
 | GET | `/auth/me` | Datos del usuario actual |
+| POST | `/auth/refresh` | Refrescar access token. El refresh token se **rota** en cada uso; la reutilización de un token ya rotado revoca la sesión |
 
 ### Usuarios
 | Método | Ruta | Descripción |

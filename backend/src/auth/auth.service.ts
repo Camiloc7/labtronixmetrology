@@ -113,24 +113,43 @@ export class AuthService {
       throw new UnauthorizedException('Acceso denegado');
     }
 
-    const refreshTokenMatches = await bcrypt.compare(
+    const matchesCurrent = await bcrypt.compare(
       refreshToken,
       user.hashedRefreshToken,
     );
-    if (!refreshTokenMatches) {
+    const matchesPrevious = user.previousHashedRefreshToken
+      ? await bcrypt.compare(refreshToken, user.previousHashedRefreshToken)
+      : false;
+
+    if (!matchesCurrent && !matchesPrevious) {
       throw new UnauthorizedException('Acceso denegado');
     }
 
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      name: user.name,
-    };
-    const accessToken = await this.jwtService.signAsync(payload);
+    // Reutilización de un refresh token ya rotado: posible token robado.
+    // Por seguridad se revoca toda la familia de tokens.
+    if (matchesPrevious) {
+      await this.usersService.revokeRefreshTokens(user.id);
+      throw new UnauthorizedException(
+        'Sesión revocada por reutilización del token de refresco',
+      );
+    }
 
-    // We don't rotate the refresh token to prevent race conditions across multiple tabs
-    return { accessToken, refreshToken };
+    // Rotación: el token usado pasa a ser el "anterior" y se emite uno nuevo.
+    // El anterior solo sobrevive para detectar reutilizaciones.
+    const tokens = await this.getTokens(
+      user.id,
+      user.email,
+      user.role,
+      user.name,
+    );
+    const newRefreshHash = await bcrypt.hash(tokens.refreshToken, 10);
+    await this.usersService.rotateRefreshToken(
+      user.id,
+      user.hashedRefreshToken,
+      newRefreshHash,
+    );
+
+    return tokens;
   }
 
   async validateOAuthLogin(email: string, name: string, googleId: string) {
@@ -161,7 +180,12 @@ export class AuthService {
 
   async getMe(userId: string) {
     const user = await this.usersService.findOne(userId);
-    const { passwordHash: _, hashedRefreshToken: __, ...result } = user;
+    const {
+      passwordHash: _,
+      hashedRefreshToken: __,
+      previousHashedRefreshToken: ___,
+      ...result
+    } = user;
     return result;
   }
 }

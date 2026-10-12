@@ -29,6 +29,13 @@ export class User {
   @Column({ name: 'hashed_refresh_token', nullable: true, type: 'varchar' })
   hashedRefreshToken?: string | null;
 
+  @Column({
+    name: 'previous_hashed_refresh_token',
+    nullable: true,
+    type: 'varchar',
+  })
+  previousHashedRefreshToken?: string | null;
+
   @Column({ type: 'enum', enum: UserRole, default: UserRole.COMERCIAL })
   role: UserRole;
 

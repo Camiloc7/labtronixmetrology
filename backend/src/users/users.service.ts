@@ -20,11 +20,19 @@ export class UsersService {
   ) {}
 
   async findAll(): Promise<
-    Omit<User, 'passwordHash' | 'hashedRefreshToken'>[]
+    Omit<
+      User,
+      'passwordHash' | 'hashedRefreshToken' | 'previousHashedRefreshToken'
+    >[]
   > {
     const users = await this.usersRepo.find({ order: { createdAt: 'DESC' } });
     return users.map(
-      ({ passwordHash: _, hashedRefreshToken: __, ...rest }) => rest as any,
+      ({
+        passwordHash: _,
+        hashedRefreshToken: __,
+        previousHashedRefreshToken: ___,
+        ...rest
+      }) => rest as any,
     );
   }
 
@@ -46,7 +54,28 @@ export class UsersService {
     id: string,
     hashedToken: string | null,
   ): Promise<void> {
-    await this.usersRepo.update(id, { hashedRefreshToken: hashedToken });
+    await this.usersRepo.update(id, {
+      hashedRefreshToken: hashedToken,
+      previousHashedRefreshToken: null,
+    });
+  }
+
+  async rotateRefreshToken(
+    id: string,
+    previousHash: string | null,
+    newHash: string,
+  ): Promise<void> {
+    await this.usersRepo.update(id, {
+      previousHashedRefreshToken: previousHash,
+      hashedRefreshToken: newHash,
+    });
+  }
+
+  async revokeRefreshTokens(id: string): Promise<void> {
+    await this.usersRepo.update(id, {
+      hashedRefreshToken: null,
+      previousHashedRefreshToken: null,
+    });
   }
 
   async updateLoginAttempts(
@@ -62,7 +91,12 @@ export class UsersService {
 
   async create(
     dto: CreateUserDto,
-  ): Promise<Omit<User, 'passwordHash' | 'hashedRefreshToken'>> {
+  ): Promise<
+    Omit<
+      User,
+      'passwordHash' | 'hashedRefreshToken' | 'previousHashedRefreshToken'
+    >
+  > {
     const exists = await this.findByEmail(dto.email);
     if (exists) throw new ConflictException('El email ya está registrado');
 
@@ -72,7 +106,12 @@ export class UsersService {
     }
     const user = this.usersRepo.create({ ...dto, passwordHash });
     const saved = await this.usersRepo.save(user);
-    const { passwordHash: _, hashedRefreshToken: __, ...result } = saved;
+    const {
+      passwordHash: _,
+      hashedRefreshToken: __,
+      previousHashedRefreshToken: ___,
+      ...result
+    } = saved;
     return result;
   }
 
@@ -94,14 +133,24 @@ export class UsersService {
   async update(
     id: string,
     dto: UpdateUserDto,
-  ): Promise<Omit<User, 'passwordHash' | 'hashedRefreshToken'>> {
+  ): Promise<
+    Omit<
+      User,
+      'passwordHash' | 'hashedRefreshToken' | 'previousHashedRefreshToken'
+    >
+  > {
     const user = await this.findOne(id);
     if (dto.password) {
       (dto as any).passwordHash = await bcrypt.hash(dto.password, 10);
       delete dto.password;
     }
     const updated = await this.usersRepo.save({ ...user, ...dto });
-    const { passwordHash: _, hashedRefreshToken: __, ...result } = updated;
+    const {
+      passwordHash: _,
+      hashedRefreshToken: __,
+      previousHashedRefreshToken: ___,
+      ...result
+    } = updated;
     return result;
   }
 
