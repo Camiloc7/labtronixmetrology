@@ -26,7 +26,7 @@ git reset --hard origin/main
 git clean -fd
 
 # 2. Levantar Docker (PostgreSQL + Redis)
-echo "[2/5] Verificando Docker Compose (PostgreSQL + Redis)..."
+echo "[2/6] Verificando Docker Compose (PostgreSQL + Redis)..."
 docker compose up -d
 
 # Esperar a que PostgreSQL este listo
@@ -43,21 +43,25 @@ for i in $(seq 1 30); do
   sleep 1
 done
 
-# 3. Build del Backend
-echo "[3/5] Construyendo Backend..."
+# 3. Migraciones de base de datos
+echo "[3/6] Aplicando migraciones de base de datos..."
+bash scripts/db-migrate.sh
+
+# 4. Build del Backend
+echo "[4/6] Construyendo Backend..."
 cd "$APP_DIR/backend"
 npm install --include=dev
 npm run build
 
-# 4. Build del Frontend
-echo "[4/5] Construyendo Frontend..."
+# 5. Build del Frontend
+echo "[5/6] Construyendo Frontend..."
 cd "$APP_DIR/frontend"
 rm -rf .next
 npm install --include=dev
 npm run build
 
-# 5. Recargar PM2
-echo "[5/5] Recargando PM2..."
+# 6. Recargar PM2
+echo "[6/6] Recargando PM2..."
 cd "$APP_DIR"
 
 # Si PM2 ya tiene los procesos, recargar. Si no, iniciar.

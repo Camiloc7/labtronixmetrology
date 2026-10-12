@@ -51,6 +51,10 @@ ecosystem.config.js.bak
 *.sql
 *.dump
 
+# ... salvo las migraciones versionadas, que sí viven en el repo
+!backend/src/database/migrations/
+!backend/src/database/migrations/*.sql
+
 # Uploads / Archivos generados
 uploads/
 pdfs/
