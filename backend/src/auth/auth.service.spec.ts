@@ -15,6 +15,7 @@ const mockConfigService = {
     const map: Record<string, unknown> = {
       JWT_REFRESH_SECRET: 'test-refresh-secret',
       NODE_ENV: 'test',
+      GOOGLE_ALLOWED_DOMAINS: 'labtronix.com',
     };
     return key in map ? map[key] : def;
   }),
@@ -289,23 +290,31 @@ describe('AuthService', () => {
   });
 
   describe('validateOAuthLogin', () => {
-    it('crea el usuario automáticamente si no existe', async () => {
+    it('crea el usuario automáticamente solo si el dominio está autorizado', async () => {
       mockUsersService.findByEmail.mockResolvedValue(null);
       mockUsersService.createGoogleUser.mockResolvedValue(
         makeUser({ googleId: 'g-1' }),
       );
       const tokens = await service.validateOAuthLogin(
-        'nuevo@x.com',
+        'nuevo@labtronix.com',
         'Nuevo',
         'g-1',
       );
       expect(tokens.refreshToken).toBeTruthy();
       expect(mockUsersService.createGoogleUser).toHaveBeenCalledWith(
-        'nuevo@x.com',
+        'nuevo@labtronix.com',
         'Nuevo',
         'g-1',
       );
       expect(mockUsersService.updateRefreshToken).toHaveBeenCalled();
+    });
+
+    it('rechaza el auto-registro desde un dominio no autorizado', async () => {
+      mockUsersService.findByEmail.mockResolvedValue(null);
+      await expect(
+        service.validateOAuthLogin('cualquiera@example.com', 'X', 'g-2'),
+      ).rejects.toThrow('Acceso con Google no autorizado para este dominio');
+      expect(mockUsersService.createGoogleUser).not.toHaveBeenCalled();
     });
 
     it('vincula el googleId a un usuario existente si no lo tenía', async () => {

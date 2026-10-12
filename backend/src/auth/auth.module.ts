@@ -21,7 +21,7 @@ import { LoginRateLimitGuard } from '../common/guards/login-rate-limit.guard';
         }
         return {
           secret: secret || 'local-development-secret-not-for-production',
-          signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '8h') },
+          signOptions: { expiresIn: config.get('JWT_EXPIRES_IN', '15m') },
         };
       },
     }),

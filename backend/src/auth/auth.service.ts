@@ -172,11 +172,27 @@ export class AuthService {
     let user = await this.usersService.findByEmail(email);
 
     if (!user) {
+      // Auto-registro restringido a dominios autorizados (GOOGLE_ALLOWED_DOMAINS).
+      // Sin allowlist configurada NO se crean cuentas automáticamente.
+      const allowedDomains = (
+        this.configService.get<string>('GOOGLE_ALLOWED_DOMAINS', '') || ''
+      )
+        .split(',')
+        .map((d) => d.trim().toLowerCase())
+        .filter(Boolean);
+      const emailDomain = email.split('@')[1]?.toLowerCase();
+      if (!emailDomain || !allowedDomains.includes(emailDomain)) {
+        throw new UnauthorizedException(
+          'Acceso con Google no autorizado para este dominio',
+        );
+      }
       // Create new user automatically if not found
       user = await this.usersService.createGoogleUser(email, name, googleId);
     } else if (!user.googleId) {
-      // Link Google ID if user exists without one
-      await this.usersService.update(user.id, { googleId } as any);
+      if (user.isActive) {
+        // Link Google ID if user exists without one
+        await this.usersService.update(user.id, { googleId } as any);
+      }
     }
 
     if (!user.isActive) {

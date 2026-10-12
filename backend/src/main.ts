@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 const cookieParser = require('cookie-parser');
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -27,12 +28,19 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  app.use((req, res, next) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-    next();
-  });
+  // Cabeceras de seguridad. CSP se mantiene desactivado de momento porque la UI
+  // de Swagger usa scripts inline; se puede endurecer al definir la política.
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      strictTransportSecurity:
+        process.env.NODE_ENV === 'production'
+          ? { maxAge: 15552000, includeSubDomains: true }
+          : false,
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    }),
+  );
 
   // Validación global
   app.useGlobalPipes(

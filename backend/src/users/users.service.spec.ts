@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { ExcelService } from '../common/excel/excel.service';
@@ -19,6 +20,10 @@ const mockExcelService = {
   importFromExcel: jest.fn(),
 };
 
+const mockConfigService = {
+  get: jest.fn((key: string, def?: unknown) => def),
+};
+
 describe('UsersService (persistencia de refresh tokens)', () => {
   let service: UsersService;
 
@@ -29,6 +34,7 @@ describe('UsersService (persistencia de refresh tokens)', () => {
         UsersService,
         { provide: getRepositoryToken(User), useValue: mockUserRepo },
         { provide: ExcelService, useValue: mockExcelService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -81,6 +87,38 @@ describe('UsersService (persistencia de refresh tokens)', () => {
     it('lanza NotFoundException si el usuario no existe', async () => {
       mockUserRepo.findOne.mockResolvedValue(null);
       await expect(service.findOne('nope')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('importFromExcel', () => {
+    beforeEach(() => {
+      mockExcelService.importFromExcel.mockResolvedValue([
+        { Email: 'nuevo@labtronix.com', Nombre: 'Nuevo', Rol: 'COMERCIAL' },
+      ]);
+      mockUserRepo.findOne.mockResolvedValue(null);
+    });
+
+    it('rechaza crear usuarios nuevos si DEFAULT_IMPORT_PASSWORD no está configurado', async () => {
+      mockConfigService.get.mockReturnValue(undefined);
+      await expect(service.importFromExcel(Buffer.from(''))).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(mockUserRepo.create).not.toHaveBeenCalled();
+      expect(mockUserRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('crea usuarios nuevos con el password de env cuando está configurado', async () => {
+      mockConfigService.get.mockReturnValue('TempPass2026!');
+      mockUserRepo.create.mockImplementation((e) => ({ id: 'x', ...e }));
+      mockUserRepo.save.mockImplementation((e) => Promise.resolve(e));
+
+      const result = await service.importFromExcel(Buffer.from(''));
+
+      expect(result.created).toBe(1);
+      const created = mockUserRepo.create.mock.calls[0][0];
+      expect(created.email).toBe('nuevo@labtronix.com');
+      expect(created.passwordHash).toBeTruthy();
+      expect(created.passwordHash).not.toContain('TempPass2026!');
     });
   });
 });

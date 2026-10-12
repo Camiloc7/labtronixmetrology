@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ClientsModule } from './clients/clients.module';
@@ -17,6 +18,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { GlobalRateLimitGuard } from './common/guards/global-rate-limit.guard';
 
 @Module({
   imports: [
@@ -53,6 +55,12 @@ import { ScheduleModule } from '@nestjs/schedule';
     RequisitionsModule,
     DashboardModule,
     CloudinaryModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: GlobalRateLimitGuard,
+    },
   ],
 })
 export class AppModule {}

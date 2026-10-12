@@ -2,10 +2,12 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 import { User, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -17,6 +19,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly usersRepo: Repository<User>,
     private readonly excelService: ExcelService,
+    private readonly configService: ConfigService,
   ) {}
 
   async findAll(): Promise<
@@ -196,7 +199,16 @@ export class UsersService {
         await this.usersRepo.save({ ...user, ...payload });
         updated++;
       } else {
-        const passwordHash = await bcrypt.hash('Labtronix2026!', 10);
+        // Nunca crear usuarios con una contraseña conocida por defecto:
+        // se exige DEFAULT_IMPORT_PASSWORD (fail-closed si no está configurado).
+        const defaultPassword =
+          this.configService.get<string>('DEFAULT_IMPORT_PASSWORD');
+        if (!defaultPassword) {
+          throw new BadRequestException(
+            'DEFAULT_IMPORT_PASSWORD no está configurado: no se pueden crear usuarios nuevos desde Excel.',
+          );
+        }
+        const passwordHash = await bcrypt.hash(defaultPassword, 10);
         const newUser = this.usersRepo.create({
           email,
           passwordHash,
