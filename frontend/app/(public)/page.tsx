@@ -31,39 +31,39 @@ export default function LandingPage() {
   return (
     <div className="relative overflow-x-hidden">
 
-      <section className="relative bg-slate-950 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(236,6,11,0.18),transparent_36%),radial-gradient(circle_at_85%_75%,rgba(148,163,184,0.1),transparent_32%)]" />
-        <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(rgba(255,255,255,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.5)_1px,transparent_1px)] bg-[size:48px_48px]" />
+      <section className="relative bg-white text-slate-950 overflow-hidden border-b border-red-100">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_20%,rgba(236,6,11,0.09),transparent_36%),radial-gradient(circle_at_88%_72%,rgba(15,23,42,0.05),transparent_32%)]" />
+        <div className="absolute inset-0 opacity-[0.025] bg-[linear-gradient(rgba(236,6,11,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(236,6,11,.7)_1px,transparent_1px)] bg-[size:48px_48px]" />
         <div className="relative max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-16 sm:py-20 lg:py-24">
           <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             <div className="lg:col-span-7">
-              <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/[0.07] border border-white/10 text-xs sm:text-sm font-semibold text-slate-200 mb-7">
-                <ShieldCheck size={18} weight="fill" className="text-brand-light" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-red-50 border border-red-200 text-xs sm:text-sm font-semibold text-red-950 mb-7 shadow-sm">
+                <ShieldCheck size={18} weight="fill" className="text-brand" />
                 Laboratorio acreditado ONAC · 21-LAC-011
               </div>
               <h1 className="text-[2.65rem] leading-[1.04] sm:text-6xl lg:text-[4.5rem] font-black tracking-[-0.04em] max-w-4xl">
-                Confianza y exactitud en cada <span className="text-brand-light">calibración.</span>
+                Confianza y exactitud en cada <span className="text-brand">calibración.</span>
               </h1>
-              <p className="mt-7 text-base sm:text-lg leading-relaxed text-slate-300 max-w-2xl">
+              <p className="mt-7 text-base sm:text-lg leading-relaxed text-slate-600 max-w-2xl">
                 Calibramos instrumentos de pesaje y otras magnitudes con trazabilidad técnica, atención nacional y el respaldo de la norma ISO/IEC 17025:2017.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 mt-9">
                 <Link href="#contacto" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-brand hover:bg-brand-light text-white font-bold shadow-[0_12px_35px_rgba(236,6,11,.3)] transition-all">
                   Solicitar cotización <ArrowRight size={18} weight="bold" />
                 </Link>
-                <Link href="#servicios" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/10 text-white font-semibold transition-colors">
+                <Link href="#servicios" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-900 font-semibold transition-colors shadow-sm">
                   Conocer servicios
                 </Link>
               </div>
-              <div className="grid sm:grid-cols-3 gap-4 mt-10 pt-8 border-t border-white/10">
+              <div className="grid sm:grid-cols-3 gap-4 mt-10 pt-8 border-t border-slate-200">
                 {[
                   ['0–2000 kg', 'Alcance acreditado'],
                   ['ISO/IEC 17025', 'Competencia técnica'],
                   ['Cobertura nacional', 'Laboratorio e in situ'],
                 ].map(([value, label]) => (
                   <div key={value}>
-                    <strong className="block text-base sm:text-lg text-white">{value}</strong>
-                    <span className="block text-xs text-slate-400 mt-1">{label}</span>
+                    <strong className="block text-base sm:text-lg text-slate-950">{value}</strong>
+                    <span className="block text-xs text-slate-500 mt-1">{label}</span>
                   </div>
                 ))}
               </div>
@@ -71,14 +71,14 @@ export default function LandingPage() {
 
             <div className="lg:col-span-5">
               <div className="relative max-w-lg mx-auto lg:ml-auto">
-                <div className="absolute -inset-4 rounded-[2rem] border border-white/10 rotate-3" />
-                <div className="relative h-[420px] sm:h-[520px] rounded-[1.75rem] overflow-hidden border border-white/15 shadow-2xl bg-slate-900">
+                <div className="absolute -inset-4 rounded-[2rem] border border-red-100 rotate-3 bg-red-50/50" />
+                <div className="relative h-[420px] sm:h-[520px] rounded-[1.75rem] overflow-hidden border border-slate-200 shadow-[0_25px_70px_rgba(15,23,42,.16)] bg-slate-50">
                   <Image src="/images/original/pesas-m1.jpg" alt="Técnico de Labtronix realizando una calibración de masa" fill priority className="object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
-                  <div className="absolute left-5 right-5 bottom-5 rounded-2xl bg-slate-950/85 backdrop-blur-md border border-white/10 p-5">
+                  <div className="absolute left-5 right-5 bottom-5 rounded-2xl bg-white/90 backdrop-blur-md border border-white p-5 shadow-xl">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-brand/20 text-brand-light flex items-center justify-center shrink-0"><Medal size={22} weight="fill" /></div>
-                      <div><strong className="block text-sm">Calibración acreditada</strong><span className="block text-xs text-slate-400 mt-1">Pesaje no automático con reconocimiento ILAC-MRA.</span></div>
+                      <div className="w-10 h-10 rounded-xl bg-red-50 text-brand flex items-center justify-center shrink-0"><Medal size={22} weight="fill" /></div>
+                      <div><strong className="block text-sm text-slate-950">Calibración acreditada</strong><span className="block text-xs text-slate-600 mt-1">Pesaje no automático con reconocimiento ILAC-MRA.</span></div>
                     </div>
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export default function LandingPage() {
 
 
       {/* ─── 2. ONAC ACCREDITATION SPOTLIGHT ─────────────────────────────────── */}
-      <section id="acreditacion" className="py-20 bg-slate-900 border-y border-slate-800 text-white relative">
+      <section id="acreditacion" className="py-20 bg-slate-950 border-y border-slate-900 text-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
@@ -327,7 +327,7 @@ export default function LandingPage() {
               { title: 'Balanzas de precisión', image: '/images/original/balanzas.png', detail: 'Servicio para laboratorios, industria farmacéutica y procesos de calidad.' },
               { title: 'Alta exactitud', image: '/images/original/balanzas-alta-exactitud.png', detail: 'Atención especializada para mediciones críticas en miligramos y microgramos.' },
             ].map((service) => (
-              <article key={service.title} className="group rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-xl">
+              <article key={service.title} className="group rounded-3xl overflow-hidden bg-slate-950 border border-slate-900 shadow-xl">
                 <div className="relative h-56 bg-gradient-to-br from-slate-100 to-slate-300 overflow-hidden">
                   <Image src={service.image} alt={service.title} fill className="object-contain p-5 group-hover:scale-105 transition-transform duration-500" />
                   <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-brand text-white text-[10px] font-black uppercase tracking-wider shadow-lg">Acreditado ONAC</span>
@@ -605,7 +605,7 @@ export default function LandingPage() {
           </div>
 
           {/* Quick numbers banner */}
-          <div className="bg-slate-900 rounded-3xl p-8 sm:p-12 text-white">
+          <div className="bg-slate-950 rounded-3xl p-8 sm:p-12 text-white">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-slate-800">
               <div className="pt-4 md:pt-0">
                 <div className="font-mono text-3xl sm:text-4xl font-black text-brand-light">2019</div>

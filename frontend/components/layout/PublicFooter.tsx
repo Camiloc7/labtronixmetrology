@@ -14,7 +14,7 @@ import {
 
 export default function PublicFooter() {
   return (
-    <footer className="bg-slate-950 text-slate-400 border-t border-slate-800/80 pt-16 pb-12 relative overflow-hidden">
+    <footer className="bg-slate-950 text-slate-400 border-t border-slate-900 pt-16 pb-12 relative overflow-hidden">
       {/* Decorative glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[150px] bg-brand/10 blur-[120px] rounded-full pointer-events-none"></div>
 

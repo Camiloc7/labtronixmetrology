@@ -46,7 +46,7 @@ export default function ContactSection() {
     <section id="contacto" className="py-24 bg-gradient-to-b from-white to-slate-100 relative overflow-hidden">
       {/* Decorative blurred background shapes */}
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-brand/5 blur-[100px] rounded-full pointer-events-none"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand/5 blur-[120px] rounded-full pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
@@ -67,9 +67,9 @@ export default function ContactSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           
           {/* Contact Details Card */}
-          <div className="lg:col-span-5 bg-slate-900 text-white rounded-3xl p-8 sm:p-10 shadow-xl relative overflow-hidden border border-slate-800">
+          <div className="lg:col-span-5 bg-slate-950 text-white rounded-3xl p-8 sm:p-10 shadow-xl relative overflow-hidden border border-slate-900">
             <Image src="/images/original/contacto-labtronix.jpg" alt="Contacto Labtronix Metrology" fill className="object-cover opacity-15" />
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 to-slate-950"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-950/75 to-slate-950"></div>
             <div className="absolute -right-10 -bottom-10 w-44 h-44 bg-brand/20 rounded-full blur-3xl pointer-events-none"></div>
 
             <div className="relative z-10 space-y-8">
