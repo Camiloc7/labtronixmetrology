@@ -58,3 +58,7 @@ ecosystem.config.js.bak
 # Uploads / Archivos generados
 uploads/
 pdfs/
+
+# Agentes e instrucciones internas
+AGENTS.md
+docs/
