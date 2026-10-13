@@ -13,6 +13,7 @@ import {
   Thermometer,
 } from '@phosphor-icons/react/dist/ssr';
 import ContactSection from '@/components/layout/ContactSection';
+import HomeHeroSlider from '@/components/public/HomeHeroSlider';
 import { ButtonLink, Container, Eyebrow, Section, SectionHeading } from '@/components/public/ui';
 
 export const metadata: Metadata = {
@@ -26,6 +27,39 @@ const stats = [
   { value: '21-LAC-011', label: 'Código de acreditación ONAC' },
   { value: 'ISO/IEC 17025', label: 'Competencia técnica demostrada' },
   { value: 'Hasta 2.000 kg', label: 'Alcance acreditado en pesaje' },
+];
+
+const primaryServices = [
+  {
+    id: 'basculas',
+    title: 'BÁSCULAS',
+    subtitle: 'Calibración con acreditación ONAC',
+    description:
+      'Calibración de instrumentos de pesaje de funcionamiento no automático, básculas camioneras, de plataforma y colgantes hasta 2.000 kg utilizadas en cualquier ámbito industrial.',
+    image: '/images/original/basculas.png',
+    scope: 'Hasta 2.000 kg',
+    accredited: true,
+  },
+  {
+    id: 'balanzas',
+    title: 'BALANZAS',
+    subtitle: 'Calibración con acreditación ONAC',
+    description:
+      'Calibración acreditada de balanzas de diferentes capacidades y exactitud para laboratorios de ensayo, control de calidad e investigación en todo el país.',
+    image: '/images/original/balanzas.png',
+    scope: 'Analíticas y de precisión',
+    accredited: true,
+  },
+  {
+    id: 'balanzas-alta-exactitud',
+    title: 'BALANZAS DE ALTA EXACTITUD',
+    subtitle: 'Calibración con acreditación ONAC',
+    description:
+      'Calibración con acreditación a instrumentos de pesaje de funcionamiento no automático y balanzas de alta exactitud, microbalanzas y semimicrobalanzas bajo estrictas condiciones.',
+    image: '/images/original/balanzas-alta-exactitud.png',
+    scope: 'Clase I y Clase II',
+    accredited: true,
+  },
 ];
 
 const secondaryServices = [
@@ -52,171 +86,278 @@ const process = [
 export default function LandingPage() {
   return (
     <>
-      {/* ─── Hero ─────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-slate-200 bg-white">
-        <Container className="grid gap-12 py-14 sm:py-20 lg:grid-cols-12 lg:items-center lg:gap-10 lg:py-24">
-          <div className="lg:col-span-6">
-            <Eyebrow>Metrología para decisiones confiables</Eyebrow>
-            <h1 className="mt-6 text-[2.6rem] font-semibold leading-[1.03] tracking-[-0.04em] text-slate-950 sm:text-6xl lg:text-[4.25rem]">
-              Precisión que respalda <span className="text-brand">tu operación.</span>
-            </h1>
-            <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600">
-              Calibramos instrumentos de medición con competencia técnica, trazabilidad y atención especializada para
-              laboratorios e industria en Colombia.
-            </p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              <ButtonLink href="#contacto" arrow>
-                Solicitar cotización
-              </ButtonLink>
-              <ButtonLink href="/servicios" variant="secondary">
-                Explorar servicios
-              </ButtonLink>
-            </div>
+      {/* ─── Hero Slider Principal Dinámico ──────────────────── */}
+      <HomeHeroSlider />
 
-            <dl className="mt-14 grid grid-cols-1 border-t border-slate-200 sm:grid-cols-3">
-              {stats.map((stat, i) => (
-                <div
-                  key={stat.value}
-                  className={`flex flex-col py-5 sm:py-6 ${i > 0 ? 'border-t border-slate-200 sm:border-l sm:border-t-0 sm:pl-6' : ''} ${
-                    i < stats.length - 1 ? 'sm:pr-6' : ''
-                  }`}
-                >
-                  <dt className="order-2 mt-1 text-sm text-slate-500">{stat.label}</dt>
-                  <dd className="order-1 text-lg font-semibold tracking-tight text-slate-950">{stat.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-
-          <div className="lg:col-span-6 lg:pl-6">
-            <div className="relative">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-slate-100 sm:aspect-[5/4] lg:aspect-[4/5]">
-                <Image
-                  src="/images/original/pesas-m1.jpg"
-                  alt="Técnico de Labtronix calibrando una balanza con una pesa patrón"
-                  fill
-                  priority
-                  sizes="(min-width: 1024px) 45vw, 100vw"
-                  className="object-cover"
-                />
-              </div>
-              {/* Detalle de marca: escuadra roja */}
-              <span aria-hidden="true" className="absolute -left-3 -top-3 h-16 w-16 border-l-4 border-t-4 border-brand" />
-              <div className="absolute -bottom-6 left-4 right-4 rounded-md border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.14)] sm:left-auto sm:right-6 sm:max-w-xs">
-                <div className="flex items-start gap-3">
-                  <ShieldCheck size={26} weight="fill" className="mt-0.5 shrink-0 text-brand" />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-950">Calibración acreditada</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Reconocimiento ONAC e ILAC-MRA para pesaje no automático.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      {/* ─── Acreditación ────────────────────────────────────── */}
-      <section id="acreditacion" className="scroll-mt-24 border-b border-slate-200 bg-slate-50">
-        <Container className="grid gap-8 py-12 sm:py-14 lg:grid-cols-12 lg:items-center">
+      {/* ─── Franja de Acreditación ONAC ──────────────────────── */}
+      <section id="acreditacion" className="scroll-mt-24 border-b border-slate-200 bg-white">
+        <Container className="grid gap-8 py-10 sm:py-12 lg:grid-cols-12 lg:items-center">
           <div className="flex items-center gap-4 lg:col-span-4">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-white text-brand ring-1 ring-slate-200">
-              <Medal size={30} weight="duotone" />
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-red-50 text-brand ring-1 ring-brand/20">
+              <Medal size={32} weight="duotone" />
             </span>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">Acreditación vigente</p>
-              <p className="mt-1 text-xl font-semibold tracking-tight text-slate-950">ONAC 21-LAC-011</p>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand">Acreditación vigente</p>
+              <p className="mt-1 text-2xl font-bold tracking-tight text-slate-950">ONAC 21-LAC-011</p>
             </div>
           </div>
-          <p className="text-base leading-7 text-slate-600 lg:col-span-6 lg:border-l lg:border-slate-300 lg:pl-8">
-            Nuestro alcance acreditado demuestra competencia técnica bajo ISO/IEC 17025:2017 y aporta confianza
-            internacional a los resultados de calibración.
+          <p className="text-base leading-7 text-slate-600 lg:col-span-6 lg:border-l lg:border-slate-200 lg:pl-8">
+            Nuestro alcance acreditado demuestra competencia técnica bajo la norma internacional <strong className="text-slate-900 font-semibold">ISO/IEC 17025:2017</strong> y aporta confianza y trazabilidad a tus auditorías y procesos de calidad.
           </p>
           <div className="lg:col-span-2 lg:text-right">
-            <ButtonLink href="/acreditacion" variant="link" arrow>
+            <ButtonLink href="/acreditacion" variant="secondary" arrow>
               Ver alcance
             </ButtonLink>
           </div>
         </Container>
       </section>
 
-      {/* ─── Servicios ───────────────────────────────────────── */}
-      <Section id="servicios">
-        <SectionHeading
-          align="split"
-          eyebrow="Capacidad técnica"
-          title="Medimos lo que sostiene tu calidad."
-          lead="Servicios pensados para responsables de calidad, mantenimiento y producción que necesitan resultados claros, tiempos definidos y soporte experto."
-        />
-
-        <div className="mt-14 grid gap-6 lg:grid-cols-12">
-          {/* Servicio principal: acreditado */}
-          <article className="group relative flex min-h-[460px] flex-col justify-end overflow-hidden rounded-lg bg-slate-950 lg:col-span-7 lg:min-h-[560px]">
-            <Image
-              src="/images/original/balanzas.png"
-              alt=""
-              fill
-              sizes="(min-width: 1024px) 58vw, 100vw"
-              className="object-cover opacity-70 transition-transform duration-700 group-hover:scale-[1.03]"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/0" />
-            <div className="relative p-7 text-white sm:p-10">
-              <span className="inline-flex items-center gap-2 rounded-sm bg-brand px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider">
-                <ShieldCheck size={14} weight="fill" /> Acreditado ONAC
-              </span>
-              <div className="mt-5 flex items-center gap-3">
-                <Scales size={30} weight="duotone" className="text-red-400" />
-                <h3 className="text-2xl font-semibold tracking-tight sm:text-3xl">Masa y pesaje</h3>
-              </div>
-              <p className="mt-4 max-w-lg text-base leading-7 text-slate-200">
-                Calibración acreditada de balanzas e instrumentos de pesaje de funcionamiento no automático, desde alta
-                exactitud hasta 2.000 kg.
+      {/* ─── Sección NOSOTROS con Sello Visual 4-Grid & Dot Pattern ─ */}
+      <Section id="nosotros" tone="muted" className="border-b border-slate-200">
+        <div className="grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+          <div className="lg:col-span-6">
+            <Eyebrow>Sobre Labtronix</Eyebrow>
+            <h2 className="mt-5 text-3xl font-bold leading-[1.1] tracking-tight text-slate-950 sm:text-4xl lg:text-[2.65rem]">
+              NOSOTROS
+            </h2>
+            <div className="mt-6 space-y-4 text-base sm:text-lg leading-relaxed text-slate-600">
+              <p>
+                En <strong className="font-semibold text-slate-900">Labtronix Metrology S.A.S.</strong>, contamos con la acreditación ONAC vigente a la fecha, con código de acreditación <strong className="font-semibold text-brand">21-LAC-011</strong>, bajo la norma <strong className="font-semibold text-slate-900">ISO/IEC 17025:2017</strong>, para calibración de equipos de pesaje de funcionamiento no automático.
               </p>
-              <Link
-                href="/#contacto"
-                className="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white underline decoration-brand decoration-2 underline-offset-[6px] hover:text-red-300"
-              >
-                Cotizar calibración <ArrowRight size={16} weight="bold" />
-              </Link>
+              <p className="text-base text-slate-600 leading-relaxed">
+                Brindamos soluciones integrales de metrología con personal calificado, patrones trazables y una plataforma tecnológica moderna para la emisión y trazabilidad de certificados digitales.
+              </p>
             </div>
-          </article>
 
-          {/* Servicios secundarios */}
-          <div className="grid gap-6 lg:col-span-5">
-            {secondaryServices.map(({ icon: Icon, title, text, image }) => (
-              <article
-                key={title}
-                className="group grid overflow-hidden rounded-lg border border-slate-200 bg-white transition-colors hover:border-slate-300 sm:grid-cols-[180px_1fr] lg:grid-cols-1 xl:grid-cols-[170px_1fr]"
-              >
-                <div className="relative h-44 bg-slate-100 sm:h-auto lg:h-40 xl:h-auto">
-                  <Image
-                    src={image}
-                    alt=""
-                    fill
-                    sizes="(min-width: 1280px) 170px, (min-width: 1024px) 40vw, 180px"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <ButtonLink href="/sobre-nosotros" arrow>
+                LEER MÁS
+              </ButtonLink>
+              <ButtonLink href="/acreditacion" variant="secondary">
+                Certificado ONAC
+              </ButtonLink>
+            </div>
+
+            {/* Estadísticas rápidas de la empresa */}
+            <dl className="mt-12 grid grid-cols-1 border-t border-slate-200 sm:grid-cols-3">
+              {stats.map((stat, i) => (
+                <div
+                  key={stat.value}
+                  className={`flex flex-col py-4 ${
+                    i > 0 ? 'border-t border-slate-200 sm:border-l sm:border-t-0 sm:pl-6' : ''
+                  } ${i < stats.length - 1 ? 'sm:pr-6' : ''}`}
+                >
+                  <dt className="order-2 mt-1 text-xs text-slate-500 font-medium">{stat.label}</dt>
+                  <dd className="order-1 text-base font-bold tracking-tight text-slate-950">{stat.value}</dd>
                 </div>
-                <div className="p-6 sm:p-7">
-                  <Icon size={26} weight="duotone" className="text-brand" />
-                  <h3 className="mt-4 text-lg font-semibold tracking-tight">{title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
-                </div>
-              </article>
-            ))}
+              ))}
+            </dl>
           </div>
-        </div>
 
-        <div className="mt-10">
-          <ButtonLink href="/servicios" variant="link" arrow>
-            Ver todas las magnitudes
-          </ButtonLink>
+          {/* Sello visual: Composición cuadrícula de 4 recuadros + patrón de puntos */}
+          <div className="lg:col-span-6 flex justify-center lg:justify-end">
+            <div className="relative p-6 sm:p-8">
+              {/* Patrón de puntos técnico (Dot Matrix / Grid Sello de identidad) */}
+              <div 
+                aria-hidden="true" 
+                className="absolute top-0 right-0 sm:right-6 w-48 sm:w-56 h-48 sm:h-56 bg-[radial-gradient(#94a3b8_2px,transparent_2px)] [background-size:16px_16px] opacity-70 z-0" 
+              />
+              <div 
+                aria-hidden="true" 
+                className="absolute bottom-2 left-0 sm:left-4 w-32 sm:w-40 h-32 sm:h-40 bg-[radial-gradient(#ec060b_2px,transparent_2px)] [background-size:16px_16px] opacity-40 z-0" 
+              />
+
+              {/* Contenedor de la imagen recortada en 4 cuadrantes estilo matriz */}
+              <div className="relative z-10 w-[300px] h-[300px] sm:w-[420px] sm:h-[420px] grid grid-cols-2 grid-rows-2 gap-3.5 bg-transparent drop-shadow-xl">
+                {/* Cuadrante 1: Superior Izquierdo */}
+                <div className="relative overflow-hidden rounded-md bg-white border border-slate-200/80 shadow-sm group">
+                  <div className="absolute inset-0 w-[200%] h-[200%] -top-0 -left-0">
+                    <Image
+                      src="/images/original/pesas-m1.jpg"
+                      alt="Calibración de patrones de masa"
+                      fill
+                      className="object-cover object-[0%_0%] transition-transform duration-500 group-hover:scale-105"
+                      sizes="(min-width: 640px) 420px, 300px"
+                    />
+                  </div>
+                </div>
+
+                {/* Cuadrante 2: Superior Derecho */}
+                <div className="relative overflow-hidden rounded-md bg-white border border-slate-200/80 shadow-sm group">
+                  <div className="absolute inset-0 w-[200%] h-[200%] -top-0 -left-[100%]">
+                    <Image
+                      src="/images/original/pesas-m1.jpg"
+                      alt="Técnico metrólogo en procedimiento de pesaje"
+                      fill
+                      className="object-cover object-[100%_0%] transition-transform duration-500 group-hover:scale-105"
+                      sizes="(min-width: 640px) 420px, 300px"
+                    />
+                  </div>
+                </div>
+
+                {/* Cuadrante 3: Inferior Izquierdo */}
+                <div className="relative overflow-hidden rounded-md bg-white border border-slate-200/80 shadow-sm group">
+                  <div className="absolute inset-0 w-[200%] h-[200%] -top-[100%] -left-0">
+                    <Image
+                      src="/images/original/pesas-m1.jpg"
+                      alt="Instrumento de pesaje no automático"
+                      fill
+                      className="object-cover object-[0%_100%] transition-transform duration-500 group-hover:scale-105"
+                      sizes="(min-width: 640px) 420px, 300px"
+                    />
+                  </div>
+                </div>
+
+                {/* Cuadrante 4: Inferior Derecho */}
+                <div className="relative overflow-hidden rounded-md bg-white border border-slate-200/80 shadow-sm group">
+                  <div className="absolute inset-0 w-[200%] h-[200%] -top-[100%] -left-[100%]">
+                    <Image
+                      src="/images/original/pesas-m1.jpg"
+                      alt="Verificación técnica y calibración acreditada"
+                      fill
+                      className="object-cover object-[100%_100%] transition-transform duration-500 group-hover:scale-105"
+                      sizes="(min-width: 640px) 420px, 300px"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Badge flotante de acreditación */}
+              <div className="absolute -bottom-2 sm:bottom-2 left-2 sm:left-4 z-20 flex items-center gap-2.5 rounded-md border border-slate-200 bg-white px-4 py-2.5 shadow-lg">
+                <ShieldCheck size={24} weight="fill" className="text-brand shrink-0" />
+                <span className="text-xs font-bold text-slate-900 tracking-wide">
+                  ONAC 21-LAC-011 · ISO 17025
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </Section>
 
-      {/* ─── Equipos ─────────────────────────────────────────── */}
+      {/* ─── NUESTROS SERVICIOS: Cards Uniformes y de Alto Impacto ─── */}
+      <Section id="servicios" className="bg-white">
+        <div className="text-center max-w-3xl mx-auto">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">
+            CAPACIDAD TÉCNICA Y COBERTURA
+          </p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.75rem]">
+            NUESTROS SERVICIOS
+          </h2>
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-red-50 border border-brand/20 px-4 py-1">
+            <ShieldCheck size={16} weight="fill" className="text-brand" />
+            <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-brand">
+              Calibración acreditada por Organismo Nacional de Acreditación (ONAC)
+            </span>
+          </div>
+          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
+            En Labtronix metrology SAS, contamos con la acreditación ONAC, vigente a la fecha, con código de acreditación <strong>21-LAC-011</strong>, bajo la norma <strong>IEC 17025:2017</strong>.
+          </p>
+        </div>
+
+        {/* Grid de 3 Cards Principales Uniformes */}
+        <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {primaryServices.map((service) => (
+            <article
+              key={service.id}
+              className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-brand/40 hover:shadow-[0_16px_36px_rgba(236,6,11,0.08)] overflow-hidden"
+            >
+              {/* Esquina superior estilizada con pestaña distintiva */}
+              <div className="absolute top-0 right-0 h-16 w-16 bg-gradient-to-bl from-red-50 to-transparent rounded-bl-3xl -z-0" />
+
+              {/* Contenedor uniforme de la imagen del equipo */}
+              <div className="relative mb-6 flex h-52 w-full items-center justify-center rounded-xl bg-slate-50/80 p-4 transition-colors group-hover:bg-red-50/30">
+                <div className="relative h-44 w-full">
+                  <Image
+                    src={service.image}
+                    alt={service.title}
+                    fill
+                    className="object-contain transition-transform duration-300 group-hover:scale-105"
+                    sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
+                  />
+                </div>
+                {service.accredited && (
+                  <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-800 shadow-sm">
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand" />
+                    ONAC 21-LAC-011
+                  </span>
+                )}
+              </div>
+
+              {/* Títulos y Contenido */}
+              <div className="flex flex-1 flex-col justify-between">
+                <div>
+                  <h3 className="text-xl font-bold tracking-tight text-slate-950 group-hover:text-brand transition-colors">
+                    {service.title}
+                  </h3>
+                  <span className="mt-1 block text-xs font-semibold uppercase tracking-wider text-brand">
+                    Alcance: {service.scope}
+                  </span>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-600 line-clamp-4">
+                    {service.description}
+                  </p>
+                </div>
+
+                {/* Botón de acción */}
+                <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
+                  <Link
+                    href="#contacto"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-brand hover:text-brand-dark transition-colors"
+                  >
+                    Cotizar servicio <ArrowRight size={16} weight="bold" className="transition-transform group-hover:translate-x-1" />
+                  </Link>
+                  <Link
+                    href="/servicios"
+                    className="text-xs font-medium text-slate-400 hover:text-slate-700 transition-colors"
+                  >
+                    Detalles
+                  </Link>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        {/* Magnitudes Secundarias Complementarias */}
+        <div className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h4 className="text-lg font-bold text-slate-900">Otras magnitudes y servicios técnicos</h4>
+              <p className="text-sm text-slate-600">Servicios complementarios con trazabilidad documentada para tu planta o laboratorio.</p>
+            </div>
+            <ButtonLink href="/servicios" variant="secondary" arrow>
+              Ver todas las magnitudes
+            </ButtonLink>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            {secondaryServices.map(({ icon: Icon, title, text, image }) => (
+              <div
+                key={title}
+                className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300"
+              >
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                  <Image
+                    src={image}
+                    alt={title}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Icon size={20} weight="duotone" className="text-brand shrink-0" />
+                    <h5 className="font-bold text-sm text-slate-900">{title}</h5>
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-600 line-clamp-2">{text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* ─── Equipos y Venta ──────────────────────────────────── */}
       <section id="productos" className="scroll-mt-24 bg-slate-950 text-white">
         <div className="mx-auto grid max-w-[1440px] lg:grid-cols-2">
           <div className="relative min-h-[360px] sm:min-h-[460px] lg:min-h-[640px]">
@@ -260,7 +401,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── Proceso ─────────────────────────────────────────── */}
+      {/* ─── Proceso de Trabajo ──────────────────────────────── */}
       <Section tone="muted">
         <SectionHeading
           eyebrow="Así trabajamos"
