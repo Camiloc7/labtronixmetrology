@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 
+@theme {
+  --color-brand:        #ec060b;
+  --color-brand-dark:   #b80008;
+  --color-brand-light:  #ff2d32;
+}
+
 :root {
   --color-brand:        #ec060b;
   --color-brand-dark:   #b80008;
