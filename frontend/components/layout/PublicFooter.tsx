@@ -12,7 +12,7 @@ const links = [
 export default function PublicFooter() {
   return (
     <footer className="bg-slate-950 text-white">
-      <div className="mx-auto max-w-7xl px-5 pb-10 pt-20 sm:px-8 sm:pt-24">
+      <div className="mx-auto max-w-7xl px-5 pb-10 pt-20 sm:px-8 sm:pt-24 lg:px-10">
         <div className="grid gap-14 border-b border-slate-800 pb-16 lg:grid-cols-[1.2fr_.65fr_.85fr] lg:gap-20">
           <div>
             <Image src="/images/original/labtronix-logo.png" alt="Labtronix Metrology" width={210} height={60} className="h-auto w-[190px] brightness-0 invert" />
@@ -49,7 +49,7 @@ export default function PublicFooter() {
               ['https://www.instagram.com/labtronix_metrologysas/', 'Instagram', InstagramLogo],
             ].map(([href, label, Icon]) => {
               const SocialIcon = Icon as typeof FacebookLogo;
-              return <a key={String(label)} href={String(href)} target="_blank" rel="noreferrer" aria-label={String(label)} className="flex h-11 w-11 items-center justify-center border border-slate-800 text-slate-400 transition hover:border-brand hover:text-white"><SocialIcon size={18} /></a>;
+              return <a key={String(label)} href={String(href)} target="_blank" rel="noreferrer" aria-label={String(label)} className="flex h-11 w-11 items-center justify-center rounded-md border border-slate-800 text-slate-400 transition hover:border-brand hover:text-white"><SocialIcon size={18} /></a>;
             })}
           </div>
         </div>

@@ -1,107 +1,298 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Check, FileText, Gauge, Medal, Ruler, Scales, ShieldCheck, Thermometer } from '@phosphor-icons/react/dist/ssr';
+import {
+  ArrowRight,
+  Check,
+  FileText,
+  Gauge,
+  Medal,
+  Ruler,
+  Scales,
+  ShieldCheck,
+  Thermometer,
+} from '@phosphor-icons/react/dist/ssr';
 import ContactSection from '@/components/layout/ContactSection';
+import { ButtonLink, Container, Eyebrow, Section, SectionHeading } from '@/components/public/ui';
 
 export const metadata: Metadata = {
   title: 'Laboratorio de calibración acreditado ONAC | Labtronix',
-  description: 'Calibración acreditada de instrumentos de pesaje y servicios metrológicos para la industria colombiana. ONAC 21-LAC-011.',
+  description:
+    'Calibración acreditada de instrumentos de pesaje y servicios metrológicos para la industria colombiana. ONAC 21-LAC-011.',
   alternates: { canonical: '/' },
 };
 
-const services = [
-  { icon: Scales, number: '01', title: 'Masa y pesaje', text: 'Calibración acreditada de balanzas e instrumentos de pesaje de funcionamiento no automático, desde alta exactitud hasta 2.000 kg.', image: '/images/original/balanzas.png', accredited: true },
-  { icon: Thermometer, number: '02', title: 'Temperatura y humedad', text: 'Calibración de termómetros, termohigrómetros y equipos de medición ambiental para procesos controlados.', image: '/images/original/termohigrometros.jpg' },
-  { icon: Gauge, number: '03', title: 'Presión y otras magnitudes', text: 'Soluciones para presión, volumen, dimensional, tiempo y frecuencia con trazabilidad documentada.', image: '/images/original/termometros-contacto.jpg' },
+const stats = [
+  { value: '21-LAC-011', label: 'Código de acreditación ONAC' },
+  { value: 'ISO/IEC 17025', label: 'Competencia técnica demostrada' },
+  { value: 'Hasta 2.000 kg', label: 'Alcance acreditado en pesaje' },
+];
+
+const secondaryServices = [
+  {
+    icon: Thermometer,
+    title: 'Temperatura y humedad',
+    text: 'Calibración de termómetros, termohigrómetros y equipos de medición ambiental para procesos controlados.',
+    image: '/images/original/termohigrometros.jpg',
+  },
+  {
+    icon: Gauge,
+    title: 'Presión y otras magnitudes',
+    text: 'Soluciones para presión, volumen, dimensional, tiempo y frecuencia con trazabilidad documentada.',
+    image: '/images/original/termometros-contacto.jpg',
+  },
 ];
 
 const process = [
-  ['01', 'Cuéntanos qué necesitas', 'Identificamos equipo, magnitud, rango y lugar del servicio.'],
-  ['02', 'Recibe una propuesta clara', 'Definimos alcance, tiempos y condiciones antes de iniciar.'],
-  ['03', 'Calibramos y documentamos', 'Ejecutamos el servicio y entregamos el certificado trazable.'],
+  { n: '01', title: 'Cuéntanos qué necesitas', text: 'Identificamos equipo, magnitud, rango y lugar del servicio.' },
+  { n: '02', title: 'Recibe una propuesta clara', text: 'Definimos alcance, tiempos y condiciones antes de iniciar.' },
+  { n: '03', title: 'Calibramos y documentamos', text: 'Ejecutamos el servicio y entregamos el certificado trazable.' },
 ];
 
 export default function LandingPage() {
   return (
-    <main className="bg-white text-slate-950">
-      <section className="border-b border-slate-200 bg-white py-12 sm:py-16 lg:py-20">
-        <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:gap-16">
-          <div className="flex items-center py-4 lg:py-10">
-            <div className="max-w-3xl">
-              <div className="mb-8 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-600"><span className="h-px w-10 bg-brand" />Metrología para decisiones confiables</div>
-              <h1 className="max-w-3xl text-[2.6rem] font-semibold leading-[1.05] tracking-[-0.04em] text-slate-950 sm:text-5xl xl:text-[4rem]">Precisión que respalda <span className="text-brand">tu operación.</span></h1>
-              <p className="mt-7 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Calibramos instrumentos de medición con competencia técnica, trazabilidad y atención especializada para laboratorios e industria en Colombia.</p>
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Link href="#contacto" className="inline-flex min-h-12 items-center justify-center gap-2 bg-brand px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">Solicitar cotización <ArrowRight size={18} weight="bold" /></Link>
-                <Link href="/servicios" className="inline-flex min-h-12 items-center justify-center border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 transition-colors hover:border-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">Explorar servicios</Link>
+    <>
+      {/* ─── Hero ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-b border-slate-200 bg-white">
+        <Container className="grid gap-12 py-14 sm:py-20 lg:grid-cols-12 lg:items-center lg:gap-10 lg:py-24">
+          <div className="lg:col-span-6">
+            <Eyebrow>Metrología para decisiones confiables</Eyebrow>
+            <h1 className="mt-6 text-[2.6rem] font-semibold leading-[1.03] tracking-[-0.04em] text-slate-950 sm:text-6xl lg:text-[4.25rem]">
+              Precisión que respalda <span className="text-brand">tu operación.</span>
+            </h1>
+            <p className="mt-7 max-w-xl text-lg leading-8 text-slate-600">
+              Calibramos instrumentos de medición con competencia técnica, trazabilidad y atención especializada para
+              laboratorios e industria en Colombia.
+            </p>
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              <ButtonLink href="#contacto" arrow>
+                Solicitar cotización
+              </ButtonLink>
+              <ButtonLink href="/servicios" variant="secondary">
+                Explorar servicios
+              </ButtonLink>
+            </div>
+
+            <dl className="mt-14 grid grid-cols-1 border-t border-slate-200 sm:grid-cols-3">
+              {stats.map((stat, i) => (
+                <div
+                  key={stat.value}
+                  className={`flex flex-col py-5 sm:py-6 ${i > 0 ? 'border-t border-slate-200 sm:border-l sm:border-t-0 sm:pl-6' : ''} ${
+                    i < stats.length - 1 ? 'sm:pr-6' : ''
+                  }`}
+                >
+                  <dt className="order-2 mt-1 text-sm text-slate-500">{stat.label}</dt>
+                  <dd className="order-1 text-lg font-semibold tracking-tight text-slate-950">{stat.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="lg:col-span-6 lg:pl-6">
+            <div className="relative">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-slate-100 sm:aspect-[5/4] lg:aspect-[4/5]">
+                <Image
+                  src="/images/original/pesas-m1.jpg"
+                  alt="Técnico de Labtronix calibrando una balanza con una pesa patrón"
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 45vw, 100vw"
+                  className="object-cover"
+                />
               </div>
-              <div className="mt-12 grid max-w-2xl grid-cols-1 gap-5 border-t border-slate-200 pt-7 sm:grid-cols-3">
-                <div><strong className="block text-lg">21-LAC-011</strong><span className="text-sm text-slate-500">Código ONAC</span></div>
-                <div><strong className="block text-lg">ISO/IEC 17025</strong><span className="text-sm text-slate-500">Competencia técnica</span></div>
-                <div><strong className="block text-lg">Hasta 2.000 kg</strong><span className="text-sm text-slate-500">Alcance en pesaje</span></div>
+              {/* Detalle de marca: escuadra roja */}
+              <span aria-hidden="true" className="absolute -left-3 -top-3 h-16 w-16 border-l-4 border-t-4 border-brand" />
+              <div className="absolute -bottom-6 left-4 right-4 rounded-md border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.14)] sm:left-auto sm:right-6 sm:max-w-xs">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck size={26} weight="fill" className="mt-0.5 shrink-0 text-brand" />
+                  <div>
+                    <p className="text-sm font-semibold text-slate-950">Calibración acreditada</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Reconocimiento ONAC e ILAC-MRA para pesaje no automático.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div className="relative min-h-[360px] overflow-hidden bg-slate-100 sm:min-h-[440px] lg:min-h-[540px]">
-            <Image src="/images/original/pesas-m1.jpg" alt="Patrones de masa usados en calibración metrológica" fill priority sizes="(min-width: 1024px) 48vw, 100vw" className="object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7">
-              <div className="max-w-sm border-l-4 border-brand bg-white p-5 shadow-lg"><div className="flex items-start gap-4"><ShieldCheck size={28} weight="fill" className="mt-0.5 shrink-0 text-brand" /><div><strong className="block text-sm">Calibración acreditada</strong><p className="mt-1 text-xs leading-5 text-slate-600">Reconocimiento ONAC e ILAC-MRA para pesaje no automático.</p></div></div></div>
+        </Container>
+      </section>
+
+      {/* ─── Acreditación ────────────────────────────────────── */}
+      <section id="acreditacion" className="scroll-mt-24 border-b border-slate-200 bg-slate-50">
+        <Container className="grid gap-8 py-12 sm:py-14 lg:grid-cols-12 lg:items-center">
+          <div className="flex items-center gap-4 lg:col-span-4">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-white text-brand ring-1 ring-slate-200">
+              <Medal size={30} weight="duotone" />
+            </span>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">Acreditación vigente</p>
+              <p className="mt-1 text-xl font-semibold tracking-tight text-slate-950">ONAC 21-LAC-011</p>
+            </div>
+          </div>
+          <p className="text-base leading-7 text-slate-600 lg:col-span-6 lg:border-l lg:border-slate-300 lg:pl-8">
+            Nuestro alcance acreditado demuestra competencia técnica bajo ISO/IEC 17025:2017 y aporta confianza
+            internacional a los resultados de calibración.
+          </p>
+          <div className="lg:col-span-2 lg:text-right">
+            <ButtonLink href="/acreditacion" variant="link" arrow>
+              Ver alcance
+            </ButtonLink>
+          </div>
+        </Container>
+      </section>
+
+      {/* ─── Servicios ───────────────────────────────────────── */}
+      <Section id="servicios">
+        <SectionHeading
+          align="split"
+          eyebrow="Capacidad técnica"
+          title="Medimos lo que sostiene tu calidad."
+          lead="Servicios pensados para responsables de calidad, mantenimiento y producción que necesitan resultados claros, tiempos definidos y soporte experto."
+        />
+
+        <div className="mt-14 grid gap-6 lg:grid-cols-12">
+          {/* Servicio principal: acreditado */}
+          <article className="group relative flex min-h-[460px] flex-col justify-end overflow-hidden rounded-lg bg-slate-950 lg:col-span-7 lg:min-h-[560px]">
+            <Image
+              src="/images/original/balanzas.png"
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 58vw, 100vw"
+              className="object-cover opacity-70 transition-transform duration-700 group-hover:scale-[1.03]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/0" />
+            <div className="relative p-7 text-white sm:p-10">
+              <span className="inline-flex items-center gap-2 rounded-sm bg-brand px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider">
+                <ShieldCheck size={14} weight="fill" /> Acreditado ONAC
+              </span>
+              <div className="mt-5 flex items-center gap-3">
+                <Scales size={30} weight="duotone" className="text-red-400" />
+                <h3 className="text-2xl font-semibold tracking-tight sm:text-3xl">Masa y pesaje</h3>
+              </div>
+              <p className="mt-4 max-w-lg text-base leading-7 text-slate-200">
+                Calibración acreditada de balanzas e instrumentos de pesaje de funcionamiento no automático, desde alta
+                exactitud hasta 2.000 kg.
+              </p>
+              <Link
+                href="/#contacto"
+                className="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-white underline decoration-brand decoration-2 underline-offset-[6px] hover:text-red-300"
+              >
+                Cotizar calibración <ArrowRight size={16} weight="bold" />
+              </Link>
+            </div>
+          </article>
+
+          {/* Servicios secundarios */}
+          <div className="grid gap-6 lg:col-span-5">
+            {secondaryServices.map(({ icon: Icon, title, text, image }) => (
+              <article
+                key={title}
+                className="group grid overflow-hidden rounded-lg border border-slate-200 bg-white transition-colors hover:border-slate-300 sm:grid-cols-[180px_1fr] lg:grid-cols-1 xl:grid-cols-[170px_1fr]"
+              >
+                <div className="relative h-44 bg-slate-100 sm:h-auto lg:h-40 xl:h-auto">
+                  <Image
+                    src={image}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1280px) 170px, (min-width: 1024px) 40vw, 180px"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-6 sm:p-7">
+                  <Icon size={26} weight="duotone" className="text-brand" />
+                  <h3 className="mt-4 text-lg font-semibold tracking-tight">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-10">
+          <ButtonLink href="/servicios" variant="link" arrow>
+            Ver todas las magnitudes
+          </ButtonLink>
+        </div>
+      </Section>
+
+      {/* ─── Equipos ─────────────────────────────────────────── */}
+      <section id="productos" className="scroll-mt-24 bg-slate-950 text-white">
+        <div className="mx-auto grid max-w-[1440px] lg:grid-cols-2">
+          <div className="relative min-h-[360px] sm:min-h-[460px] lg:min-h-[640px]">
+            <Image
+              src="/images/equipment_scale_1790955120303.jpg"
+              alt="Balanza de precisión para laboratorio"
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="flex items-center px-5 py-16 sm:px-10 sm:py-20 lg:px-16 xl:px-20">
+            <div className="max-w-xl">
+              <Eyebrow dark>Equipamiento de medición</Eyebrow>
+              <h2 className="mt-5 text-3xl font-semibold leading-[1.1] tracking-[-0.03em] sm:text-4xl lg:text-[2.75rem]">
+                El equipo correcto, respaldado técnicamente.
+              </h2>
+              <p className="mt-6 text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
+                Suministramos balanzas, básculas y soluciones de medición con acompañamiento para seleccionar, instalar y
+                mantener cada equipo.
+              </p>
+              <ul className="mt-9 divide-y divide-white/10 border-y border-white/10">
+                {[
+                  'Selección según proceso y exactitud requerida',
+                  'Calibración e instalación coordinadas',
+                  'Soporte técnico después de la compra',
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-3 py-4 text-sm text-slate-200 sm:text-base">
+                    <Check size={18} weight="bold" className="shrink-0 text-red-400" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-10">
+                <ButtonLink href="/equipos" variant="ghost-dark" arrow>
+                  Ver equipos y soluciones
+                </ButtonLink>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="acreditacion" className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 sm:px-8 lg:grid-cols-[.75fr_1.25fr] lg:items-center lg:py-16">
-          <div className="flex items-center gap-4"><Medal size={44} weight="duotone" className="text-brand" /><div><p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">Acreditación vigente</p><p className="mt-1 text-xl font-semibold">ONAC 21-LAC-011</p></div></div>
-          <p className="border-l border-slate-300 pl-6 text-base leading-7 text-slate-600 lg:text-lg">Nuestro alcance acreditado demuestra competencia técnica bajo ISO/IEC 17025:2017 y aporta confianza internacional a los resultados de calibración.</p>
-        </div>
-      </section>
+      {/* ─── Proceso ─────────────────────────────────────────── */}
+      <Section tone="muted">
+        <SectionHeading
+          eyebrow="Así trabajamos"
+          title="Un proceso claro de principio a fin."
+          lead="Tres etapas, un responsable técnico y visibilidad sobre lo que ocurrirá con tus instrumentos."
+        />
 
-      <section id="servicios" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28">
-        <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-end">
-          <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand">Capacidad técnica</p><h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">Medimos lo que sostiene tu calidad.</h2></div>
-          <p className="max-w-2xl text-base leading-7 text-slate-600 lg:justify-self-end">Servicios pensados para responsables de calidad, mantenimiento y producción que necesitan resultados claros, tiempos definidos y soporte experto.</p>
-        </div>
-        <div className="mt-14 border-t border-slate-300">
-          {services.map((service) => { const Icon = service.icon; return (
-            <article key={service.title} className="group grid gap-6 border-b border-slate-300 py-8 sm:grid-cols-[56px_1fr_160px] sm:items-center lg:grid-cols-[72px_1fr_1.2fr_210px]">
-              <span className="font-mono text-sm text-slate-400">{service.number}</span>
-              <div className="flex items-center gap-4"><Icon size={30} weight="duotone" className="shrink-0 text-brand" /><h3 className="text-xl font-semibold sm:text-2xl">{service.title}</h3></div>
-              <p className="text-sm leading-6 text-slate-600 sm:col-start-2 lg:col-start-auto lg:text-base lg:leading-7">{service.text}</p>
-              <div className="relative hidden h-28 overflow-hidden bg-slate-100 sm:block"><Image src={service.image} alt="" fill sizes="210px" className="object-cover transition-transform duration-500 group-hover:scale-105" />{service.accredited && <span className="absolute bottom-2 left-2 bg-brand px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Acreditado</span>}</div>
-            </article>
-          ); })}
-        </div>
-        <Link href="/servicios" className="mt-10 inline-flex min-h-12 items-center gap-2 border-b-2 border-brand text-sm font-bold text-slate-950">Ver todas las magnitudes <ArrowRight size={18} weight="bold" /></Link>
-      </section>
+        <ol className="mt-14 grid gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 md:grid-cols-3">
+          {process.map((step) => (
+            <li key={step.n} className="bg-white p-7 sm:p-9">
+              <span className="font-mono text-4xl font-semibold text-brand/90">{step.n}</span>
+              <h3 className="mt-8 text-xl font-semibold tracking-tight">{step.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">{step.text}</p>
+            </li>
+          ))}
+        </ol>
 
-      <section id="productos" className="bg-slate-950 text-white">
-        <div className="mx-auto grid max-w-7xl lg:grid-cols-2">
-          <div className="relative min-h-[420px] lg:min-h-[620px]"><Image src="/images/equipment_scale_1790955120303.jpg" alt="Balanza de precisión para laboratorio" fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" /><div className="absolute inset-0 bg-slate-950/20" /></div>
-          <div className="flex items-center px-5 py-16 sm:px-10 sm:py-20 lg:px-16"><div className="max-w-xl">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-400">Equipamiento de medición</p><h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">El equipo correcto, respaldado técnicamente.</h2>
-            <p className="mt-6 text-base leading-7 text-slate-300">Suministramos balanzas, básculas y soluciones de medición con acompañamiento para seleccionar, instalar y mantener cada equipo.</p>
-            <ul className="mt-8 space-y-4 text-sm text-slate-200">{['Selección según proceso y exactitud requerida', 'Calibración e instalación coordinadas', 'Soporte técnico después de la compra'].map((item) => <li key={item} className="flex gap-3"><Check size={19} weight="bold" className="shrink-0 text-red-400" />{item}</li>)}</ul>
-            <Link href="/equipos" className="mt-9 inline-flex min-h-12 items-center gap-2 border-b-2 border-brand pb-2 text-sm font-bold text-white transition-colors hover:text-red-300">Ver equipos y soluciones <ArrowRight size={18} weight="bold" /></Link>
-          </div></div>
-        </div>
-      </section>
+        <ul className="mt-10 grid gap-6 sm:grid-cols-3">
+          {[
+            { icon: FileText, label: 'Certificados digitales trazables' },
+            { icon: Ruler, label: 'Servicio en laboratorio e in situ' },
+            { icon: ShieldCheck, label: 'Acompañamiento técnico especializado' },
+          ].map(({ icon: Icon, label }) => (
+            <li key={label} className="flex items-center gap-3 text-sm font-medium text-slate-800">
+              <Icon size={22} weight="duotone" className="shrink-0 text-brand" />
+              {label}
+            </li>
+          ))}
+        </ul>
+      </Section>
 
-      <section className="border-t border-slate-200 bg-slate-50 py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand">Así trabajamos</p><h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">Un proceso claro de principio a fin.</h2><p className="mt-5 text-base leading-7 text-slate-600">Tres etapas, un responsable técnico y visibilidad sobre lo que ocurrirá con tus instrumentos.</p></div>
-          <div className="mt-14 grid gap-6 md:grid-cols-3">{process.map(([number, title, text]) => <div key={number} className="border-t-2 border-slate-950 bg-white p-7 sm:p-8"><span className="font-mono text-sm text-brand">{number}</span><h3 className="mt-10 text-xl font-semibold">{title}</h3><p className="mt-4 text-sm leading-6 text-slate-600">{text}</p></div>)}</div>
-          <div className="mt-12 grid gap-5 border-t border-slate-300 pt-8 sm:grid-cols-3">
-            <div className="flex items-center gap-3"><FileText size={24} className="text-brand" /><span className="text-sm font-semibold">Certificados digitales trazables</span></div>
-            <div className="flex items-center gap-3"><Ruler size={24} className="text-brand" /><span className="text-sm font-semibold">Servicio en laboratorio e in situ</span></div>
-            <div className="flex items-center gap-3"><ShieldCheck size={24} className="text-brand" /><span className="text-sm font-semibold">Acompañamiento técnico especializado</span></div>
-          </div>
-        </div>
-      </section>
       <ContactSection />
-    </main>
+    </>
   );
 }

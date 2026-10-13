@@ -1,10 +1,13 @@
-@import "tailwindcss";
+/* Las @import externas deben ir antes que cualquier otra regla o el navegador las descarta */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+@import "tailwindcss";
 
 @theme {
   --color-brand:        #ec060b;
   --color-brand-dark:   #b80008;
   --color-brand-light:  #ff2d32;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 :root {
@@ -77,6 +80,9 @@
 }
 
 /* ─── Reset ─────────────────────────────────────────── */
+/* Dentro de @layer base: si queda fuera de una capa, anula todas las utilidades
+   de Tailwind v4 (padding, margin, bg en botones...). */
+@layer base {
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -111,6 +117,7 @@ button {
 
 input, select, textarea {
   font-family: inherit;
+}
 }
 
 /* ─── Scrollbar ─────────────────────────────────────── */

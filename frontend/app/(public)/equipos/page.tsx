@@ -1,16 +1,105 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
-import { ArrowRight, Check } from '@phosphor-icons/react/dist/ssr';
+import { Check } from '@phosphor-icons/react/dist/ssr';
+import { ButtonLink, CtaBand, PageHero, Section, SectionHeading } from '@/components/public/ui';
 
-export const metadata: Metadata = { title: 'Equipos e instrumentación de medición | Labtronix', description: 'Venta de balanzas, básculas, pesas patrón e instrumentación con soporte técnico y calibración.', alternates: { canonical: '/equipos' } };
+export const metadata: Metadata = {
+  title: 'Equipos e instrumentación de medición | Labtronix',
+  description: 'Venta de balanzas, básculas, pesas patrón e instrumentación con soporte técnico y calibración.',
+  alternates: { canonical: '/equipos' },
+};
 
-const catalog = ['Balanzas analíticas, semianalíticas y de precisión', 'Básculas industriales', 'Pesas patrón OIML clases E2, F1, F2 y M1 en acero inoxidable', 'Termohigrómetros y data loggers con trazabilidad', 'Manómetros digitales de alta exactitud', 'Sistemas de adquisición y software metrológico'];
+const catalog = [
+  { title: 'Balanzas analíticas, semianalíticas y de precisión', image: '/images/original/balanzas.png' },
+  { title: 'Básculas industriales', image: '/images/original/basculas.png' },
+  { title: 'Pesas patrón OIML clases E2, F1, F2 y M1 en acero inoxidable', image: '/images/original/pesas-m1.jpg' },
+  { title: 'Termohigrómetros y data loggers con trazabilidad', image: '/images/original/termohigrometros.jpg' },
+];
+
+const moreItems = ['Manómetros digitales de alta exactitud', 'Sistemas de adquisición y software metrológico'];
+
+const steps = [
+  { n: '01', title: 'Selección técnica', text: 'Revisamos uso, capacidad, división y condiciones del proceso antes de recomendar.' },
+  { n: '02', title: 'Entrega preparada', text: 'Coordinamos instalación, configuración y calibración inicial cuando aplique.' },
+  { n: '03', title: 'Soporte posterior', text: 'Acompañamos mantenimiento, recalibración y continuidad metrológica.' },
+];
 
 export default function EquiposPage() {
-  return <main className="bg-white text-slate-950">
-    <header className="grid lg:grid-cols-2"><div className="flex items-center px-5 py-20 sm:px-8 lg:px-16 xl:px-24"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-brand">Equipamiento de medición</p><h1 className="mt-4 text-5xl font-semibold tracking-[-.04em] sm:text-6xl">Instrumentos seleccionados para tu proceso.</h1><p className="mt-7 max-w-xl text-lg leading-8 text-slate-600">Suministramos equipos de medición con acompañamiento técnico para elegir la capacidad, exactitud y configuración adecuadas.</p><Link href="/#contacto" className="mt-9 inline-flex min-h-12 items-center gap-2 bg-brand px-6 text-sm font-bold text-white">Solicitar cotización <ArrowRight size={18} /></Link></div></div><div className="relative min-h-[460px] lg:min-h-[680px]"><Image src="/images/equipment_scale_1790955120303.jpg" alt="Balanza de alta precisión para laboratorio" fill priority className="object-cover" /></div></header>
-    <section className="mx-auto grid max-w-7xl gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[.75fr_1.25fr]"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-brand">Portafolio</p><h2 className="mt-4 text-4xl font-semibold tracking-[-.035em]">Soluciones para laboratorio e industria.</h2><p className="mt-5 text-base leading-7 text-slate-600">Trabajamos con instrumentación de fabricantes reconocidos y coordinamos protocolo de calificación y certificado de calibración inicial según la solución adquirida. Consulta disponibilidad con nuestro equipo comercial.</p></div><div className="border-t border-slate-300">{catalog.map(item => <div key={item} className="flex gap-3 border-b border-slate-300 py-5"><Check size={20} weight="bold" className="shrink-0 text-brand" /><span className="font-semibold">{item}</span></div>)}</div></section>
-    <section className="bg-slate-950 text-white"><div className="mx-auto grid max-w-7xl gap-px bg-slate-800 md:grid-cols-3"><div className="bg-slate-950 p-9"><p className="font-mono text-sm text-red-400">01</p><h2 className="mt-8 text-xl font-semibold">Selección técnica</h2><p className="mt-3 text-sm leading-6 text-slate-300">Revisamos uso, capacidad, división y condiciones del proceso antes de recomendar.</p></div><div className="bg-slate-950 p-9"><p className="font-mono text-sm text-red-400">02</p><h2 className="mt-8 text-xl font-semibold">Entrega preparada</h2><p className="mt-3 text-sm leading-6 text-slate-300">Coordinamos instalación, configuración y calibración inicial cuando aplique.</p></div><div className="bg-slate-950 p-9"><p className="font-mono text-sm text-red-400">03</p><h2 className="mt-8 text-xl font-semibold">Soporte posterior</h2><p className="mt-3 text-sm leading-6 text-slate-300">Acompañamos mantenimiento, recalibración y continuidad metrológica.</p></div></div></section>
-  </main>;
+  return (
+    <>
+      <PageHero
+        eyebrow="Equipamiento de medición"
+        title="Instrumentos seleccionados para tu proceso."
+        lead="Suministramos equipos de medición con acompañamiento técnico para elegir la capacidad, exactitud y configuración adecuadas."
+        media={
+          <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-slate-100">
+            <Image
+              src="/images/equipment_scale_1790955120303.jpg"
+              alt="Balanza de alta precisión para laboratorio"
+              fill
+              priority
+              sizes="(min-width: 1024px) 45vw, 100vw"
+              className="object-cover"
+            />
+          </div>
+        }
+      >
+        <ButtonLink href="/#contacto" arrow>Solicitar cotización</ButtonLink>
+      </PageHero>
+
+      <Section>
+        <SectionHeading
+          align="split"
+          eyebrow="Portafolio"
+          title="Soluciones para laboratorio e industria."
+          lead="Trabajamos con instrumentación de fabricantes reconocidos y coordinamos protocolo de calificación y certificado de calibración inicial según la solución adquirida. Consulta disponibilidad con nuestro equipo comercial."
+        />
+
+        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {catalog.map((item) => (
+            <article key={item.title} className="group overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <div className="relative aspect-[4/3] bg-slate-100">
+                <Image
+                  src={item.image}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+              <h3 className="p-5 text-base font-semibold leading-6 tracking-tight">{item.title}</h3>
+            </article>
+          ))}
+        </div>
+
+        <ul className="mt-8 grid gap-4 border-t border-slate-200 pt-8 sm:grid-cols-2">
+          {moreItems.map((item) => (
+            <li key={item} className="flex items-center gap-3 text-base font-medium text-slate-800">
+              <Check size={18} weight="bold" className="shrink-0 text-brand" />
+              {item}
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section tone="muted">
+        <SectionHeading eyebrow="Acompañamiento" title="Del requerimiento al equipo en operación." />
+        <ol className="mt-14 grid gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 md:grid-cols-3">
+          {steps.map((step) => (
+            <li key={step.n} className="bg-white p-7 sm:p-9">
+              <span className="font-mono text-4xl font-semibold text-brand/90">{step.n}</span>
+              <h3 className="mt-8 text-xl font-semibold tracking-tight">{step.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">{step.text}</p>
+            </li>
+          ))}
+        </ol>
+      </Section>
+
+      <CtaBand
+        title="¿Buscas un equipo específico?"
+        text="Indícanos capacidad, división, uso y cantidad. Te proponemos la opción adecuada con su calibración inicial."
+        label="Solicitar cotización"
+      />
+    </>
+  );
 }

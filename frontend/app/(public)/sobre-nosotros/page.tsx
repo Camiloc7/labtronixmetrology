@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
-import { ArrowRight, Building, Check, Target, UsersThree } from '@phosphor-icons/react/dist/ssr';
+import { Building, Check, Target } from '@phosphor-icons/react/dist/ssr';
+import { Container, CtaBand, Eyebrow, PageHero, Section, SectionHeading } from '@/components/public/ui';
 
 export const metadata: Metadata = {
   title: 'Sobre Labtronix Metrology',
@@ -9,52 +9,121 @@ export const metadata: Metadata = {
   alternates: { canonical: '/sobre-nosotros' },
 };
 
+const values = ['Calidad', 'Confiabilidad', 'Transparencia', 'Pasión', 'Compromiso', 'Liderazgo'];
+
+const figures = [
+  { value: '2019', label: 'Año de fundación' },
+  { value: '17025', label: 'Norma acreditada' },
+  { value: 'ONAC', label: 'Acreditación 21-LAC-011' },
+  { value: '24/7', label: 'Portal de certificados' },
+];
+
 export default function SobreNosotrosPage() {
   return (
-    <main className="bg-white text-slate-950">
-      <header className="border-b border-slate-200 bg-slate-50">
-        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28">
-          <p className="text-xs font-bold uppercase tracking-[.16em] text-brand">Nuestra compañía</p>
-          <h1 className="mt-4 max-w-4xl text-5xl font-semibold tracking-[-.04em] sm:text-6xl">Excelencia metrológica al servicio de la industria.</h1>
-          <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-600">Labtronix es un aliado técnico para organizaciones que exigen calidad, trazabilidad y cumplimiento en sus procesos de medición.</p>
-        </div>
-      </header>
+    <>
+      <PageHero
+        eyebrow="Nuestra compañía"
+        title="Excelencia metrológica al servicio de la industria."
+        lead="Labtronix es un aliado técnico para organizaciones que exigen calidad, trazabilidad y cumplimiento en sus procesos de medición."
+      />
 
-      <section className="mx-auto grid max-w-7xl gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[.16em] text-brand">Nuestra historia</p>
-          <h2 className="mt-4 text-4xl font-semibold tracking-[-.035em]">Una empresa construida alrededor de la confianza técnica.</h2>
-          <div className="mt-7 space-y-5 text-base leading-8 text-slate-600">
-            <p>Desde nuestros inicios en 2019 en Bogotá identificamos la necesidad de las industrias farmacéutica, alimentaria, química y manufacturera de contar con calibración transparente, rigurosa y con tiempos de respuesta adecuados.</p>
-            <p>Nos hemos enfocado en inversión continua en patrones de alta gama trazables internacionalmente al INM y al PTB de Alemania, sistemas de gestión digitalizados y capacitación especializada de nuestros metrólogos.</p>
+      {/* Historia */}
+      <Section>
+        <div className="grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+          <div className="lg:col-span-6">
+            <Eyebrow>Nuestra historia</Eyebrow>
+            <h2 className="mt-5 text-3xl font-semibold leading-[1.1] tracking-[-0.03em] sm:text-4xl lg:text-[2.75rem]">
+              Una empresa construida alrededor de la confianza técnica.
+            </h2>
+            <div className="mt-7 space-y-5 text-base leading-8 text-slate-600 sm:text-lg">
+              <p>
+                Desde nuestros inicios en 2019 en Bogotá identificamos la necesidad de las industrias farmacéutica,
+                alimentaria, química y manufacturera de contar con calibración transparente, rigurosa y con tiempos de
+                respuesta adecuados.
+              </p>
+              <p>
+                Nos hemos enfocado en inversión continua en patrones de alta gama trazables internacionalmente al INM y al
+                PTB de Alemania, sistemas de gestión digitalizados y capacitación especializada de nuestros metrólogos.
+              </p>
+            </div>
+          </div>
+          <div className="lg:col-span-6">
+            <div className="relative">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-slate-100">
+                <Image
+                  src="/images/original/termohigrometros.jpg"
+                  alt="Equipos de medición atendidos por Labtronix"
+                  fill
+                  sizes="(min-width: 1024px) 45vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
+              <span aria-hidden="true" className="absolute -bottom-3 -right-3 h-16 w-16 border-b-4 border-r-4 border-brand" />
+            </div>
           </div>
         </div>
-        <div className="relative min-h-[360px] overflow-hidden bg-slate-100 sm:min-h-[460px]"><Image src="/images/original/termohigrometros.jpg" alt="Equipos de medición atendidos por Labtronix" fill className="object-cover" /></div>
-      </section>
+      </Section>
 
-      <section className="border-y border-slate-200 bg-slate-50 py-20 sm:py-28">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <article className="border-t-2 border-brand bg-white p-8 sm:p-10"><Target size={32} weight="duotone" className="text-brand" /><h2 className="mt-8 text-2xl font-semibold">Misión</h2><p className="mt-4 text-base leading-8 text-slate-600">Proveer servicios metrológicos de la más alta exactitud y confiabilidad técnica, respaldados por personal calificado y patrones de referencia trazables a organismos internacionales.</p></article>
-            <article className="border-t-2 border-slate-950 bg-white p-8 sm:p-10"><Building size={32} weight="duotone" className="text-brand" /><h2 className="mt-8 text-2xl font-semibold">Visión</h2><p className="mt-4 text-base leading-8 text-slate-600">Consolidarnos como el laboratorio de metrología referente en Colombia y la región andina, reconocidos por la innovación digital en la gestión de calibraciones y la transparencia técnica.</p></article>
-          </div>
-          <div className="mt-14 grid gap-8 lg:grid-cols-[.6fr_1.4fr] lg:items-start">
-            <div><UsersThree size={32} weight="duotone" className="text-brand" /><h2 className="mt-5 text-2xl font-semibold">Valores corporativos</h2></div>
-            <div className="grid grid-cols-2 gap-px bg-slate-300 sm:grid-cols-3">{['Calidad', 'Confiabilidad', 'Transparencia', 'Pasión', 'Compromiso', 'Liderazgo'].map(value => <div key={value} className="flex items-center gap-3 bg-slate-50 px-5 py-5 text-sm font-semibold"><Check size={18} className="text-brand" />{value}</div>)}</div>
-          </div>
-        </div>
-      </section>
-
+      {/* Cifras */}
       <section className="bg-slate-950 text-white">
-        <div className="mx-auto grid max-w-7xl gap-px bg-slate-800 sm:grid-cols-2 lg:grid-cols-4">
-          {[['2019', 'Año de fundación'], ['17025', 'Norma acreditada'], ['ONAC', 'Acreditación 21-LAC-011'], ['24/7', 'Portal de certificados']].map(([value, label]) => <div key={value} className="bg-slate-950 p-8 sm:p-10"><p className="font-mono text-3xl font-bold text-red-400">{value}</p><p className="mt-2 text-sm text-slate-400">{label}</p></div>)}
-        </div>
+        <Container>
+          <dl className="grid grid-cols-2 gap-px bg-white/10 lg:grid-cols-4">
+            {figures.map((f) => (
+              <div key={f.value} className="flex flex-col bg-slate-950 px-5 py-10 sm:px-8 sm:py-12">
+                <dt className="order-2 mt-2 text-sm text-slate-400">{f.label}</dt>
+                <dd className="order-1 font-mono text-3xl font-semibold text-red-400 sm:text-4xl">{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </Container>
       </section>
 
-      <section className="mx-auto flex max-w-7xl flex-col gap-7 px-5 py-20 sm:px-8 md:flex-row md:items-center md:justify-between">
-        <div><h2 className="text-3xl font-semibold">Conoce cómo podemos apoyar tu operación.</h2><p className="mt-3 text-slate-600">Consulta nuestras magnitudes, alcance acreditado y soluciones de equipamiento.</p></div>
-        <Link href="/servicios" className="inline-flex min-h-12 items-center justify-center gap-2 bg-brand px-6 text-sm font-bold text-white">Ver servicios <ArrowRight size={18} /></Link>
-      </section>
-    </main>
+      {/* Misión, visión y valores */}
+      <Section tone="muted">
+        <SectionHeading eyebrow="Propósito" title="Lo que nos mueve y hacia dónde vamos." />
+
+        <div className="mt-14 grid gap-6 lg:grid-cols-2">
+          <article className="rounded-lg border border-slate-200 bg-white p-8 sm:p-10">
+            <span className="flex h-12 w-12 items-center justify-center rounded-md bg-red-50 text-brand">
+              <Target size={26} weight="duotone" />
+            </span>
+            <h3 className="mt-7 text-2xl font-semibold tracking-tight">Misión</h3>
+            <p className="mt-4 text-base leading-8 text-slate-600">
+              Proveer servicios metrológicos de la más alta exactitud y confiabilidad técnica, respaldados por personal
+              calificado y patrones de referencia trazables a organismos internacionales.
+            </p>
+          </article>
+          <article className="rounded-lg border border-slate-200 bg-white p-8 sm:p-10">
+            <span className="flex h-12 w-12 items-center justify-center rounded-md bg-slate-950 text-white">
+              <Building size={26} weight="duotone" />
+            </span>
+            <h3 className="mt-7 text-2xl font-semibold tracking-tight">Visión</h3>
+            <p className="mt-4 text-base leading-8 text-slate-600">
+              Consolidarnos como el laboratorio de metrología referente en Colombia y la región andina, reconocidos por la
+              innovación digital en la gestión de calibraciones y la transparencia técnica.
+            </p>
+          </article>
+        </div>
+
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-8 sm:p-10">
+          <h3 className="text-2xl font-semibold tracking-tight">Valores corporativos</h3>
+          <ul className="mt-7 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            {values.map((value) => (
+              <li key={value} className="flex items-center gap-2.5 text-base font-medium text-slate-800">
+                <Check size={18} weight="bold" className="shrink-0 text-brand" />
+                {value}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Section>
+
+      <CtaBand
+        title="Conoce cómo podemos apoyar tu operación."
+        text="Consulta nuestras magnitudes, alcance acreditado y soluciones de equipamiento."
+        href="/servicios"
+        label="Ver servicios"
+      />
+    </>
   );
 }

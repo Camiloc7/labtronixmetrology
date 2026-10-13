@@ -31,7 +31,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   }, []);
 
   return (
-    <div className="font-sans bg-slate-50 text-slate-900 min-h-screen flex flex-col selection:bg-brand selection:text-white">
+    <div className="flex min-h-screen flex-col bg-white font-sans text-slate-950 antialiased selection:bg-brand selection:text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

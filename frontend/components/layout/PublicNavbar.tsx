@@ -1,220 +1,166 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  List, 
-  X, 
-  ShieldCheck, 
-  SignIn, 
-  Envelope, 
-  WhatsappLogo,
-  CaretRight
-} from '@phosphor-icons/react';
+import { usePathname } from 'next/navigation';
+import { Envelope, List, SignIn, WhatsappLogo, X } from '@phosphor-icons/react';
+
+const NAV_LINKS = [
+  { href: '/', label: 'Inicio' },
+  { href: '/servicios', label: 'Servicios' },
+  { href: '/equipos', label: 'Equipos' },
+  { href: '/acreditacion', label: 'Acreditación ONAC' },
+  { href: '/sobre-nosotros', label: 'Nosotros' },
+  { href: '/#contacto', label: 'Contacto' },
+];
 
 export default function PublicNavbar() {
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 8);
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const isActive = (href: string) => {
+    if (href.startsWith('/#')) return false;
+    return href === '/' ? pathname === '/' : pathname.startsWith(href);
+  };
+
   return (
     <>
-      {/* Top Banner Notice */}
-      <div className="bg-slate-950 px-4 py-2.5 text-xs text-slate-300">
-        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
-          <div className="flex items-center gap-3">
-            <Link href="/acreditacion" className="inline-flex items-center gap-1.5 font-semibold text-red-400">
+      {/* Barra de contacto */}
+      <div className="bg-slate-950 text-slate-300">
+        <div className="mx-auto flex min-h-10 w-full max-w-7xl items-center justify-between gap-4 px-5 text-xs sm:px-8 lg:px-10">
+          <p className="flex items-center gap-2">
+            <Link href="/acreditacion" className="font-semibold text-white hover:text-red-300">
               Acreditación ONAC 21-LAC-011
             </Link>
-            <span className="hidden sm:inline text-slate-400">
-              Norma ISO/IEC 17025:2017 &bull; Bogotá, Colombia
-            </span>
-          </div>
-          <div className="flex items-center gap-4 text-[11px] font-medium text-slate-300">
-            <a href="https://wa.me/573160249528" target="_blank" rel="noreferrer" className="hover:text-white flex items-center gap-1 transition-colors">
-              <WhatsappLogo size={14} weight="fill" className="text-red-400" />
+            <span className="hidden text-slate-500 sm:inline">·</span>
+            <span className="hidden text-slate-400 sm:inline">ISO/IEC 17025:2017 · Bogotá, Colombia</span>
+          </p>
+          <div className="flex items-center gap-5">
+            <a
+              href="https://wa.me/573160249528"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 transition-colors hover:text-white"
+            >
+              <WhatsappLogo size={15} weight="fill" className="text-red-400" />
               <span>+57 316 024 9528</span>
             </a>
-            <a href="mailto:comercial1@labtronix.com.co" className="hover:text-white hidden md:flex items-center gap-1 transition-colors">
-              <Envelope size={13} weight="bold" className="text-brand-light" />
+            <a
+              href="mailto:comercial1@labtronix.com.co"
+              className="hidden items-center gap-1.5 transition-colors hover:text-white md:flex"
+            >
+              <Envelope size={15} className="text-red-400" />
               <span>comercial1@labtronix.com.co</span>
             </a>
           </div>
         </div>
       </div>
 
-      {/* Main Navbar */}
-      <nav 
-        className={`sticky top-0 left-0 w-full z-50 transition-all duration-300 ${
-          isScrolled 
-            ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200 py-3'
-            : 'bg-white border-b border-slate-200 py-4'
+      {/* Navegación principal */}
+      <nav
+        aria-label="Navegación principal"
+        className={`sticky top-0 z-50 border-b bg-white/95 backdrop-blur-md transition-shadow duration-300 ${
+          isScrolled ? 'border-slate-200 shadow-[0_6px_24px_rgba(15,23,42,0.06)]' : 'border-slate-100'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          
-          {/* Brand Logo */}
-          <Link href="/" className="group shrink-0">
-              <Image
-                src="/images/original/labtronix-logo.png"
-                alt="Labtronix Metrology" 
-                width={196}
-                height={56}
-                className="w-[156px] sm:w-[196px] h-auto object-contain group-hover:scale-[1.02] transition-transform"
-                priority
-              />
+        <div className="mx-auto flex h-[72px] w-full max-w-7xl items-center justify-between gap-6 px-5 sm:px-8 lg:px-10">
+          <Link href="/" className="shrink-0" aria-label="Labtronix Metrology, inicio">
+            <Image
+              src="/images/original/labtronix-logo.png"
+              alt="Labtronix Metrology"
+              width={196}
+              height={56}
+              className="h-auto w-[148px] sm:w-[172px]"
+              priority
+            />
           </Link>
 
-          {/* Desktop Nav Items */}
-          <div className="hidden lg:flex items-center gap-8">
-            <Link 
-              href="/" 
-              className="text-sm font-semibold text-slate-700 hover:text-brand transition-colors"
+          <ul className="hidden items-center gap-1 lg:flex">
+            {NAV_LINKS.map(({ href, label }) => {
+              const active = isActive(href);
+              return (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    aria-current={active ? 'page' : undefined}
+                    className={`relative inline-flex min-h-11 items-center px-3 text-sm font-medium transition-colors after:absolute after:inset-x-3 after:bottom-1.5 after:h-0.5 after:origin-left after:bg-brand after:transition-transform ${
+                      active
+                        ? 'text-slate-950 after:scale-x-100'
+                        : 'text-slate-600 after:scale-x-0 hover:text-slate-950 hover:after:scale-x-100'
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="hidden items-center gap-3 sm:flex">
+            <Link
+              href="/#contacto"
+              className="hidden min-h-11 items-center rounded-md px-4 text-sm font-semibold text-slate-900 transition-colors hover:text-brand xl:inline-flex"
             >
-              Inicio
+              Cotizar calibración
             </Link>
-            <Link 
-              href="/servicios"
-              className="text-sm font-semibold text-slate-700 hover:text-brand transition-colors"
+            <Link
+              href="/login"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md bg-brand px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
-              Servicios
-            </Link>
-            <Link 
-              href="/equipos"
-              className="text-sm font-semibold text-slate-700 hover:text-brand transition-colors"
-            >
-              Equipos
-            </Link>
-            <Link 
-              href="/acreditacion"
-              className="text-sm font-semibold text-slate-700 hover:text-brand transition-colors flex items-center gap-1.5"
-            >
-              <ShieldCheck size={16} weight="duotone" className="text-brand" />
-              Acreditación ONAC
-            </Link>
-            <Link 
-              href="/sobre-nosotros"
-              className="text-sm font-semibold text-slate-700 hover:text-brand transition-colors"
-            >
-              Nosotros
-            </Link>
-            <Link 
-              href="/#contacto" 
-              className="text-sm font-semibold text-slate-700 hover:text-brand transition-colors"
-            >
-              Contacto
+              <SignIn size={17} weight="bold" />
+              Portal clientes
             </Link>
           </div>
 
-          {/* CTA & Client Access */}
-          <div className="hidden sm:flex items-center gap-3">
-            <Link 
-              href="/#contacto" 
-              className="hidden xl:inline-flex min-h-11 items-center justify-center border border-slate-300 px-4 text-xs font-bold text-slate-800 transition-colors hover:border-slate-950"
-            >
-              Cotizar Calibración
-            </Link>
-            <Link 
-              href="/login" 
-              className="inline-flex min-h-11 items-center gap-2 bg-brand px-5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-brand-dark"
-            >
-              <SignIn size={16} weight="bold" />
-              <span>Portal Clientes</span>
-            </Link>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center gap-2">
-            <Link 
-              href="/login" 
-              className="inline-flex sm:hidden items-center gap-1 px-3 py-1.5 rounded-lg font-bold text-xs text-white bg-brand"
-            >
-              <SignIn size={14} weight="bold" />
-              <span>Portal</span>
-            </Link>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors border border-slate-200"
-              aria-label="Abrir menú"
-            >
-              {mobileMenuOpen ? <X size={24} weight="bold" /> : <List size={24} weight="bold" />}
-            </button>
-          </div>
-
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-slate-200 text-slate-800 transition-colors hover:bg-slate-50 lg:hidden"
+            aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
+          >
+            {mobileMenuOpen ? <X size={22} weight="bold" /> : <List size={22} weight="bold" />}
+          </button>
         </div>
 
-        {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white border-b border-slate-200 px-6 py-6 shadow-xl animate-in slide-in-from-top-4">
-            <div className="flex flex-col gap-4 font-semibold text-slate-800">
-              <Link 
-                href="/" 
+          <div id="mobile-menu" className="border-t border-slate-100 bg-white lg:hidden">
+            <ul className="mx-auto w-full max-w-7xl px-5 py-3 sm:px-8">
+              {NAV_LINKS.map(({ href, label }) => {
+                const active = isActive(href);
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex min-h-12 items-center border-b border-slate-100 text-base font-medium ${
+                        active ? 'text-brand' : 'text-slate-800'
+                      }`}
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="mx-auto w-full max-w-7xl px-5 pb-6 pt-2 sm:hidden">
+              <Link
+                href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between py-2 border-b border-slate-100 hover:text-brand"
-              >
-                <span>Inicio</span>
-                <CaretRight size={16} className="text-slate-400" />
-              </Link>
-              <Link 
-                href="/servicios"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between py-2 border-b border-slate-100 hover:text-brand"
-              >
-                <span>Servicios y Magnitudes</span>
-                <CaretRight size={16} className="text-slate-400" />
-              </Link>
-              <Link 
-                href="/equipos"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between py-2 border-b border-slate-100 hover:text-brand"
-              >
-                <span>Venta de Equipos</span>
-                <CaretRight size={16} className="text-slate-400" />
-              </Link>
-              <Link 
-                href="/acreditacion"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between py-2 border-b border-slate-100 hover:text-brand text-brand font-bold"
-              >
-                <span className="flex items-center gap-2">
-                  <ShieldCheck size={18} weight="fill" />
-                  Acreditación ONAC 17025
-                </span>
-                <CaretRight size={16} />
-              </Link>
-              <Link 
-                href="/sobre-nosotros"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between py-2 border-b border-slate-100 hover:text-brand"
-              >
-                <span>Sobre Nosotros</span>
-                <CaretRight size={16} className="text-slate-400" />
-              </Link>
-              <Link 
-                href="/#contacto" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between py-2 border-b border-slate-100 hover:text-brand"
-              >
-                <span>Solicitar Cotización / Contacto</span>
-                <CaretRight size={16} className="text-slate-400" />
-              </Link>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col gap-3">
-              <Link 
-                href="/login" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-3 rounded-xl font-bold text-center text-sm text-white bg-gradient-to-r from-brand to-brand-light shadow-md flex items-center justify-center gap-2"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-brand text-sm font-semibold text-white"
               >
                 <SignIn size={18} weight="bold" />
-                Acceder al Portal Clientes
+                Portal clientes
               </Link>
             </div>
           </div>
