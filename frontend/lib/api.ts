@@ -2,6 +2,11 @@ import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api/v1';
 
+const PUBLIC_PATHS = ['/', '/login', '/sobre-nosotros'];
+
+const isPublicPath = (path: string) =>
+  PUBLIC_PATHS.some((p) => (p === '/' ? path === '/' : path.startsWith(p)));
+
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true, // incluye cookies HttpOnly automáticamente
@@ -60,11 +65,13 @@ api.interceptors.response.use(
       } catch (err: any) {
         processQueue(err, null);
         // Solo forzamos el login si el backend explícitamente rechaza el refresh (401)
-        if (err.response?.status === 401 && typeof window !== 'undefined') {
-          const currentPath = window.location.pathname;
-          if (currentPath !== '/login') {
-            window.location.href = '/login';
-          }
+        // y no estamos en una ruta pública (el landing no debe redirigir a /login)
+        if (
+          err.response?.status === 401 &&
+          typeof window !== 'undefined' &&
+          !isPublicPath(window.location.pathname)
+        ) {
+          window.location.href = '/login';
         }
         return Promise.reject(err);
       } finally {
@@ -76,12 +83,10 @@ api.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       typeof window !== 'undefined' &&
-      originalRequest.url !== '/auth/login'
+      originalRequest.url !== '/auth/login' &&
+      !isPublicPath(window.location.pathname)
     ) {
-      const currentPath = window.location.pathname;
-      if (currentPath !== '/login') {
-        window.location.href = '/login';
-      }
+      window.location.href = '/login';
     }
 
     return Promise.reject(error);
