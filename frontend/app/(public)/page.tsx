@@ -31,8 +31,65 @@ export default function LandingPage() {
   return (
     <div className="relative overflow-x-hidden">
 
+      <section className="relative bg-slate-950 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(236,6,11,0.18),transparent_36%),radial-gradient(circle_at_85%_75%,rgba(148,163,184,0.1),transparent_32%)]" />
+        <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(rgba(255,255,255,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.5)_1px,transparent_1px)] bg-[size:48px_48px]" />
+        <div className="relative max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-16 sm:py-20 lg:py-24">
+          <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/[0.07] border border-white/10 text-xs sm:text-sm font-semibold text-slate-200 mb-7">
+                <ShieldCheck size={18} weight="fill" className="text-brand-light" />
+                Laboratorio acreditado ONAC · 21-LAC-011
+              </div>
+              <h1 className="text-[2.65rem] leading-[1.04] sm:text-6xl lg:text-[4.5rem] font-black tracking-[-0.04em] max-w-4xl">
+                Confianza y exactitud en cada <span className="text-brand-light">calibración.</span>
+              </h1>
+              <p className="mt-7 text-base sm:text-lg leading-relaxed text-slate-300 max-w-2xl">
+                Calibramos instrumentos de pesaje y otras magnitudes con trazabilidad técnica, atención nacional y el respaldo de la norma ISO/IEC 17025:2017.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 mt-9">
+                <Link href="#contacto" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-brand hover:bg-brand-light text-white font-bold shadow-[0_12px_35px_rgba(236,6,11,.3)] transition-all">
+                  Solicitar cotización <ArrowRight size={18} weight="bold" />
+                </Link>
+                <Link href="#servicios" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl border border-white/15 bg-white/[0.05] hover:bg-white/10 text-white font-semibold transition-colors">
+                  Conocer servicios
+                </Link>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-4 mt-10 pt-8 border-t border-white/10">
+                {[
+                  ['0–2000 kg', 'Alcance acreditado'],
+                  ['ISO/IEC 17025', 'Competencia técnica'],
+                  ['Cobertura nacional', 'Laboratorio e in situ'],
+                ].map(([value, label]) => (
+                  <div key={value}>
+                    <strong className="block text-base sm:text-lg text-white">{value}</strong>
+                    <span className="block text-xs text-slate-400 mt-1">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:col-span-5">
+              <div className="relative max-w-lg mx-auto lg:ml-auto">
+                <div className="absolute -inset-4 rounded-[2rem] border border-white/10 rotate-3" />
+                <div className="relative h-[420px] sm:h-[520px] rounded-[1.75rem] overflow-hidden border border-white/15 shadow-2xl bg-slate-900">
+                  <Image src="/images/original/pesas-m1.jpg" alt="Técnico de Labtronix realizando una calibración de masa" fill priority className="object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
+                  <div className="absolute left-5 right-5 bottom-5 rounded-2xl bg-slate-950/85 backdrop-blur-md border border-white/10 p-5">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-brand/20 text-brand-light flex items-center justify-center shrink-0"><Medal size={22} weight="fill" /></div>
+                      <div><strong className="block text-sm">Calibración acreditada</strong><span className="block text-xs text-slate-400 mt-1">Pesaje no automático con reconocimiento ILAC-MRA.</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── 1. HERO SECTION ─────────────────────────────────────────────────── */}
-      <section className="relative min-h-[92vh] flex items-center pt-8 pb-20 bg-slate-950 text-white overflow-hidden">
+      <section className="hidden" aria-hidden="true">
         {/* Real Lab Background with dynamic overlay */}
         <div className="absolute inset-0 z-0">
           <Image 
@@ -65,13 +122,13 @@ export default function LandingPage() {
               </div>
 
               {/* Title */}
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] text-white">
+              <div className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] text-white">
                 Exactitud y <br />
                 <span className="bg-gradient-to-r from-white via-slate-200 to-brand-light bg-clip-text text-transparent">
                   Trazabilidad Confiable
                 </span> <br />
                 para tu Industria.
-              </h1>
+              </div>
 
               {/* Subtitle */}
               <p className="text-base sm:text-xl text-slate-300 font-normal max-w-2xl leading-relaxed">
