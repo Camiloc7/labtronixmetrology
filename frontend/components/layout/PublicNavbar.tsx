@@ -27,20 +27,19 @@ export default function PublicNavbar() {
   return (
     <>
       {/* Top Banner Notice */}
-      <div className="bg-slate-900 text-slate-300 text-xs py-2 px-4 border-b border-slate-800">
+      <div className="bg-slate-950 px-4 py-2.5 text-xs text-slate-300">
         <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-brand/20 text-brand-light font-semibold text-[11px] border border-brand/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-light animate-pulse"></span>
+            <Link href="/acreditacion" className="inline-flex items-center gap-1.5 font-semibold text-red-400">
               Acreditación ONAC 21-LAC-011
-            </span>
+            </Link>
             <span className="hidden sm:inline text-slate-400">
               Norma ISO/IEC 17025:2017 &bull; Bogotá, Colombia
             </span>
           </div>
           <div className="flex items-center gap-4 text-[11px] font-medium text-slate-300">
             <a href="https://wa.me/573160249528" target="_blank" rel="noreferrer" className="hover:text-white flex items-center gap-1 transition-colors">
-              <WhatsappLogo size={14} weight="fill" className="text-emerald-400" />
+              <WhatsappLogo size={14} weight="fill" className="text-red-400" />
               <span>+57 316 024 9528</span>
             </a>
             <a href="mailto:comercial1@labtronix.com.co" className="hover:text-white hidden md:flex items-center gap-1 transition-colors">
@@ -55,8 +54,8 @@ export default function PublicNavbar() {
       <nav 
         className={`sticky top-0 left-0 w-full z-50 transition-all duration-300 ${
           isScrolled 
-            ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-slate-200/80 py-3' 
-            : 'bg-white/90 backdrop-blur-sm border-b border-slate-100 py-4'
+            ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200 py-3'
+            : 'bg-white border-b border-slate-200 py-4'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
@@ -118,13 +117,13 @@ export default function PublicNavbar() {
           <div className="hidden sm:flex items-center gap-3">
             <Link 
               href="/#contacto" 
-              className="hidden xl:inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all"
+              className="hidden xl:inline-flex min-h-11 items-center justify-center border border-slate-300 px-4 text-xs font-bold text-slate-800 transition-colors hover:border-slate-950"
             >
               Cotizar Calibración
             </Link>
             <Link 
               href="/login" 
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-brand to-brand-light shadow-[0_4px_14px_rgba(236,6,11,0.28)] hover:shadow-[0_6px_20px_rgba(236,6,11,0.4)] hover:-translate-y-0.5 transition-all"
+              className="inline-flex min-h-11 items-center gap-2 bg-brand px-5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-brand-dark"
             >
               <SignIn size={16} weight="bold" />
               <span>Portal Clientes</span>

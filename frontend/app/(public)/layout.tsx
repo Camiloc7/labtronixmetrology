@@ -44,9 +44,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         target="_blank"
         rel="noreferrer"
         aria-label="Contactar a Labtronix por WhatsApp"
-        className="fixed right-5 bottom-5 z-50 w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex items-center justify-center shadow-[0_10px_35px_rgba(16,185,129,0.45)] hover:-translate-y-1 transition-all"
+        className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-brand text-white shadow-[0_10px_28px_rgba(236,6,11,.28)] transition hover:-translate-y-1 hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       >
-        <WhatsappLogo size={30} weight="fill" />
+        <WhatsappLogo size={25} weight="fill" />
       </a>
     </div>
   );

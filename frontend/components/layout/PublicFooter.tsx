@@ -1,171 +1,58 @@
-import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  Envelope, 
-  Phone,
-  MapPin, 
-  ShieldCheck, 
-  Clock, 
-  FacebookLogo,
-  InstagramLogo,
-  LinkedinLogo,
-  ArrowUpRight 
-} from '@phosphor-icons/react/dist/ssr';
+import Link from 'next/link';
+import { ArrowRight, Envelope, FacebookLogo, InstagramLogo, LinkedinLogo, MapPin, Phone } from '@phosphor-icons/react/dist/ssr';
+
+const links = [
+  ['/servicios', 'Servicios de calibración'],
+  ['/acreditacion', 'Acreditación ONAC'],
+  ['/equipos', 'Equipos e instrumentación'],
+  ['/sobre-nosotros', 'Sobre Labtronix'],
+];
 
 export default function PublicFooter() {
   return (
-    <footer className="bg-slate-950 text-slate-400 border-t border-slate-900 pt-16 pb-12 relative overflow-hidden">
-      {/* Decorative glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[150px] bg-brand/10 blur-[120px] rounded-full pointer-events-none"></div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-16">
-          
-          {/* Brand Info */}
-          <div className="lg:col-span-2 space-y-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-1.5 shadow-sm">
-                <Image 
-                  src="/logo.png" 
-                  alt="Labtronix Metrology" 
-                  width={34} 
-                  height={34} 
-                  className="object-contain"
-                />
-              </div>
-              <div>
-                <span className="font-extrabold text-2xl tracking-tight text-white flex items-center">
-                  LABTRONIX<span className="text-brand ml-0.5">.</span>
-                </span>
-                <span className="text-xs uppercase tracking-wider font-semibold text-slate-400 block -mt-1">
-                  Metrology S.A.S.
-                </span>
-              </div>
-            </div>
-
-            <p className="text-sm text-slate-300 max-w-sm leading-relaxed">
-              Laboratorio de Metrología con acreditación ONAC bajo la norma ISO/IEC 17025:2017. 
-              Servicios de calibración de alta exactitud y comercialización de equipamiento de medición industrial.
+    <footer className="bg-slate-950 text-white">
+      <div className="mx-auto max-w-7xl px-5 pb-10 pt-20 sm:px-8 sm:pt-24">
+        <div className="grid gap-14 border-b border-slate-800 pb-16 lg:grid-cols-[1.2fr_.65fr_.85fr] lg:gap-20">
+          <div>
+            <Image src="/images/original/labtronix-logo.png" alt="Labtronix Metrology" width={210} height={60} className="h-auto w-[190px] brightness-0 invert" />
+            <p className="mt-7 max-w-md text-base leading-7 text-slate-300">
+              Servicios metrológicos y equipamiento de medición para organizaciones que necesitan resultados trazables y decisiones confiables.
             </p>
-
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300">
-              <ShieldCheck size={18} weight="fill" className="text-brand-light" />
-              <span>Acreditación ONAC Código <strong>21-LAC-011</strong></span>
-            </div>
-            <div className="flex items-center gap-2">
-              {[
-                { href: 'https://www.facebook.com/LabtronixMetrology', label: 'Facebook', icon: <FacebookLogo size={18} weight="fill" /> },
-                { href: 'https://www.linkedin.com/in/labtronix-metrology-sas-28bba8244/', label: 'LinkedIn', icon: <LinkedinLogo size={18} weight="fill" /> },
-                { href: 'https://www.instagram.com/labtronix_metrologysas/', label: 'Instagram', icon: <InstagramLogo size={18} weight="bold" /> },
-              ].map((social) => (
-                <a key={social.label} href={social.href} target="_blank" rel="noreferrer" aria-label={social.label} className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-brand transition-colors">
-                  {social.icon}
-                </a>
-              ))}
+            <div className="mt-8 inline-flex border-l-2 border-brand pl-4">
+              <div><p className="text-xs font-bold uppercase tracking-[.14em] text-red-400">Laboratorio acreditado</p><p className="mt-1 text-sm text-slate-300">ONAC 21-LAC-011 · ISO/IEC 17025:2017</p></div>
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
-              Navegación
-            </h4>
-            <ul className="space-y-2.5 text-sm">
-              <li>
-                <Link href="/" className="hover:text-white transition-colors flex items-center gap-1">
-                  Inicio
-                </Link>
-              </li>
-              <li>
-                <Link href="/servicios" className="hover:text-white transition-colors flex items-center gap-1">
-                  Servicios de Calibración
-                </Link>
-              </li>
-              <li>
-                <Link href="/equipos" className="hover:text-white transition-colors flex items-center gap-1">
-                  Equipamiento y Balanzas
-                </Link>
-              </li>
-              <li>
-                <Link href="/acreditacion" className="hover:text-white transition-colors flex items-center gap-1">
-                  Acreditación ONAC
-                </Link>
-              </li>
-              <li>
-                <Link href="/sobre-nosotros" className="hover:text-white transition-colors flex items-center gap-1">
-                  Sobre Nosotros
-                </Link>
-              </li>
-              <li>
-                <Link href="/login" className="text-brand-light hover:text-white font-semibold transition-colors flex items-center gap-1">
-                  Portal de Clientes
-                  <ArrowUpRight size={14} weight="bold" />
-                </Link>
-              </li>
-            </ul>
-          </div>
+          <nav aria-label="Navegación del pie de página">
+            <h2 className="text-xs font-bold uppercase tracking-[.16em] text-slate-500">Explorar</h2>
+            <ul className="mt-7 space-y-4">{links.map(([href, label]) => <li key={href}><Link href={href} className="inline-flex items-center gap-2 text-sm text-slate-300 transition hover:text-white">{label}<ArrowRight size={14} className="text-brand" /></Link></li>)}</ul>
+          </nav>
 
-          {/* Magnitudes */}
           <div>
-            <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
-              Magnitudes
-            </h4>
-            <ul className="space-y-2.5 text-sm">
-              <li className="hover:text-white transition-colors">Masa y Balanzas (ONAC)</li>
-              <li className="hover:text-white transition-colors">Temperatura y Humedad</li>
-              <li className="hover:text-white transition-colors">Presión y Vacío</li>
-              <li className="hover:text-white transition-colors">Volumen y Vidriería</li>
-              <li className="hover:text-white transition-colors">Dimensional y Longitud</li>
-              <li className="hover:text-white transition-colors">Tiempo y Frecuencia</li>
-            </ul>
-          </div>
-
-          {/* Contact & Hours */}
-          <div>
-            <h4 className="font-bold text-white text-sm uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
-              Contacto
-            </h4>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-start gap-2.5">
-                <MapPin size={18} weight="duotone" className="text-brand-light shrink-0 mt-0.5" />
-                <span className="text-slate-300">Calle 69 B #90B-48, oficina 202<br />Bogotá D.C.</span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <Phone size={18} weight="duotone" className="text-brand-light shrink-0" />
-                <a href="tel:+573125730305" className="text-slate-300 hover:text-white transition-colors">+57 312 573 0305</a>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <Envelope size={18} weight="duotone" className="text-brand-light shrink-0" />
-                <a href="mailto:comercial1@labtronix.com.co" className="text-slate-300 hover:text-white transition-colors break-all">
-                  comercial1@labtronix.com.co
-                </a>
-              </div>
-              <div className="flex items-start gap-2.5 pt-2">
-                <Clock size={18} weight="duotone" className="text-brand-light shrink-0 mt-0.5" />
-                <div className="text-xs text-slate-400">
-                  <span className="block font-medium text-slate-300">Lunes a Viernes</span>
-                  8:00 AM - 5:30 PM
-                </div>
-              </div>
+            <h2 className="text-xs font-bold uppercase tracking-[.16em] text-slate-500">Contacto</h2>
+            <div className="mt-7 space-y-5">
+              <div className="flex gap-3"><MapPin size={19} className="mt-0.5 shrink-0 text-brand" /><p className="text-sm leading-6 text-slate-300">Calle 69 B #90B-48, oficina 202<br />Bogotá D.C., Colombia</p></div>
+              <div className="flex gap-3"><Phone size={19} className="shrink-0 text-brand" /><div><a href="tel:+573125730305" className="block text-sm text-slate-300 hover:text-white">+57 312 573 0305</a><a href="https://wa.me/573160249528" className="mt-1 block text-sm text-slate-400 hover:text-white">WhatsApp +57 316 024 9528</a></div></div>
+              <div className="flex gap-3"><Envelope size={19} className="shrink-0 text-brand" /><a href="mailto:comercial1@labtronix.com.co" className="break-all text-sm text-slate-300 hover:text-white">comercial1@labtronix.com.co</a></div>
+              <p className="border-t border-slate-800 pt-5 text-xs leading-5 text-slate-400">Lunes a viernes<br /><span className="text-slate-300">8:00 a. m. – 5:30 p. m.</span></p>
             </div>
-          </div>
-
-        </div>
-
-        {/* Bottom bar */}
-        <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-          <p>&copy; {new Date().getFullYear()} Labtronix Metrology S.A.S. Todos los derechos reservados.</p>
-          <div className="flex items-center gap-6">
-            <span className="inline-flex items-center gap-1.5 text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              Sistemas Operativos 24/7
-            </span>
-            <Link href="/login" className="hover:text-white transition-colors">
-              Intranet Corporativa
-            </Link>
           </div>
         </div>
 
+        <div className="flex flex-col gap-6 pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs leading-5 text-slate-500">© {new Date().getFullYear()} Labtronix Metrology S.A.S. Todos los derechos reservados.</p>
+          <div className="flex items-center gap-3">
+            {[
+              ['https://www.facebook.com/LabtronixMetrology', 'Facebook', FacebookLogo],
+              ['https://www.linkedin.com/in/labtronix-metrology-sas-28bba8244/', 'LinkedIn', LinkedinLogo],
+              ['https://www.instagram.com/labtronix_metrologysas/', 'Instagram', InstagramLogo],
+            ].map(([href, label, Icon]) => {
+              const SocialIcon = Icon as typeof FacebookLogo;
+              return <a key={String(label)} href={String(href)} target="_blank" rel="noreferrer" aria-label={String(label)} className="flex h-11 w-11 items-center justify-center border border-slate-800 text-slate-400 transition hover:border-brand hover:text-white"><SocialIcon size={18} /></a>;
+            })}
+          </div>
+        </div>
       </div>
     </footer>
   );
