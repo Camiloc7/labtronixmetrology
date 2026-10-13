@@ -17,7 +17,15 @@
  *   - `/` se compara EXACTO (solo la raíz, para no abrir todo el sitio).
  *   - El resto se compara por PREFIJO (p. ej. `/sobre-nosotros/intro`).
  */
-export const PUBLIC_PATHS = ['/', '/login', '/sobre-nosotros', '/images'] as const;
+export const PUBLIC_PATHS = [
+  '/',
+  '/login',
+  '/servicios',
+  '/acreditacion',
+  '/equipos',
+  '/sobre-nosotros',
+  '/images',
+] as const;
 
 export function isPublicPath(path: string): boolean {
   return PUBLIC_PATHS.some((p) => path === p || (p !== '/' && path.startsWith(`${p}/`)));

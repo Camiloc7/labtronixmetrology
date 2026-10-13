@@ -34,7 +34,7 @@ export default function LandingPage() {
               <p className="mt-7 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Calibramos instrumentos de medición con competencia técnica, trazabilidad y atención especializada para laboratorios e industria en Colombia.</p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <Link href="#contacto" className="inline-flex min-h-12 items-center justify-center gap-2 bg-brand px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">Solicitar cotización <ArrowRight size={18} weight="bold" /></Link>
-                <Link href="#servicios" className="inline-flex min-h-12 items-center justify-center border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 transition-colors hover:border-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">Explorar servicios</Link>
+                <Link href="/servicios" className="inline-flex min-h-12 items-center justify-center border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-900 transition-colors hover:border-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">Explorar servicios</Link>
               </div>
               <div className="mt-12 grid max-w-2xl grid-cols-1 gap-5 border-t border-slate-200 pt-7 sm:grid-cols-3">
                 <div><strong className="block text-lg">21-LAC-011</strong><span className="text-sm text-slate-500">Código ONAC</span></div>
@@ -75,6 +75,7 @@ export default function LandingPage() {
             </article>
           ); })}
         </div>
+        <Link href="/servicios" className="mt-10 inline-flex min-h-12 items-center gap-2 border-b-2 border-brand text-sm font-bold text-slate-950">Ver todas las magnitudes <ArrowRight size={18} weight="bold" /></Link>
       </section>
 
       <section id="productos" className="bg-slate-950 text-white">
@@ -84,7 +85,7 @@ export default function LandingPage() {
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-400">Equipamiento de medición</p><h2 className="mt-4 text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">El equipo correcto, respaldado técnicamente.</h2>
             <p className="mt-6 text-base leading-7 text-slate-300">Suministramos balanzas, básculas y soluciones de medición con acompañamiento para seleccionar, instalar y mantener cada equipo.</p>
             <ul className="mt-8 space-y-4 text-sm text-slate-200">{['Selección según proceso y exactitud requerida', 'Calibración e instalación coordinadas', 'Soporte técnico después de la compra'].map((item) => <li key={item} className="flex gap-3"><Check size={19} weight="bold" className="shrink-0 text-red-400" />{item}</li>)}</ul>
-            <Link href="#contacto" className="mt-9 inline-flex min-h-12 items-center gap-2 border-b-2 border-brand pb-2 text-sm font-bold text-white transition-colors hover:text-red-300">Consultar equipos <ArrowRight size={18} weight="bold" /></Link>
+            <Link href="/equipos" className="mt-9 inline-flex min-h-12 items-center gap-2 border-b-2 border-brand pb-2 text-sm font-bold text-white transition-colors hover:text-red-300">Ver equipos y soluciones <ArrowRight size={18} weight="bold" /></Link>
           </div></div>
         </div>
       </section>

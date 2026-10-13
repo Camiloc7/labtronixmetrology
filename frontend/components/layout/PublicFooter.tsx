@@ -77,17 +77,17 @@ export default function PublicFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/#servicios" className="hover:text-white transition-colors flex items-center gap-1">
+                <Link href="/servicios" className="hover:text-white transition-colors flex items-center gap-1">
                   Servicios de Calibración
                 </Link>
               </li>
               <li>
-                <Link href="/#productos" className="hover:text-white transition-colors flex items-center gap-1">
+                <Link href="/equipos" className="hover:text-white transition-colors flex items-center gap-1">
                   Equipamiento y Balanzas
                 </Link>
               </li>
               <li>
-                <Link href="/#acreditacion" className="hover:text-white transition-colors flex items-center gap-1">
+                <Link href="/acreditacion" className="hover:text-white transition-colors flex items-center gap-1">
                   Acreditación ONAC
                 </Link>
               </li>

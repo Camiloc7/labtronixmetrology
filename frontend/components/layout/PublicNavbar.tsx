@@ -82,19 +82,19 @@ export default function PublicNavbar() {
               Inicio
             </Link>
             <Link 
-              href="/#servicios" 
+              href="/servicios"
               className="text-sm font-semibold text-slate-700 hover:text-brand transition-colors"
             >
               Servicios
             </Link>
             <Link 
-              href="/#productos" 
+              href="/equipos"
               className="text-sm font-semibold text-slate-700 hover:text-brand transition-colors"
             >
               Equipos
             </Link>
             <Link 
-              href="/#acreditacion" 
+              href="/acreditacion"
               className="text-sm font-semibold text-slate-700 hover:text-brand transition-colors flex items-center gap-1.5"
             >
               <ShieldCheck size={16} weight="duotone" className="text-brand" />
@@ -164,7 +164,7 @@ export default function PublicNavbar() {
                 <CaretRight size={16} className="text-slate-400" />
               </Link>
               <Link 
-                href="/#servicios" 
+                href="/servicios"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-between py-2 border-b border-slate-100 hover:text-brand"
               >
@@ -172,7 +172,7 @@ export default function PublicNavbar() {
                 <CaretRight size={16} className="text-slate-400" />
               </Link>
               <Link 
-                href="/#productos" 
+                href="/equipos"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-between py-2 border-b border-slate-100 hover:text-brand"
               >
@@ -180,7 +180,7 @@ export default function PublicNavbar() {
                 <CaretRight size={16} className="text-slate-400" />
               </Link>
               <Link 
-                href="/#acreditacion" 
+                href="/acreditacion"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-between py-2 border-b border-slate-100 hover:text-brand text-brand font-bold"
               >
