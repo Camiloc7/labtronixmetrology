@@ -8,12 +8,10 @@ import {
   Gauge, 
   Flask, 
   Ruler, 
-  Lightning, 
   Clock, 
   Cpu, 
   CheckCircle, 
   ArrowRight, 
-  Sparkle, 
   CaretRight, 
   Medal, 
   FileText, 
@@ -24,8 +22,9 @@ import {
 import ContactSection from '@/components/layout/ContactSection';
 
 export const metadata: Metadata = {
-  title: 'Labtronix Metrology | Laboratorio de Calibración Acreditado ONAC ISO/IEC 17025',
+  title: 'Laboratorio de Calibración Acreditado ONAC ISO/IEC 17025',
   description: 'Servicios especializados de calibración metrológica y venta de instrumental de precisión en Colombia. Acreditación ONAC 21-LAC-011.',
+  alternates: { canonical: '/' },
 };
 
 export default function LandingPage() {
@@ -37,7 +36,7 @@ export default function LandingPage() {
         {/* Real Lab Background with dynamic overlay */}
         <div className="absolute inset-0 z-0">
           <Image 
-            src="/images/lab_hero_1790955109399.jpg" 
+            src="/images/original/pesas-m1.jpg"
             alt="Laboratorio Metrológico Labtronix" 
             fill
             quality={95}
@@ -104,12 +103,12 @@ export default function LandingPage() {
                   <div className="text-xs text-slate-400 mt-0.5">Alcance Acreditado Balanzas</div>
                 </div>
                 <div>
-                  <div className="text-2xl sm:text-3xl font-black text-white font-mono">&gt;10,000</div>
-                  <div className="text-xs text-slate-400 mt-0.5">Instrumentos Calibrados</div>
+                  <div className="text-2xl sm:text-3xl font-black text-white font-mono">ISO/IEC</div>
+                  <div className="text-xs text-slate-400 mt-0.5">Norma 17025:2017</div>
                 </div>
                 <div>
-                  <div className="text-2xl sm:text-3xl font-black text-white font-mono">100%</div>
-                  <div className="text-xs text-slate-400 mt-0.5">Trazabilidad Internacional</div>
+                  <div className="text-2xl sm:text-3xl font-black text-white font-mono">Digital</div>
+                  <div className="text-xs text-slate-400 mt-0.5">Gestión de Certificados</div>
                 </div>
               </div>
 
@@ -136,26 +135,14 @@ export default function LandingPage() {
                   </span>
                 </div>
 
-                {/* Accuracy meter demo */}
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-xs font-semibold text-slate-300 mb-1.5">
-                      <span>Exactitud & Confiabilidad Metrológica</span>
-                      <span className="text-brand-light font-mono font-bold">99.99%</span>
-                    </div>
-                    <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                      <div className="bg-gradient-to-r from-brand to-brand-light h-full w-[99.99%] rounded-full shadow-sm"></div>
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-semibold text-slate-300">
+                  <div className="flex items-center gap-2 rounded-xl bg-slate-950/60 border border-slate-800 p-3">
+                    <CheckCircle size={18} weight="fill" className="text-brand-light shrink-0" />
+                    Trazabilidad documentada
                   </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-semibold text-slate-300 mb-1.5">
-                      <span>Cumplimiento Tiempos de Entrega</span>
-                      <span className="text-emerald-400 font-mono font-bold">98.5%</span>
-                    </div>
-                    <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                      <div className="bg-emerald-500 h-full w-[98.5%] rounded-full shadow-sm"></div>
-                    </div>
+                  <div className="flex items-center gap-2 rounded-xl bg-slate-950/60 border border-slate-800 p-3">
+                    <CheckCircle size={18} weight="fill" className="text-emerald-400 shrink-0" />
+                    Atención técnica especializada
                   </div>
                 </div>
 
@@ -275,6 +262,26 @@ export default function LandingPage() {
             <p className="text-base sm:text-lg text-slate-600 font-medium">
               Ofrecemos soluciones metrológicas integrales con cobertura in-situ en tu planta o en nuestro laboratorio central.
             </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-16">
+            {[
+              { title: 'Básculas industriales', image: '/images/original/basculas.png', detail: 'Calibración acreditada hasta 2000 kg para industria, logística y alimentos.' },
+              { title: 'Balanzas de precisión', image: '/images/original/balanzas.png', detail: 'Servicio para laboratorios, industria farmacéutica y procesos de calidad.' },
+              { title: 'Alta exactitud', image: '/images/original/balanzas-alta-exactitud.png', detail: 'Atención especializada para mediciones críticas en miligramos y microgramos.' },
+            ].map((service) => (
+              <article key={service.title} className="group rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-xl">
+                <div className="relative h-56 bg-gradient-to-br from-slate-100 to-slate-300 overflow-hidden">
+                  <Image src={service.image} alt={service.title} fill className="object-contain p-5 group-hover:scale-105 transition-transform duration-500" />
+                  <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-brand text-white text-[10px] font-black uppercase tracking-wider shadow-lg">Acreditado ONAC</span>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-lg font-black text-white">{service.title}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed mt-2">{service.detail}</p>
+                  <Link href="#contacto" className="inline-flex items-center gap-2 mt-5 text-xs font-bold text-brand-light uppercase tracking-wider">Solicitar cotización <ArrowRight size={14} /></Link>
+                </div>
+              </article>
+            ))}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -552,8 +559,8 @@ export default function LandingPage() {
                 <div className="text-xs uppercase tracking-wider text-slate-400 mt-1">Norma Acreditada</div>
               </div>
               <div className="pt-4 md:pt-0">
-                <div className="font-mono text-3xl sm:text-4xl font-black text-brand-light">100%</div>
-                <div className="text-xs uppercase tracking-wider text-slate-400 mt-1">Validez Auditorías</div>
+                <div className="font-mono text-3xl sm:text-4xl font-black text-brand-light">ONAC</div>
+                <div className="text-xs uppercase tracking-wider text-slate-400 mt-1">Acreditación</div>
               </div>
               <div className="pt-4 md:pt-0">
                 <div className="font-mono text-3xl sm:text-4xl font-black text-white">24/7</div>

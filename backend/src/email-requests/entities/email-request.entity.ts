@@ -1,5 +1,10 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
 } from 'typeorm';
 import { Client } from '../../clients/entities/client.entity';
 import { User } from '../../users/entities/user.entity';
@@ -28,7 +33,11 @@ export class EmailRequest {
   @Column({ name: 'client_id', nullable: true })
   clientId: string;
 
-  @Column({ type: 'enum', enum: EmailRequestStatus, default: EmailRequestStatus.PENDIENTE })
+  @Column({
+    type: 'enum',
+    enum: EmailRequestStatus,
+    default: EmailRequestStatus.PENDIENTE,
+  })
   status: EmailRequestStatus;
 
   @ManyToOne(() => User, { nullable: true, eager: true })
@@ -37,6 +46,9 @@ export class EmailRequest {
 
   @Column({ name: 'processed_by', nullable: true })
   processedById: string;
+
+  @Column({ name: 'processed_at', type: 'timestamptz', nullable: true })
+  processedAt: Date;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

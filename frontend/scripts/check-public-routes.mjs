@@ -51,6 +51,10 @@ const pages = walk(publicPagesDir)
   .sort((a, b) => a.route.localeCompare(b.route));
 
 const missing = pages.filter((p) => !isPublicPath(p.route));
+const unsafePrefixMatches = PUBLIC_PATHS
+  .filter((route) => route !== '/')
+  .map((route) => `${route}-no-debe-ser-publica`)
+  .filter(isPublicPath);
 
 console.log('Rutas registradas en lib/public-paths.ts:', JSON.stringify(PUBLIC_PATHS));
 console.log('Páginas encontradas en app/(public):');
@@ -60,6 +64,12 @@ if (missing.length > 0) {
   console.log('\n❌ FALTAN rutas públicas por registrar en frontend/lib/public-paths.ts:');
   for (const p of missing) console.log(`  - ${p.route}  (${p.file})`);
   console.log('\nAgrégalas a PUBLIC_PATHS; si no, serán redirigidas a /login.');
+  process.exit(1);
+}
+
+if (unsafePrefixMatches.length > 0) {
+  console.log('\n❌ Hay coincidencias públicas por prefijo sin límite de segmento:');
+  for (const route of unsafePrefixMatches) console.log(`  - ${route}`);
   process.exit(1);
 }
 

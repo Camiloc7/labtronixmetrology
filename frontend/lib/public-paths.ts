@@ -20,5 +20,5 @@
 export const PUBLIC_PATHS = ['/', '/login', '/sobre-nosotros', '/images'] as const;
 
 export function isPublicPath(path: string): boolean {
-  return PUBLIC_PATHS.some((p) => (p === '/' ? path === '/' : path.startsWith(p)));
+  return PUBLIC_PATHS.some((p) => path === p || (p !== '/' && path.startsWith(`${p}/`)));
 }

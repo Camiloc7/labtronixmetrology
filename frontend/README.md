@@ -46,3 +46,9 @@ Al crear una nueva página pública (landing, legales, docs, etc.) **agrégala a
 2. `lib/api.ts` (interceptor de axios): evita el redirect cliente a `/login` cuando `/auth/me` responde `401` estando en una ruta pública.
 
 > Si olvidas registrar una ruta pública, se expulsará a `/login`: al instante (middleware) o tras ~2 s (interceptor, al fallar `/auth/me` + `/auth/refresh`). Centralizando la lista en `lib/public-paths.ts` basta editar **un solo archivo**.
+
+## Sitio público y SEO
+
+Configura `NEXT_PUBLIC_SITE_URL` con el origen canónico, sin barra final. Este valor se usa para metadata, enlaces canónicos, `robots.txt`, `sitemap.xml` y datos estructurados. Consulta `.env.example`.
+
+El formulario público envía las solicitudes a `POST /api/v1/public/contact`; el backend las guarda en la bandeja existente de solicitudes por email para que el equipo comercial pueda procesarlas.

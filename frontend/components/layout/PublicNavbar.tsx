@@ -7,10 +7,8 @@ import {
   X, 
   ShieldCheck, 
   SignIn, 
-  Phone, 
   Envelope, 
-  MapPin, 
-  CheckCircle,
+  WhatsappLogo,
   CaretRight
 } from '@phosphor-icons/react';
 
@@ -41,14 +39,13 @@ export default function PublicNavbar() {
             </span>
           </div>
           <div className="flex items-center gap-4 text-[11px] font-medium text-slate-300">
-            <a href="tel:+573000000000" className="hover:text-white flex items-center gap-1 transition-colors">
-              <Phone size={13} weight="bold" className="text-brand-light" />
-              <span>+57 (601) 745-1234</span>
+            <a href="https://wa.me/573160249528" target="_blank" rel="noreferrer" className="hover:text-white flex items-center gap-1 transition-colors">
+              <WhatsappLogo size={14} weight="fill" className="text-emerald-400" />
+              <span>+57 316 024 9528</span>
             </a>
-            <span className="text-slate-600 hidden md:inline">|</span>
-            <a href="mailto:comercial@labtronix.com.co" className="hover:text-white hidden md:flex items-center gap-1 transition-colors">
+            <a href="mailto:comercial1@labtronix.com.co" className="hover:text-white hidden md:flex items-center gap-1 transition-colors">
               <Envelope size={13} weight="bold" className="text-brand-light" />
-              <span>comercial@labtronix.com.co</span>
+              <span>comercial1@labtronix.com.co</span>
             </a>
           </div>
         </div>
@@ -65,25 +62,15 @@ export default function PublicNavbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center p-1.5 shadow-sm group-hover:scale-105 transition-transform">
-              <Image 
-                src="/logo.png" 
+          <Link href="/" className="group shrink-0">
+              <Image
+                src="/images/original/labtronix-logo.png"
                 alt="Labtronix Metrology" 
-                width={34} 
-                height={34} 
-                className="object-contain"
+                width={196}
+                height={56}
+                className="w-[156px] sm:w-[196px] h-auto object-contain group-hover:scale-[1.02] transition-transform"
                 priority
               />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-extrabold text-xl tracking-tight leading-tight text-slate-950 flex items-center">
-                LABTRONIX<span className="text-brand ml-0.5 font-black">.</span>
-              </span>
-              <span className="text-[10px] tracking-wider uppercase font-semibold text-slate-500 -mt-0.5">
-                Metrology S.A.S.
-              </span>
-            </div>
           </Link>
 
           {/* Desktop Nav Items */}
@@ -114,7 +101,7 @@ export default function PublicNavbar() {
               Acreditación ONAC
             </Link>
             <Link 
-              href="/#nosotros" 
+              href="/sobre-nosotros"
               className="text-sm font-semibold text-slate-700 hover:text-brand transition-colors"
             >
               Nosotros
@@ -204,7 +191,7 @@ export default function PublicNavbar() {
                 <CaretRight size={16} />
               </Link>
               <Link 
-                href="/#nosotros" 
+                href="/sobre-nosotros"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-between py-2 border-b border-slate-100 hover:text-brand"
               >

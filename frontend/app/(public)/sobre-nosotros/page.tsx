@@ -8,18 +8,15 @@ import {
   Gauge, 
   Flask, 
   Ruler, 
-  Lightning, 
   Clock, 
-  Target, 
-  Building, 
-  UsersThree, 
   CheckCircle,
   ArrowRight
 } from '@phosphor-icons/react/dist/ssr';
 
 export const metadata: Metadata = {
-  title: 'Sobre Nosotros | Labtronix Metrology S.A.S.',
+  title: 'Sobre nosotros',
   description: 'Conoce la historia, valores y alcance técnico de Labtronix Metrology SAS. Acreditación ONAC 21-LAC-011 bajo la norma NTC-ISO/IEC 17025:2017.',
+  alternates: { canonical: '/sobre-nosotros' },
 };
 
 export default function SobreNosotrosPage() {
@@ -69,7 +66,7 @@ export default function SobreNosotrosPage() {
 
           <div className="lg:col-span-5 relative h-[380px] rounded-3xl overflow-hidden border border-slate-200 shadow-xl">
             <Image 
-              src="/images/lab_hero_1790955109399.jpg" 
+              src="/images/original/termohigrometros.jpg"
               alt="Instalaciones de Labtronix Metrology" 
               fill
               className="object-cover"

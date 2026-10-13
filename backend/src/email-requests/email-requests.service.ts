@@ -6,6 +6,7 @@ import {
   EmailRequestStatus,
 } from './entities/email-request.entity';
 import { ExcelService } from '../common/excel/excel.service';
+import { CreatePublicContactDto } from './dto/create-public-contact.dto';
 
 @Injectable()
 export class EmailRequestsService {
@@ -65,6 +66,35 @@ export class EmailRequestsService {
     return this.emailRequestsRepo.save(req);
   }
 
+  async createFromWebsite(data: CreatePublicContactDto): Promise<EmailRequest> {
+    const rawContent = [
+      'Origen: formulario web',
+      `Nombre: ${data.nombre.trim()}`,
+      `Empresa: ${data.empresa.trim()}`,
+      `Email: ${data.email.trim().toLowerCase()}`,
+      `Teléfono: ${data.telefono.trim()}`,
+      `Servicio: ${data.servicio}`,
+      `Mensaje: ${data.mensaje?.trim() || 'Sin mensaje adicional'}`,
+    ].join('\n');
+    const extractedData = {
+      ...this.parseEmailContent(rawContent),
+      source: 'website',
+      contact: {
+        name: data.nombre.trim(),
+        company: data.empresa.trim(),
+        email: data.email.trim().toLowerCase(),
+        phone: data.telefono.trim(),
+        service: data.servicio,
+        message: data.mensaje?.trim() || '',
+      },
+    };
+    const request = this.emailRequestsRepo.create({
+      rawContent,
+      extractedData,
+    });
+    return this.emailRequestsRepo.save(request);
+  }
+
   async process(
     id: string,
     userId: string,
@@ -74,6 +104,7 @@ export class EmailRequestsService {
     if (!req) throw new NotFoundException('Solicitud no encontrada');
     req.status = EmailRequestStatus.PROCESADO;
     req.processedById = userId;
+    req.processedAt = new Date();
     if (clientId) req.clientId = clientId;
     return this.emailRequestsRepo.save(req);
   }
@@ -83,6 +114,7 @@ export class EmailRequestsService {
     if (!req) throw new NotFoundException('Solicitud no encontrada');
     req.status = EmailRequestStatus.DESCARTADO;
     req.processedById = userId;
+    req.processedAt = new Date();
     return this.emailRequestsRepo.save(req);
   }
 
@@ -92,11 +124,18 @@ export class EmailRequestsService {
     });
     const data = requests.map((req) => ({
       ID: req.id,
+      Origen: req.extractedData?.source === 'website' ? 'Formulario web' : 'Correo capturado',
+      Nombre: req.extractedData?.contact?.name || '',
+      Empresa: req.extractedData?.contact?.company || '',
+      Telefono: req.extractedData?.contact?.phone || req.extractedData?.phones?.[0] || '',
+      Servicio: req.extractedData?.contact?.service || '',
       ContenidoOriginal: req.rawContent,
       EmailsExtraidos: req.extractedData?.emails?.join(', ') || '',
       NITExtraido: req.extractedData?.nit || '',
       Estado: req.status,
       FechaCaptura: req.createdAt,
+      GestionadoPor: req.processedBy?.name || '',
+      FechaGestion: req.processedAt || '',
     }));
     return this.excelService.exportToExcel(data, 'SolicitudesEmail');
   }

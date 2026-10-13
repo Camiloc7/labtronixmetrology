@@ -2,6 +2,8 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { authApi } from '../api';
 import type { AuthUser } from '../types';
+import { usePathname } from 'next/navigation';
+import { isPublicPath } from '../public-paths';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -14,8 +16,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isPublicPath(pathname));
 
   const fetchMe = async () => {
     try {
@@ -29,8 +32,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchMe();
-  }, []);
+    if (isPublicPath(pathname)) {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => void fetchMe(), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [pathname]);
 
   const login = async (email: string, password: string) => {
     const data = await authApi.login(email, password);

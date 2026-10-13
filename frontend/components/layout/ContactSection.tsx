@@ -1,16 +1,17 @@
 'use client';
 import { useState } from 'react';
+import Image from 'next/image';
 import { 
   PaperPlaneTilt, 
   CheckCircle, 
-  Phone, 
   Envelope, 
+  Phone,
   MapPin, 
-  Clock,
   Sparkle,
   ShieldCheck
 } from '@phosphor-icons/react';
 import toast from 'react-hot-toast';
+import { publicContactApi } from '@/lib/api';
 
 export default function ContactSection() {
   const [formData, setFormData] = useState({
@@ -20,21 +21,25 @@ export default function ContactSection() {
     telefono: '',
     servicio: 'calibracion-balanzas',
     mensaje: '',
+    website: '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Feedback inmediato y experiencia fluida
-    setTimeout(() => {
+    try {
+      await publicContactApi.create(formData);
       setIsSubmitting(false);
       setIsSuccess(true);
       toast.success('¡Solicitud enviada con éxito! Un asesor metrológico te contactará en breve.');
-    }, 900);
+    } catch {
+      setIsSubmitting(false);
+      toast.error('No pudimos enviar la solicitud. Inténtalo de nuevo o escríbenos por correo.');
+    }
   };
 
   return (
@@ -63,6 +68,8 @@ export default function ContactSection() {
           
           {/* Contact Details Card */}
           <div className="lg:col-span-5 bg-slate-900 text-white rounded-3xl p-8 sm:p-10 shadow-xl relative overflow-hidden border border-slate-800">
+            <Image src="/images/original/contacto-labtronix.jpg" alt="Contacto Labtronix Metrology" fill className="object-cover opacity-15" />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 to-slate-950"></div>
             <div className="absolute -right-10 -bottom-10 w-44 h-44 bg-brand/20 rounded-full blur-3xl pointer-events-none"></div>
 
             <div className="relative z-10 space-y-8">
@@ -85,8 +92,8 @@ export default function ContactSection() {
                   </div>
                   <div>
                     <h4 className="font-bold text-white">Sede Laboratorio</h4>
-                    <p className="text-slate-300 mt-0.5">Bogotá D.C., Colombia</p>
-                    <span className="text-xs text-slate-400">Atención técnica y calibraciones in situ</span>
+                    <p className="text-slate-300 mt-0.5">Calle 69 B #90B-48, oficina 202</p>
+                    <span className="text-xs text-slate-400">Bogotá D.C., Colombia</span>
                   </div>
                 </div>
 
@@ -95,9 +102,10 @@ export default function ContactSection() {
                     <Phone size={22} weight="duotone" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-white">Línea Telefónica & WhatsApp</h4>
-                    <p className="text-slate-300 mt-0.5">+57 (601) 745-1234 / +57 300 000 0000</p>
-                    <span className="text-xs text-slate-400">Lun a Vie: 8:00 AM - 5:30 PM</span>
+                    <h4 className="font-bold text-white">Teléfono y WhatsApp</h4>
+                    <a href="tel:+573125730305" className="block text-slate-300 mt-0.5 hover:text-white">+57 312 573 0305</a>
+                    <a href="https://wa.me/573160249528" target="_blank" rel="noreferrer" className="text-emerald-400 text-xs hover:text-emerald-300">WhatsApp: +57 316 024 9528</a>
+                    <span className="text-xs text-slate-400">Atención técnica y calibraciones in situ</span>
                   </div>
                 </div>
 
@@ -107,8 +115,8 @@ export default function ContactSection() {
                   </div>
                   <div>
                     <h4 className="font-bold text-white">Correos Corporativos</h4>
-                    <p className="text-slate-300 mt-0.5">comercial@labtronix.com.co</p>
-                    <p className="text-slate-400 text-xs mt-0.5">calidad@labtronix.com.co</p>
+                    <a href="mailto:comercial1@labtronix.com.co" className="block text-slate-300 mt-0.5 hover:text-white">comercial1@labtronix.com.co</a>
+                    <a href="mailto:admon@labtronix.com.co" className="block text-slate-400 text-xs mt-0.5 hover:text-white">admon@labtronix.com.co</a>
                   </div>
                 </div>
               </div>
@@ -151,6 +159,7 @@ export default function ContactSection() {
                       telefono: '',
                       servicio: 'calibracion-balanzas',
                       mensaje: '',
+                      website: '',
                     });
                   }}
                   className="mt-4 px-6 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs uppercase tracking-wider hover:bg-slate-800 transition-colors"
@@ -160,6 +169,18 @@ export default function ContactSection() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="absolute left-[-9999px]" aria-hidden="true">
+                  <label htmlFor="contact-website">Sitio web</label>
+                  <input
+                    id="contact-website"
+                    name="website"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={formData.website}
+                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  />
+                </div>
                 <div>
                   <h3 className="text-xl font-black text-slate-900 mb-1">
                     Envíanos los datos de tus equipos

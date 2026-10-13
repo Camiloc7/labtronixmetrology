@@ -197,6 +197,21 @@ export const emailRequestsApi = {
     api.patch(`/email-requests/${id}/discard`, {}).then((r) => r.data),
 };
 
+export interface PublicContactPayload {
+  nombre: string;
+  empresa: string;
+  email: string;
+  telefono: string;
+  servicio: string;
+  mensaje: string;
+  website?: string;
+}
+
+export const publicContactApi = {
+  create: (data: PublicContactPayload) =>
+    api.post('/public/contact', data).then((response) => response.data),
+};
+
 // ─── Activity Logs ────────────────────────────────────────────────────────────
 export const activityLogsApi = {
   getAll: (limit: number = 100) => api.get(`/activity-logs?limit=${limit}`).then(res => res.data),

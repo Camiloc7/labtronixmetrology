@@ -2,11 +2,31 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/lib/hooks/useAuth';
 import { Toaster } from 'react-hot-toast';
+import { siteConfig } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: 'Labtronix Metrología | Sistema de Gestión',
-  description: 'Plataforma integral de gestión para laboratorio de metrología. Clientes, cotizaciones, equipos, órdenes de trabajo y más.',
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: 'Labtronix Metrology | Calibración metrológica',
+    template: '%s | Labtronix Metrology',
+  },
+  description: siteConfig.description,
   keywords: ['metrología', 'calibración', 'laboratorio', 'gestión', 'labtronix'],
+  openGraph: {
+    type: 'website',
+    locale: 'es_CO',
+    siteName: siteConfig.name,
+    title: 'Labtronix Metrology | Calibración metrológica',
+    description: siteConfig.description,
+    url: '/',
+    images: [{ url: '/images/original/pesas-m1.jpg', alt: 'Calibración de equipos en Labtronix Metrology' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Labtronix Metrology | Calibración metrológica',
+    description: siteConfig.description,
+    images: ['/images/original/pesas-m1.jpg'],
+  },
 };
 
 export default function RootLayout({

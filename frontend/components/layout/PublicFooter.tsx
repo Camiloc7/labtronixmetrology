@@ -1,11 +1,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
-  Phone, 
   Envelope, 
+  Phone,
   MapPin, 
   ShieldCheck, 
   Clock, 
+  FacebookLogo,
+  InstagramLogo,
+  LinkedinLogo,
   ArrowUpRight 
 } from '@phosphor-icons/react/dist/ssr';
 
@@ -49,6 +52,17 @@ export default function PublicFooter() {
               <ShieldCheck size={18} weight="fill" className="text-brand-light" />
               <span>Acreditación ONAC Código <strong>21-LAC-011</strong></span>
             </div>
+            <div className="flex items-center gap-2">
+              {[
+                { href: 'https://www.facebook.com/LabtronixMetrology', label: 'Facebook', icon: <FacebookLogo size={18} weight="fill" /> },
+                { href: 'https://www.linkedin.com/in/labtronix-metrology-sas-28bba8244/', label: 'LinkedIn', icon: <LinkedinLogo size={18} weight="fill" /> },
+                { href: 'https://www.instagram.com/labtronix_metrologysas/', label: 'Instagram', icon: <InstagramLogo size={18} weight="bold" /> },
+              ].map((social) => (
+                <a key={social.label} href={social.href} target="_blank" rel="noreferrer" aria-label={social.label} className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-brand transition-colors">
+                  {social.icon}
+                </a>
+              ))}
+            </div>
           </div>
 
           {/* Quick Links */}
@@ -78,7 +92,7 @@ export default function PublicFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/#nosotros" className="hover:text-white transition-colors flex items-center gap-1">
+                <Link href="/sobre-nosotros" className="hover:text-white transition-colors flex items-center gap-1">
                   Sobre Nosotros
                 </Link>
               </li>
@@ -114,18 +128,16 @@ export default function PublicFooter() {
             <div className="space-y-3 text-sm">
               <div className="flex items-start gap-2.5">
                 <MapPin size={18} weight="duotone" className="text-brand-light shrink-0 mt-0.5" />
-                <span className="text-slate-300">Bogotá D.C., Colombia</span>
+                <span className="text-slate-300">Calle 69 B #90B-48, oficina 202<br />Bogotá D.C.</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Phone size={18} weight="duotone" className="text-brand-light shrink-0" />
-                <a href="tel:+573000000000" className="text-slate-300 hover:text-white transition-colors">
-                  +57 (601) 745-1234
-                </a>
+                <a href="tel:+573125730305" className="text-slate-300 hover:text-white transition-colors">+57 312 573 0305</a>
               </div>
               <div className="flex items-center gap-2.5">
                 <Envelope size={18} weight="duotone" className="text-brand-light shrink-0" />
-                <a href="mailto:comercial@labtronix.com.co" className="text-slate-300 hover:text-white transition-colors">
-                  comercial@labtronix.com.co
+                <a href="mailto:comercial1@labtronix.com.co" className="text-slate-300 hover:text-white transition-colors break-all">
+                  comercial1@labtronix.com.co
                 </a>
               </div>
               <div className="flex items-start gap-2.5 pt-2">

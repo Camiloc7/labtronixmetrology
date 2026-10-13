@@ -172,10 +172,25 @@ export interface Requisition {
 export interface EmailRequest {
   id: string;
   rawContent: string;
-  extractedData?: Record<string, any>;
+  extractedData?: {
+    source?: 'website' | string;
+    emails?: string[];
+    phones?: string[];
+    equipments?: string[];
+    contact?: {
+      name?: string;
+      company?: string;
+      email?: string;
+      phone?: string;
+      service?: string;
+      message?: string;
+    };
+    [key: string]: unknown;
+  };
   client?: Client;
   status: EmailRequestStatus;
   processedBy?: User;
+  processedAt?: string;
   createdAt: string;
 }
 
