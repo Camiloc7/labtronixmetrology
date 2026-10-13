@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
-const EXACT_PUBLIC_PATHS = ['/'];
-const PREFIX_PUBLIC_PATHS = ['/login', '/sobre-nosotros', '/images'];
+import { isPublicPath } from './lib/public-paths';
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Permitir rutas públicas
-  if (EXACT_PUBLIC_PATHS.includes(pathname) || PREFIX_PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  // Permitir rutas públicas (fuente única: lib/public-paths.ts)
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 

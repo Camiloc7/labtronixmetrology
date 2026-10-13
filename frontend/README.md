@@ -34,3 +34,15 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Rutas públicas (autenticación)
+
+Las rutas accesibles **sin sesión** se declaran una sola vez en
+[`lib/public-paths.ts`](./lib/public-paths.ts) (`PUBLIC_PATHS` + `isPublicPath`).
+
+Al crear una nueva página pública (landing, legales, docs, etc.) **agrégala ahí**. Esa lista la consumen dos capas que deben mantenerse sincronizadas:
+
+1. `proxy.ts` (middleware de Next): deja pasar la ruta sin cookie `jwt`; si no está en la lista, redirige server-side a `/login`.
+2. `lib/api.ts` (interceptor de axios): evita el redirect cliente a `/login` cuando `/auth/me` responde `401` estando en una ruta pública.
+
+> Si olvidas registrar una ruta pública, se expulsará a `/login`: al instante (middleware) o tras ~2 s (interceptor, al fallar `/auth/me` + `/auth/refresh`). Centralizando la lista en `lib/public-paths.ts` basta editar **un solo archivo**.

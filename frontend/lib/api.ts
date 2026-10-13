@@ -1,11 +1,7 @@
 import axios from 'axios';
+import { isPublicPath } from './public-paths';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api/v1';
-
-const PUBLIC_PATHS = ['/', '/login', '/sobre-nosotros'];
-
-const isPublicPath = (path: string) =>
-  PUBLIC_PATHS.some((p) => (p === '/' ? path === '/' : path.startsWith(p)));
 
 const api = axios.create({
   baseURL: API_URL,
