@@ -1,135 +1,165 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
+import { 
+  ShieldCheck, 
+  Scales, 
+  Thermometer, 
+  Gauge, 
+  Flask, 
+  Ruler, 
+  Lightning, 
+  Clock, 
+  Target, 
+  Building, 
+  UsersThree, 
+  CheckCircle,
+  ArrowRight
+} from '@phosphor-icons/react/dist/ssr';
 
 export const metadata: Metadata = {
-  title: 'Sobre Nosotros | Labtronix Metrology',
-  description: 'Conoce la historia, valores y acreditaciones de Labtronix Metrology SAS. Acreditados por ONAC bajo la norma IEC 17025:2017.',
+  title: 'Sobre Nosotros | Labtronix Metrology S.A.S.',
+  description: 'Conoce la historia, valores y alcance técnico de Labtronix Metrology SAS. Acreditación ONAC 21-LAC-011 bajo la norma NTC-ISO/IEC 17025:2017.',
 };
 
 export default function SobreNosotrosPage() {
   return (
-    <div className="relative bg-slate-50 min-h-screen pt-28 pb-20">
-      {/* Decorative blur */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand/10 blur-[100px] rounded-full mix-blend-multiply pointer-events-none z-0"></div>
-
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+    <div className="bg-slate-50 min-h-screen pt-12 pb-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Page Header */}
-        <div className="text-center max-w-3xl mx-auto mb-20">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand-dark text-sm font-bold mb-6">
-            Nuestra Esencia
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand/10 border border-brand/20 text-brand-dark text-xs font-bold uppercase tracking-wider mb-4">
+            Trayectoria & Calidad
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">
-            Excelencia Metrológica desde 2019
+          <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-4">
+            Excelencia Metrológica al Servicio de la Industria
           </h1>
-          <p className="text-lg text-slate-600 font-medium">
-            Labtronix Metrology SAS nace como una alternativa integral en la cual nuestros clientes pueden encontrar 
-            soluciones metrológicas enmarcadas en los más altos estándares de calidad.
+          <p className="text-base sm:text-lg text-slate-600 font-medium">
+            Labtronix Metrology S.A.S. se consolida como un aliado técnico estratégico para empresas que exigen los más altos estándares de calidad, trazabilidad y cumplimiento normativo.
           </p>
         </div>
 
-        {/* Historia y Valores Section */}
-        <section className="mb-24 grid md:grid-cols-2 gap-12 items-center">
-          <div className="bg-white rounded-3xl p-10 shadow-sm border border-slate-200">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">Nuestra Historia y Valores</h2>
-            <p className="text-slate-600 font-medium leading-relaxed mb-6">
-              Desde nuestros inicios en el año 2019, hemos consolidado un equipo de trabajo identificado por nuestros principios corporativos. 
-              Creemos firmemente en que la exactitud y la confiabilidad son la base del éxito industrial.
+        {/* Historia & Valores */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-20">
+          <div className="lg:col-span-7 bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-sm space-y-6">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
+              Nuestra Historia
+            </h2>
+            <p className="text-slate-600 leading-relaxed font-medium">
+              Desde nuestros inicios en el año 2019 en Bogotá, Colombia, identificamos la necesidad de la industria farmacéutica, alimentaria, química y manufacturera de contar con un servicio de calibración metrológica transparente, riguroso y con tiempos de respuesta óptimos.
             </p>
-            <div className="flex flex-wrap gap-3">
-              {['Calidad', 'Confiabilidad', 'Pasión', 'Compromiso', 'Liderazgo'].map((val) => (
-                <span key={val} className="bg-brand/10 text-brand-dark px-4 py-2 rounded-lg text-sm font-bold border border-brand/10">
-                  {val}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="relative h-full min-h-[300px] rounded-3xl overflow-hidden shadow-lg border border-slate-200 bg-gradient-to-br from-slate-200 to-slate-300">
-             {/* Placeholder for an office/lab team image */}
-             <div className="absolute inset-0 bg-brand/10 mix-blend-multiply"></div>
-             <div className="absolute inset-0 flex items-center justify-center text-slate-500 font-bold">
-               [ Espacio para imagen del equipo / instalaciones ]
-             </div>
-          </div>
-        </section>
-
-        {/* Acreditaciones Section */}
-        <section className="mb-24">
-          <div className="bg-slate-900 rounded-[3rem] p-12 relative overflow-hidden shadow-xl">
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-brand/20 blur-[80px] rounded-full"></div>
+            <p className="text-slate-600 leading-relaxed font-medium">
+              A lo largo de los años nos hemos enfocado en la inversión continua en patrones de alta gama trazables internacionalmente (INM y PTB de Alemania), sistemas de gestión digitalizados y capacitación especializada de nuestros metrólogos.
+            </p>
             
-            <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-3xl font-extrabold text-white mb-6">Acreditación ONAC <br/><span className="text-brand-light">21-LAC-011</span></h2>
-                <p className="text-slate-300 font-medium mb-6">
-                  Contamos con la acreditación ONAC, vigente a la fecha, bajo la estricta norma 
-                  <strong> NTC-ISO/IEC 17025:2017</strong>, garantizando que nuestro sistema de gestión 
-                  cumple con todos los requerimientos técnicos y de calidad.
-                </p>
-                <div className="bg-white/10 border border-white/20 rounded-2xl p-6 backdrop-blur-md">
-                  <h3 className="text-white font-bold mb-2 flex items-center gap-2">
-                    <span className="text-2xl">⚖️</span> Alcance Acreditado Principal
-                  </h3>
-                  <p className="text-slate-300 text-sm">
-                    Calibración de instrumentos de pesaje de funcionamiento no automático (balanzas y básculas) en el intervalo de:
-                  </p>
-                  <div className="mt-4 font-mono text-xl text-brand-light font-bold bg-slate-950/50 py-3 px-4 rounded-lg inline-block border border-brand/30">
-                    0 g &lt; m ≤ 2000 kg
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                 {/* Visual decoration for accreditations */}
-                 <div className="bg-white/5 border border-white/10 p-6 rounded-2xl flex flex-col items-center justify-center text-center">
-                   <div className="w-16 h-16 rounded-full bg-brand/20 flex items-center justify-center text-brand-light mb-4 font-bold text-xl">ISO</div>
-                   <span className="text-white font-bold text-sm">17025:2017</span>
-                 </div>
-                 <div className="bg-white/5 border border-white/10 p-6 rounded-2xl flex flex-col items-center justify-center text-center">
-                   <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 mb-4 font-bold text-xl">✓</div>
-                   <span className="text-white font-bold text-sm">Auditorías <br/>Superadas</span>
-                 </div>
-                 <div className="bg-white/5 border border-white/10 p-6 rounded-2xl flex flex-col items-center justify-center text-center col-span-2">
-                   <div className="w-full flex items-center justify-center text-slate-400 font-bold text-3xl tracking-widest opacity-50">ONAC</div>
-                 </div>
+            <div className="pt-2">
+              <h3 className="text-xs uppercase font-bold text-slate-400 tracking-wider mb-3">
+                Pilares que nos definen
+              </h3>
+              <div className="flex flex-wrap gap-2.5">
+                {['Exactitud', 'Confiabilidad', 'Transparencia', 'Innovación Digital', 'Compromiso', 'Liderazgo'].map((val) => (
+                  <span key={val} className="px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200">
+                    {val}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
-        </section>
 
-        {/* Otros Servicios Section */}
-        <section className="mb-12">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Alcance Integral</h2>
-            <p className="text-slate-600 font-medium max-w-2xl mx-auto">
-              Además de nuestro alcance principal, ofrecemos servicios de calibración trazables o tercerizados 
-              para cubrir absolutamente todas las necesidades de exactitud en tus procesos de medición.
-            </p>
+          <div className="lg:col-span-5 relative h-[380px] rounded-3xl overflow-hidden border border-slate-200 shadow-xl">
+            <Image 
+              src="/images/lab_hero_1790955109399.jpg" 
+              alt="Instalaciones de Labtronix Metrology" 
+              fill
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+            <div className="absolute bottom-6 left-6 right-6 text-white">
+              <span className="text-xs uppercase font-bold tracking-widest text-brand-light">Sede Principal</span>
+              <p className="text-base font-bold">Laboratorio de calibración y metrología física</p>
+            </div>
           </div>
-          
-          <div className="flex flex-wrap justify-center gap-4">
+        </div>
+
+        {/* Acreditación ONAC Banner */}
+        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden mb-20 border border-slate-800">
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-8 space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/20 border border-brand/30 text-brand-light text-xs font-bold uppercase tracking-wider">
+                <ShieldCheck size={16} weight="fill" />
+                Certificación Internacional
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-white">
+                Acreditación ONAC Código 21-LAC-011
+              </h2>
+              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+                Contamos con la acreditación del Organismo Nacional de Acreditación de Colombia (ONAC), vigente y respaldada bajo la norma <strong>NTC-ISO/IEC 17025:2017</strong> en la magnitud de <strong>Masa (pesaje no automático) de 0 g a 2000 kg</strong>.
+              </p>
+              <div className="flex flex-wrap gap-4 text-xs font-semibold text-slate-300 pt-2">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle size={16} weight="fill" className="text-brand-light" />
+                  Validez en auditorías internacionales
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle size={16} weight="fill" className="text-brand-light" />
+                  Acuerdo de reconocimiento mutuo ILAC-MRA
+                </span>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 bg-slate-950 p-6 rounded-2xl border border-slate-800 text-center space-y-3">
+              <div className="font-mono text-3xl font-black text-brand-light">ISO 17025</div>
+              <p className="text-xs text-slate-400">
+                Garantía técnica de competencia para laboratorios de ensayo y calibración.
+              </p>
+              <Link 
+                href="/#contacto" 
+                className="inline-block w-full py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 text-xs font-bold uppercase tracking-wider transition-colors"
+              >
+                Solicitar Cotización
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Magnitudes Globales */}
+        <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-sm text-center">
+          <span className="text-brand text-xs font-bold uppercase tracking-widest">
+            Cobertura Integral
+          </span>
+          <h2 className="text-3xl font-black text-slate-900 mt-2 mb-4">
+            Magnitudes Metrológicas Atendidas
+          </h2>
+          <p className="text-slate-600 max-w-2xl mx-auto text-sm sm:text-base font-medium mb-10">
+            Además de nuestro alcance acreditado principal, gestionamos calibraciones trazables para responder a todas las exigencias de tu planta.
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {[
-              { id: 'temp', label: 'Temperatura', icon: '🌡️' },
-              { id: 'dim', label: 'Dimensional', icon: '📏' },
-              { id: 'vol', label: 'Volumen', icon: '🧪' },
-              { id: 'pres', label: 'Presión', icon: '⏱️' },
-              { id: 'env', label: 'Medidores Ambientales', icon: '🌤️' },
-              { id: 'elec', label: 'Eléctrica', icon: '⚡' },
-              { id: 'chem', label: 'Electroquímica', icon: '🔋' },
-              { id: 'time', label: 'Tiempo y Frecuencia', icon: '⌚' },
-            ].map((service) => (
-              <div key={service.id} className="bg-white border border-slate-200 px-6 py-4 rounded-full flex items-center gap-3 shadow-sm hover:shadow-md hover:border-brand/30 transition-all cursor-default">
-                <span className="text-xl">{service.icon}</span>
-                <span className="text-slate-800 font-bold text-sm">{service.label}</span>
+              { label: 'Masa y Balanzas', icon: <Scales size={24} weight="duotone" /> },
+              { label: 'Temperatura', icon: <Thermometer size={24} weight="duotone" /> },
+              { label: 'Presión y Vacío', icon: <Gauge size={24} weight="duotone" /> },
+              { label: 'Volumen', icon: <Flask size={24} weight="duotone" /> },
+              { label: 'Dimensional', icon: <Ruler size={24} weight="duotone" /> },
+              { label: 'Tiempo y Frecuencia', icon: <Clock size={24} weight="duotone" /> },
+            ].map((mag, i) => (
+              <div key={i} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 hover:border-brand transition-colors">
+                <div className="text-brand">{mag.icon}</div>
+                <span className="text-xs font-bold text-slate-800">{mag.label}</span>
               </div>
             ))}
           </div>
-        </section>
 
-        {/* CTA Return */}
-        <div className="text-center mt-20">
-          <Link href="/#contacto" className="inline-flex items-center justify-center px-8 py-4 rounded-full font-bold text-white bg-gradient-to-br from-brand to-brand-light shadow-[0_4px_20px_rgba(236,6,11,0.3)] hover:shadow-[0_8px_30px_rgba(236,6,11,0.4)] hover:-translate-y-1 transition-all duration-300">
-            Contáctanos ahora
-          </Link>
+          <div className="mt-10">
+            <Link 
+              href="/#contacto" 
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-brand text-white text-xs font-bold uppercase tracking-wider hover:bg-brand-dark transition-colors shadow-md"
+            >
+              <span>Contáctanos hoy</span>
+              <ArrowRight size={16} weight="bold" />
+            </Link>
+          </div>
         </div>
 
       </div>
