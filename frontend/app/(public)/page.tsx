@@ -4,8 +4,11 @@ import Link from 'next/link';
 import {
   ArrowRight,
   Check,
+  Clock,
+  Drop,
   FileText,
   Gauge,
+  Lightning,
   Medal,
   Ruler,
   Scales,
@@ -62,18 +65,61 @@ const primaryServices = [
   },
 ];
 
-const secondaryServices = [
+// Servicios Trazables en la página principal con imágenes reales
+const homeTraceableServices = [
   {
-    icon: Thermometer,
-    title: 'Temperatura y humedad',
-    text: 'Calibración de termómetros, termohigrómetros y equipos de medición ambiental para procesos controlados.',
+    title: 'CALIBRACIÓN DE TERMOHIGRÓMETROS',
+    desc: 'Calibración trazable para termohigrómetros analógicos y digitales en cuartos fríos, bodegas y laboratorios.',
     image: '/images/original/termohigrometros.jpg',
   },
   {
-    icon: Gauge,
-    title: 'Presión y otras magnitudes',
-    text: 'Soluciones para presión, volumen, dimensional, tiempo y frecuencia con trazabilidad documentada.',
+    title: 'CALIBRACIÓN DE TERMÓMETROS DE CONTACTO',
+    desc: 'Calibración trazable de termómetros digitales, sondas termopares y PT100 para control de procesos.',
     image: '/images/original/termometros-contacto.jpg',
+  },
+  {
+    title: 'CALIBRACIÓN DE PESAS M1',
+    desc: 'Calibración de masas patrón individuales y juegos en acero inoxidable o fundición clase M1.',
+    image: '/images/original/pesas-m1.jpg',
+  },
+];
+
+// Catálogo de magnitudes complementarias en la página principal
+const homeOtherMagnitudes = [
+  {
+    category: 'VOLUMEN',
+    icon: Drop,
+    items: ['Probetas', 'Buretas', 'Micropipetas', 'Picnómetros', 'Dispensadores'],
+  },
+  {
+    category: 'PRESIÓN',
+    icon: Gauge,
+    items: ['Manómetros', 'Vacuómetros', 'Diferencial de presión', 'Transmisores'],
+  },
+  {
+    category: 'ELÉCTRICA',
+    icon: Lightning,
+    items: ['Pinzas voltiamperimétricas', 'Multímetros', 'Megómetros'],
+  },
+  {
+    category: 'LONGITUD',
+    icon: Ruler,
+    items: ['Pie de rey', 'Reglas graduadas', 'Micrómetros', 'Cintas métricas'],
+  },
+  {
+    category: 'TEMPERATURA Y HUMEDAD',
+    icon: Thermometer,
+    items: ['Termómetros de contacto', 'Infrarrojos', 'Ambientales', 'Bloques secos'],
+  },
+  {
+    category: 'TIEMPO Y FRECUENCIA',
+    icon: Clock,
+    items: ['Tacómetros', 'Cronómetros', 'Temporizadores industriales'],
+  },
+  {
+    category: 'PESAS PATRÓN OIML',
+    icon: Scales,
+    items: ['Clase E2', 'Clase F1', 'Clase M1', 'Pesas ASTM'],
   },
 ];
 
@@ -86,7 +132,7 @@ const process = [
 export default function LandingPage() {
   return (
     <>
-      {/* ─── Hero Slider Principal Dinámico ──────────────────── */}
+      {/* ─── Hero Slider Principal Dinámico con Video de Fondo ─ */}
       <HomeHeroSlider />
 
       {/* ─── Franja de Acreditación ONAC ──────────────────────── */}
@@ -317,42 +363,94 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* Magnitudes Secundarias Complementarias */}
-        <div className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        {/* ─── SERVICIOS TRAZABLES (Fotos Reales de Procedimientos) ─ */}
+        <div className="mt-20 border-t border-slate-200 pt-16">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand">TRAZABILIDAD COMPROBADA</p>
+            <h3 className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-950">SERVICIOS TRAZABLES</h3>
+            <p className="mt-2 text-sm sm:text-base text-slate-600">
+              Calibración trazable a patrones nacionales e internacionales con emisión de certificados válidos para auditorías.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {homeTraceableServices.map((srv) => (
+              <div
+                key={srv.title}
+                className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:border-brand/40 hover:shadow-md"
+              >
+                <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
+                  <Image
+                    src={srv.image}
+                    alt={srv.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(min-width: 1024px) 33vw, 100vw"
+                  />
+                </div>
+                <div className="p-5 sm:p-6">
+                  <h4 className="font-bold text-sm text-slate-950 uppercase tracking-tight group-hover:text-brand transition-colors">
+                    {srv.title}
+                  </h4>
+                  <p className="mt-2 text-xs text-slate-600 leading-relaxed">{srv.desc}</p>
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <Link
+                      href="/servicios"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-brand hover:text-brand-dark"
+                    >
+                      Ver alcance <ArrowRight size={13} weight="bold" />
+                    </Link>
+                    <Link
+                      href="#contacto"
+                      className="text-xs font-medium text-slate-500 hover:text-slate-800"
+                    >
+                      Cotizar
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ─── OTROS SERVICIOS POR MAGNITUD (Cuadrícula con Nombres de Equipos) ─ */}
+        <div className="mt-16 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-              <h4 className="text-lg font-bold text-slate-900">Otras magnitudes y servicios técnicos</h4>
-              <p className="text-sm text-slate-600">Servicios complementarios con trazabilidad documentada para tu planta o laboratorio.</p>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand">PORTAFOLIO MULTIMAGNITUD</span>
+              <h4 className="mt-1 text-2xl font-bold text-slate-950">Otros servicios de calibración técnica</h4>
+              <p className="text-sm text-slate-600 mt-1">Instrumentación atendida con trazabilidad documentada para laboratorios y plantas.</p>
             </div>
-            <ButtonLink href="/servicios" variant="secondary" arrow>
+            <ButtonLink href="/servicios" variant="primary" arrow>
               Ver todas las magnitudes
             </ButtonLink>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2">
-            {secondaryServices.map(({ icon: Icon, title, text, image }) => (
-              <div
-                key={title}
-                className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300"
-              >
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                  <Image
-                    src={image}
-                    alt={title}
-                    fill
-                    className="object-cover"
-                    sizes="80px"
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Icon size={20} weight="duotone" className="text-brand shrink-0" />
-                    <h5 className="font-bold text-sm text-slate-900">{title}</h5>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {homeOtherMagnitudes.map((mag) => {
+              const Icon = mag.icon;
+              return (
+                <div
+                  key={mag.category}
+                  className="rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-brand/40 hover:shadow-sm"
+                >
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-brand">
+                      <Icon size={18} weight="duotone" />
+                    </div>
+                    <h5 className="font-bold text-xs uppercase tracking-tight text-slate-900">{mag.category}</h5>
                   </div>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-600 line-clamp-2">{text}</p>
+                  <ul className="space-y-1.5 border-t border-slate-100 pt-3">
+                    {mag.items.map((it) => (
+                      <li key={it} className="flex items-center gap-1.5 text-xs text-slate-600">
+                        <span className="h-1 w-1 rounded-full bg-brand shrink-0" />
+                        <span>{it}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </Section>
