@@ -33,7 +33,27 @@ export default function ClientDetailPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updated = await clientsApi.update(id, form);
+      // El backend valida con `forbidNonWhitelisted`: si se envía la entidad
+      // completa (id, createdAt, updatedAt) responde 400. Enviamos solo los
+      // campos que este formulario edita.
+      const payload: Record<string, string | undefined> = {};
+      const textFields = [
+        'companyName',
+        'nit',
+        'contactName',
+        'phone',
+        'city',
+        'address',
+        'notes',
+      ] as const;
+      for (const field of textFields) {
+        const value = form[field];
+        if (value !== undefined) payload[field] = value;
+      }
+      // @IsEmail() rechaza la cadena vacía: si se deja en blanco, no se envía.
+      if (form.email) payload.email = form.email;
+
+      const updated = await clientsApi.update(id, payload);
       setClient(updated);
       setEditing(false);
       toast.success('Cliente actualizado');

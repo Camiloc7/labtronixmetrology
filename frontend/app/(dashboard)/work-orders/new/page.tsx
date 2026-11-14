@@ -7,13 +7,15 @@ import { Plus, Trash, ArrowLeft, FloppyDisk } from '@phosphor-icons/react';
 import { workOrdersApi, equipmentApi, quotesApi, usersApi } from '@/lib/api';
 import type { Client, Equipment, User, Quote, CreateWorkOrderDto } from '@/lib/types';
 import ClientSelector from '@/components/ui/ClientSelector';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function NewWorkOrderPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [technicians, setTechnicians] = useState<User[]>([]);
+  const [technicians, setTechnicians] = useState<Pick<User, 'id' | 'name'>[]>([]);
 
   const [form, setForm] = useState<CreateWorkOrderDto>({
     otNumber: '',
@@ -35,12 +37,14 @@ export default function NewWorkOrderPage() {
   });
 
   useEffect(() => {
-    Promise.all([equipmentApi.getAll(), quotesApi.getAll(), usersApi.getAll()])
-      .then(([e, q, u]) => {
+    // `GET /users` es solo ADMIN: pedirlo como TÉCNICO devolvía 403 y hacía
+    // fallar todo el Promise.all. Cargamos equipos y cotizaciones (permitidos
+    // para ambos roles) y la lista de usuarios se resuelve aparte.
+    Promise.all([equipmentApi.getAll(1, 1000), quotesApi.getAll(1, 1000)])
+      .then(([e, q]) => {
         setEquipments(e.data || e);
         setQuotes(q.data || q);
-        setTechnicians((Array.isArray(u) ? u : u.data || []).filter((user: User) => user.role === 'TECNICO' || user.role === 'ADMIN'));
-        
+
         // Auto-generate OT Number (in a real app, backend would generate this)
         const year = new Date().getFullYear().toString().slice(-2);
         const rand = Math.floor(1000 + Math.random() * 9000);
@@ -48,6 +52,18 @@ export default function NewWorkOrderPage() {
       })
       .catch(() => toast.error('Error al cargar datos básicos'));
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role === 'ADMIN') {
+      usersApi.getAll()
+        .then((u) => setTechnicians((Array.isArray(u) ? u : u.data || []).filter((user: User) => user.role === 'TECNICO' || user.role === 'ADMIN')))
+        .catch(() => toast.error('No se pudo cargar la lista de técnicos'));
+    } else {
+      // Un TÉCNICO solo puede asignarse a sí mismo.
+      setTechnicians([{ id: user.id, name: user.name }]);
+    }
+  }, [user]);
 
   const set = (field: keyof CreateWorkOrderDto, value: any) =>
     setForm((p) => ({ ...p, [field]: value }));

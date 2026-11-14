@@ -147,7 +147,7 @@ export const equipmentApi = {
 export const workOrdersApi = {
   getAll: (page = 1, limit = 10, search?: string) =>
     api.get('/work-orders', { params: { page, limit, search } }).then((r) => r.data),
-  getOne: (id: string) => api.get('/work-orders/${id}').then((r) => r.data),
+  getOne: (id: string) => api.get(`/work-orders/${id}`).then((r) => r.data),
   getItemHistory: (itemId: string) => api.get(`/work-orders/items/${itemId}/history`).then((r) => r.data),
   getItemStickerData: (itemId: string) => api.get(`/work-orders/items/${itemId}/sticker`).then((r) => r.data),
   getStats: () => api.get('/work-orders/stats').then((r) => r.data),

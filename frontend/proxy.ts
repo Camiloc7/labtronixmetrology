@@ -22,5 +22,8 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$).*)'],
+  // Excluye la API, los assets de Next, socket.io y cualquier archivo con
+  // extensión (vídeo del hero, .svg, robots.txt, sitemap.xml, manifest, etc.):
+  // el middleware solo debe proteger páginas, no recursos estáticos.
+  matcher: ['/((?!api|_next/static|_next/image|socket.io|favicon.ico|.*\\..*).*)'],
 };

@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Eye, EyeSlash, SignIn, LockKey, Envelope, GoogleLogo } from '@phosphor-icons/react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { authApi } from '@/lib/api';
 
 
 function LoginContent() {
@@ -241,9 +242,7 @@ function LoginContent() {
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               onClick={() => {
-                window.location.href = process.env.NEXT_PUBLIC_API_URL 
-                  ? process.env.NEXT_PUBLIC_API_URL.replace('/v1', '') + '/auth/google'
-                  : 'http://localhost:3002/api/auth/google';
+                window.location.href = authApi.getGoogleAuthUrl();
               }}
               style={{
                 width: '100%',
