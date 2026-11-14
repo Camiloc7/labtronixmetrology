@@ -358,29 +358,21 @@ echo "[12/12] Configurando backup automatico..."
 BACKUP_DIR="/home/$APP_USER/backups/postgres"
 mkdir -p "$BACKUP_DIR"
 
-cat > /usr/local/bin/labtronix-backup.sh << BACKUPEOF
-#!/bin/bash
-set -euo pipefail
+# El backup vive versionado en scripts/backup-postgres.sh: se instala una copia
+# en /usr/local/bin para que cron no dependa del repo.
+if [ -f "$APP_DIR/scripts/backup-postgres.sh" ]; then
+  install -m 755 -o root -g root "$APP_DIR/scripts/backup-postgres.sh" /usr/local/bin/labtronix-backup.sh
+  echo "    Script de backup instalado desde el repositorio"
+else
+  echo "    ERROR: falta $APP_DIR/scripts/backup-postgres.sh; el backup no se configuro" >&2
+fi
 
-BACKUP_DIR="$BACKUP_DIR"
-DATE=\$(date +%Y%m%d_%H%M%S)
-KEEP_DAYS=7
+# Cron diario a las 3 AM. El log va al home del usuario: /var/log no es
+# escribible por usuarios sin privilegios y el redirect fallaria antes de
+# ejecutar el script.
+(crontab -l 2>/dev/null | grep -v labtronix-backup; echo "0 3 * * * mkdir -p /home/$APP_USER/backups && /usr/local/bin/labtronix-backup.sh >> /home/$APP_USER/backups/labtronix-backup.log 2>&1") | crontab -
 
-# Dump de la base de datos
-docker exec labtronix_postgres pg_dump -U labtronix_user -d labtronix_db | gzip > "\$BACKUP_DIR/labtronix_\$DATE.sql.gz"
-
-# Eliminar backups antiguos
-find "\$BACKUP_DIR" -name "*.sql.gz" -mtime +\$KEEP_DAYS -delete
-
-echo "\$(date): Backup completado - labtronix_\$DATE.sql.gz"
-BACKUPEOF
-
-chmod +x /usr/local/bin/labtronix-backup.sh
-
-# Cron diario a las 3 AM
-(crontab -l 2>/dev/null | grep -v labtronix-backup; echo "0 3 * * * /usr/local/bin/labtronix-backup.sh >> /var/log/labtronix-backup.log 2>&1") | crontab -
-
-echo "    Backup automatico configurado (diario a las 3 AM, retencion 7 dias)"
+echo "    Backup automatico configurado (diario a las 3 AM, retencion 14 dias)"
 
 # ============================================
 # Configurar fail2ban
@@ -409,7 +401,9 @@ echo "    fail2ban configurado"
 # Logrotate para la app
 # ============================================
 cat > /etc/logrotate.d/labtronix << LOGROTATEEOF
-$APP_DIR/logs/*.log {
+$APP_DIR/backend/logs/*.log
+$APP_DIR/frontend/logs/*.log {
+    su $APP_USER $APP_USER
     daily
     rotate 14
     compress
