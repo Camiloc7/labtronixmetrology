@@ -29,4 +29,7 @@ export class WorkOrderPhoto {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  // URL firmada generada al consultar la foto (no se persiste en la base de datos)
+  url?: string;
 }

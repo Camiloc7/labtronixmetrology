@@ -8,6 +8,7 @@ import CameraCapture from '../ui/CameraCapture';
 interface Photo {
   id: string;
   publicId: string;
+  url?: string;
   description?: string;
   createdAt: string;
 }
@@ -22,6 +23,12 @@ interface PhotoGalleryProps {
 export default function PhotoGallery({ itemId, photos = [], onPhotoAdded, onPhotoDeleted }: PhotoGalleryProps) {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  const getErrorMessage = (error: any, fallback: string) => {
+    const message = error?.response?.data?.message;
+    if (Array.isArray(message)) return message.join(', ');
+    return message || error?.message || fallback;
+  };
 
   // Convert base64 to File
   const base64ToFile = (base64: string, filename: string): File => {
@@ -45,7 +52,7 @@ export default function PhotoGallery({ itemId, photos = [], onPhotoAdded, onPhot
       onPhotoAdded(newPhoto);
     } catch (error) {
       console.error('Error uploading photo:', error);
-      alert('Error al subir la foto');
+      alert(getErrorMessage(error, 'Error al subir la foto'));
     } finally {
       setUploading(false);
     }
@@ -61,7 +68,7 @@ export default function PhotoGallery({ itemId, photos = [], onPhotoAdded, onPhot
       onPhotoAdded(newPhoto);
     } catch (error) {
       console.error('Error uploading photo:', error);
-      alert('Error al subir la foto');
+      alert(getErrorMessage(error, 'Error al subir la foto'));
     } finally {
       setUploading(false);
       if (e.target) e.target.value = ''; // reset input
@@ -75,7 +82,7 @@ export default function PhotoGallery({ itemId, photos = [], onPhotoAdded, onPhot
       onPhotoDeleted(photoId);
     } catch (error) {
       console.error('Error deleting photo:', error);
-      alert('Error al eliminar la foto');
+      alert(getErrorMessage(error, 'Error al eliminar la foto'));
     }
   };
 
@@ -133,11 +140,33 @@ export default function PhotoGallery({ itemId, photos = [], onPhotoAdded, onPhot
               overflow: 'hidden',
               border: '1px solid var(--color-border)'
             }}>
-              <img 
-                src={photo.publicId} 
-                alt="Equipo" 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-              />
+              {photo.url ? (
+                <img
+                  src={photo.url}
+                  alt={photo.description || 'Foto del equipo'}
+                  loading="lazy"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px',
+                    textAlign: 'center',
+                    fontSize: '0.75rem',
+                    color: 'var(--color-text-muted)',
+                  }}
+                >
+                  <ImageIcon size={24} style={{ opacity: 0.5 }} />
+                  Imagen no disponible
+                </div>
+              )}
               <button
                 onClick={() => handleDelete(photo.id)}
                 style={{

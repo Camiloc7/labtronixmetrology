@@ -91,6 +91,19 @@ export class WorkOrdersService {
   async findOne(id: string): Promise<WorkOrder> {
     const ot = await this.workOrdersRepo.findOne({ where: { id } });
     if (!ot) throw new NotFoundException(`OT ${id} no encontrada`);
+    return this.withPhotoUrls(ot);
+  }
+
+  /**
+   * Añade a cada foto la URL firmada de Cloudinary.
+   * La URL es un campo calculado: no se guarda en la base de datos.
+   */
+  private withPhotoUrls(ot: WorkOrder): WorkOrder {
+    ot.items?.forEach((item) => {
+      item.photos?.forEach((photo) => {
+        photo.url = this.cloudinaryService.generateSignedUrl(photo.publicId);
+      });
+    });
     return ot;
   }
 
@@ -547,7 +560,9 @@ export class WorkOrdersService {
       description,
     });
 
-    return this.photosRepo.save(photo);
+    const saved = await this.photosRepo.save(photo);
+    saved.url = this.cloudinaryService.generateSignedUrl(saved.publicId);
+    return saved;
   }
 
   async deletePhoto(photoId: string): Promise<void> {
