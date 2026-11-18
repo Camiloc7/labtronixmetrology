@@ -8,14 +8,17 @@ import { ArrowLeft, PencilSimple, FloppyDisk, X } from '@phosphor-icons/react';
 import { clientsApi } from '@/lib/api';
 import { formatDate, formatDateTime } from '@/lib/utils/formatters';
 import type { Client } from '@/lib/types';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
+  const canManage = user?.role === 'ADMIN' || user?.role === 'COMERCIAL';
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(searchParams.get('edit') === 'true');
+  const [editing, setEditing] = useState(searchParams.get('edit') === 'true' && canManage);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<Partial<Client>>({});
 
@@ -23,12 +26,15 @@ export default function ClientDetailPage() {
     clientsApi.getOne(id).then((data) => {
       setClient(data);
       setForm(data);
+      if (searchParams.get('edit') === 'true' && !canManage) {
+        setEditing(false);
+      }
       setLoading(false);
     }).catch(() => {
       toast.error('Cliente no encontrado');
       router.push('/clients');
     });
-  }, [id]);
+  }, [id, canManage, searchParams]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -89,20 +95,22 @@ export default function ClientDetailPage() {
           <p className="page-header__subtitle">NIT: {client.nit || '—'} · {formatDate(client.createdAt)}</p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
-          {editing ? (
-            <>
-              <button className="btn btn--secondary" onClick={() => setEditing(false)}>
-                <X size={16} /> Cancelar
+          {canManage && (
+            editing ? (
+              <>
+                <button className="btn btn--secondary" onClick={() => setEditing(false)}>
+                  <X size={16} /> Cancelar
+                </button>
+                <button className="btn btn--primary" onClick={handleSave} disabled={saving}>
+                  {saving ? <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> : <FloppyDisk size={16} weight="bold" />}
+                  Guardar
+                </button>
+              </>
+            ) : (
+              <button className="btn btn--primary" onClick={() => setEditing(true)}>
+                <PencilSimple size={16} weight="bold" /> Editar
               </button>
-              <button className="btn btn--primary" onClick={handleSave} disabled={saving}>
-                {saving ? <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> : <FloppyDisk size={16} weight="bold" />}
-                Guardar
-              </button>
-            </>
-          ) : (
-            <button className="btn btn--primary" onClick={() => setEditing(true)}>
-              <PencilSimple size={16} weight="bold" /> Editar
-            </button>
+            )
           )}
         </div>
       </div>

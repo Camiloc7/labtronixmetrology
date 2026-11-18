@@ -8,6 +8,7 @@ import { workOrdersApi } from '@/lib/api';
 import type { WorkOrder, StatusHistory, WorkOrderStatus, WorkOrderItem } from '@/lib/types';
 import PhotoGallery from '@/components/work-orders/PhotoGallery';
 import { subscribeToWorkOrderEvents } from '@/lib/work-order-realtime';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 const STATUS_FLOW: WorkOrderStatus[] = ['RECIBIDO', 'EN_PROCESO', 'CALIBRADO', 'LISTO_ENVIO', 'DESPACHADO'];
 const OT_STATUS_LABELS: Record<WorkOrderStatus, string> = {
@@ -30,6 +31,8 @@ const getOtStatusBadge = (status: WorkOrderStatus) => {
 };
 
 function WorkOrderItemCard({ item, fetchOt }: { item: WorkOrderItem, fetchOt: () => void }) {
+  const { user } = useAuth();
+  const canManageOtItems = user?.role === 'ADMIN' || user?.role === 'TECNICO';
   const [expanded, setExpanded] = useState(false);
   const [history, setHistory] = useState<StatusHistory[]>([]);
   const [changingStatus, setChangingStatus] = useState(false);
@@ -121,9 +124,11 @@ function WorkOrderItemCard({ item, fetchOt }: { item: WorkOrderItem, fetchOt: ()
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/20">
           <div className="flex justify-between items-center mb-6">
             <h4 className="font-semibold text-slate-800 dark:text-white">Detalles del Equipo</h4>
-            <button className="btn btn-secondary btn-sm" onClick={(e) => { e.stopPropagation(); handlePrintSticker(); }}>
-              <Printer size={16} /> Imprimir Sticker
-            </button>
+            {canManageOtItems && (
+              <button className="btn btn-secondary btn-sm" onClick={(e) => { e.stopPropagation(); handlePrintSticker(); }}>
+                <Printer size={16} /> Imprimir Sticker
+              </button>
+            )}
           </div>
 
           {/* Progress bar */}
@@ -145,33 +150,35 @@ function WorkOrderItemCard({ item, fetchOt }: { item: WorkOrderItem, fetchOt: ()
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className={`grid grid-cols-1 ${canManageOtItems ? 'lg:grid-cols-2' : ''} gap-6`}>
             {/* Status Change Form */}
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
-              <h5 className="font-medium text-sm mb-3">Cambiar Estado</h5>
-              <div className="flex flex-col gap-3">
-                <select className="form-input text-sm" value={newStatus} onChange={(e) => setNewStatus(e.target.value as WorkOrderStatus)}>
-                  <option value="">Seleccionar nuevo estado...</option>
-                  {STATUS_FLOW.filter(s => s !== item.status).map(s => (
-                    <option key={s} value={s}>{OT_STATUS_LABELS[s]}</option>
-                  ))}
-                </select>
-                <input 
-                  type="text" 
-                  className="form-input text-sm" 
-                  placeholder="Nota u observación (opcional)" 
-                  value={statusNote} 
-                  onChange={(e) => setStatusNote(e.target.value)} 
-                />
-                <button 
-                  className="btn btn-primary w-full justify-center text-sm py-2" 
-                  onClick={handleChangeStatus} 
-                  disabled={!newStatus || changingStatus}
-                >
-                  {changingStatus ? 'Guardando...' : 'Actualizar'}
-                </button>
+            {canManageOtItems && (
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                <h5 className="font-medium text-sm mb-3">Cambiar Estado</h5>
+                <div className="flex flex-col gap-3">
+                  <select className="form-input text-sm" value={newStatus} onChange={(e) => setNewStatus(e.target.value as WorkOrderStatus)}>
+                    <option value="">Seleccionar nuevo estado...</option>
+                    {STATUS_FLOW.filter(s => s !== item.status).map(s => (
+                      <option key={s} value={s}>{OT_STATUS_LABELS[s]}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    className="form-input text-sm"
+                    placeholder="Nota u observación (opcional)"
+                    value={statusNote}
+                    onChange={(e) => setStatusNote(e.target.value)}
+                  />
+                  <button
+                    className="btn btn-primary w-full justify-center text-sm py-2"
+                    onClick={handleChangeStatus}
+                    disabled={!newStatus || changingStatus}
+                  >
+                    {changingStatus ? 'Guardando...' : 'Actualizar'}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* History */}
             <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm overflow-y-auto max-h-[250px]">
@@ -201,15 +208,16 @@ function WorkOrderItemCard({ item, fetchOt }: { item: WorkOrderItem, fetchOt: ()
           </div>
 
           <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-6">
-            <PhotoGallery 
-              itemId={item.id} 
-              photos={item.photos || []} 
+            <PhotoGallery
+              itemId={item.id}
+              photos={item.photos || []}
               onPhotoAdded={(newPhoto) => {
                 fetchOt();
               }}
               onPhotoDeleted={(photoId) => {
                 fetchOt();
               }}
+              canManage={canManageOtItems}
             />
           </div>
         </div>

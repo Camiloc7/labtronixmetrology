@@ -275,7 +275,14 @@ echo "    PM2 iniciado"
 # ============================================
 echo "[10/12] Configurando Nginx..."
 
-cat > /etc/nginx/sites-available/labtronix << 'NGINXCONF'
+NGINX_CONF="/etc/nginx/sites-available/labtronix"
+NGINX_MANAGED_BY_SETUP=0
+if [ -f "$NGINX_CONF" ] || [ -f /etc/nginx/sites-enabled/labtronix ]; then
+  echo "    Configuracion Nginx existente detectada en $NGINX_CONF; no se sobrescribe."
+  echo "    Use nginx/labtronix.conf del repositorio (y Certbot/SSL) como fuente de verdad en servidores ya configurados."
+else
+  NGINX_MANAGED_BY_SETUP=1
+  cat > "$NGINX_CONF" << 'NGINXCONF'
 server {
     listen 80;
     server_name _;
@@ -285,6 +292,20 @@ server {
 
     # Tamanos maximos para uploads
     client_max_body_size 250M;
+
+    # Socket.IO / WebSocket
+    location /socket.io/ {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 90s;
+        proxy_send_timeout 90s;
+    }
 
     # API Backend (NestJS en puerto 3001)
     location /api/ {
@@ -333,15 +354,22 @@ server {
     gzip_types text/plain text/css text/xml text/javascript application/javascript application/json application/xml+rss;
 }
 NGINXCONF
+fi
 
-# Habilitar el sitio
-ln -sf /etc/nginx/sites-available/labtronix /etc/nginx/sites-enabled/labtronix
-rm -f /etc/nginx/sites-enabled/default
+# Habilitar el sitio solo cuando el script acaba de crear la configuracion
+if [ "$NGINX_MANAGED_BY_SETUP" -eq 1 ]; then
+  ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/labtronix
+  rm -f /etc/nginx/sites-enabled/default
+fi
 
 # Verificar configuracion
 nginx -t
 systemctl reload nginx
-echo "    Nginx configurado y recargado"
+if [ "$NGINX_MANAGED_BY_SETUP" -eq 1 ]; then
+  echo "    Nginx configurado y recargado"
+else
+  echo "    Nginx verificado y recargado (configuracion existente conservada)"
+fi
 
 # ============================================
 # 11. Seed de usuarios iniciales

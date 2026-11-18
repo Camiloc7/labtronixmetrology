@@ -12,8 +12,12 @@ import { ImportExportActions } from '@/components/ImportExportActions';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatDate } from '@/lib/utils/formatters';
 import type { Client } from '@/lib/types';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function ClientsPage() {
+  const { user } = useAuth();
+  const canManageClients = user?.role === 'ADMIN' || user?.role === 'COMERCIAL';
+  const canDeleteClients = user?.role === 'ADMIN';
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -83,17 +87,21 @@ export default function ClientsPage() {
           <p className="page-header__subtitle">Gestión de empresas clientes del laboratorio</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <ImportExportActions
-            onExport={handleExport}
-            onImport={handleImport}
-            onImportSuccess={fetchClients}
-            entityName="Clientes"
-            expectedColumns={CLIENTS_COLUMNS}
-          />
-          <Link href="/clients/new" className="btn btn--primary">
-            <Plus size={18} weight="bold" />
-            Nuevo Cliente
-          </Link>
+          {canManageClients && (
+            <>
+              <ImportExportActions
+                onExport={handleExport}
+                onImport={handleImport}
+                onImportSuccess={fetchClients}
+                entityName="Clientes"
+                expectedColumns={CLIENTS_COLUMNS}
+              />
+              <Link href="/clients/new" className="btn btn--primary">
+                <Plus size={18} weight="bold" />
+                Nuevo Cliente
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
@@ -120,10 +128,16 @@ export default function ClientsPage() {
           <div className="empty-state">
             <Buildings size={48} className="empty-state__icon" weight="thin" />
             <p className="empty-state__title">No hay clientes</p>
-            <p className="empty-state__sub">Registra el primer cliente del laboratorio</p>
-            <Link href="/clients/new" className="btn btn--primary" style={{ marginTop: 12 }}>
-              <Plus size={16} weight="bold" /> Nuevo Cliente
-            </Link>
+            <p className="empty-state__sub">
+              {canManageClients
+                ? 'Registra el primer cliente del laboratorio'
+                : 'No hay clientes disponibles para mostrar'}
+            </p>
+            {canManageClients && (
+              <Link href="/clients/new" className="btn btn--primary" style={{ marginTop: 12 }}>
+                <Plus size={16} weight="bold" /> Nuevo Cliente
+              </Link>
+            )}
           </div>
         </div>
       ) : (
@@ -179,23 +193,27 @@ export default function ClientsPage() {
                         >
                           <Eye size={15} />
                         </Link>
-                        <Link
-                          href={`/clients/${client.id}?edit=true`}
-                          className="btn btn--secondary btn--sm"
-                          style={{ padding: '5px 10px' }}
-                          title="Editar"
-                        >
-                          <PencilSimple size={15} />
-                        </Link>
-                        <button
-                          className="btn btn--danger btn--sm"
-                          style={{ padding: '5px 10px' }}
-                          title="Desactivar"
-                          onClick={() => handleDeactivate(client.id)}
-                          disabled={deletingId === client.id}
-                        >
-                          <Trash size={15} />
-                        </button>
+                        {canManageClients && (
+                          <Link
+                            href={`/clients/${client.id}?edit=true`}
+                            className="btn btn--secondary btn--sm"
+                            style={{ padding: '5px 10px' }}
+                            title="Editar"
+                          >
+                            <PencilSimple size={15} />
+                          </Link>
+                        )}
+                        {canDeleteClients && (
+                          <button
+                            className="btn btn--danger btn--sm"
+                            style={{ padding: '5px 10px' }}
+                            title="Desactivar"
+                            onClick={() => handleDeactivate(client.id)}
+                            disabled={deletingId === client.id}
+                          >
+                            <Trash size={15} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>

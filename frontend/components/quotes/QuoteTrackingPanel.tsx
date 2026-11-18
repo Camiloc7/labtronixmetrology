@@ -4,17 +4,20 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { quotesApi } from '@/lib/api';
-import { CaretDown, CaretUp, FloppyDisk, Info } from '@phosphor-icons/react';
+import { CaretDown, CaretUp, FloppyDisk } from '@phosphor-icons/react';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 interface QuoteTrackingPanelProps {
   quoteId: string;
 }
 
 export default function QuoteTrackingPanel({ quoteId }: QuoteTrackingPanelProps) {
+  const { user } = useAuth();
+  const canEdit = user?.role === 'ADMIN' || user?.role === 'COMERCIAL';
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<any>({});
-  
+
   // Accordion state
   const [openSection, setOpenSection] = useState<string | null>('general');
 
@@ -44,11 +47,13 @@ export default function QuoteTrackingPanel({ quoteId }: QuoteTrackingPanelProps)
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canEdit) return;
     const { name, value } = e.target;
     setData((prev: any) => ({ ...prev, [name]: value }));
   };
 
   const handleSave = async () => {
+    if (!canEdit) return;
     try {
       setSaving(true);
       
@@ -99,12 +104,18 @@ export default function QuoteTrackingPanel({ quoteId }: QuoteTrackingPanelProps)
       <div style={{ padding: '20px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--color-surface)' }}>
         <div>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Seguimiento y Trazabilidad</h2>
-          <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: '4px 0 0 0' }}>Gestiona las fechas y documentos de toda la operación.</p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: '4px 0 0 0' }}>
+            {canEdit
+              ? 'Gestiona las fechas y documentos de toda la operación.'
+              : 'Consulta las fechas y documentos de la operación (solo lectura).'}
+          </p>
         </div>
-        <button className="btn btn--primary" onClick={handleSave} disabled={saving}>
-          {saving ? <div className="spinner" style={{ width: 16, height: 16 }} /> : <FloppyDisk size={18} />}
-          Guardar Cambios
-        </button>
+        {canEdit && (
+          <button className="btn btn--primary" onClick={handleSave} disabled={saving}>
+            {saving ? <div className="spinner" style={{ width: 16, height: 16 }} /> : <FloppyDisk size={18} />}
+            Guardar Cambios
+          </button>
+        )}
       </div>
 
       {/* 1. Compras y Requisiciones */}
@@ -116,23 +127,23 @@ export default function QuoteTrackingPanel({ quoteId }: QuoteTrackingPanelProps)
               <div className="grid-2" style={{ padding: 20, gap: 20 }}>
                 <div className="form-group">
                   <label>Fecha pactada del Servicio</label>
-                  <input type="date" className="input" name="fechaPactadaServicio" value={data.fechaPactadaServicio || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaPactadaServicio" value={data.fechaPactadaServicio || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>ID Orden de Trabajo (OT)</label>
-                  <input type="text" className="input" name="idOrdenTrabajo" value={data.idOrdenTrabajo || ''} onChange={handleChange} placeholder="Ej: 119-24" />
+                  <input type="text" className="input" disabled={!canEdit} name="idOrdenTrabajo" value={data.idOrdenTrabajo || ''} onChange={handleChange} placeholder="Ej: 119-24" />
                 </div>
                 <div className="form-group">
                   <label>ID Requisición</label>
-                  <input type="text" className="input" name="idRequisicion" value={data.idRequisicion || ''} onChange={handleChange} />
+                  <input type="text" className="input" disabled={!canEdit} name="idRequisicion" value={data.idRequisicion || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>ID Orden de Compra (OC)</label>
-                  <input type="text" className="input" name="idOrdenCompra" value={data.idOrdenCompra || ''} onChange={handleChange} />
+                  <input type="text" className="input" disabled={!canEdit} name="idOrdenCompra" value={data.idOrdenCompra || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>Fecha de entrega OC</label>
-                  <input type="date" className="input" name="fechaEntregaOc" value={data.fechaEntregaOc || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaEntregaOc" value={data.fechaEntregaOc || ''} onChange={handleChange} />
                 </div>
               </div>
             </motion.div>
@@ -149,19 +160,19 @@ export default function QuoteTrackingPanel({ quoteId }: QuoteTrackingPanelProps)
               <div className="grid-2" style={{ padding: 20, gap: 20 }}>
                 <div className="form-group">
                   <label>Fecha Recepción de Equipos</label>
-                  <input type="date" className="input" name="fechaRecepcionEquipos" value={data.fechaRecepcionEquipos || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaRecepcionEquipos" value={data.fechaRecepcionEquipos || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>ID Recepción de Equipos</label>
-                  <input type="text" className="input" name="idRecepcionEquipos" value={data.idRecepcionEquipos || ''} onChange={handleChange} />
+                  <input type="text" className="input" disabled={!canEdit} name="idRecepcionEquipos" value={data.idRecepcionEquipos || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>Fecha de Reporte (Servicio)</label>
-                  <input type="date" className="input" name="fechaReporte" value={data.fechaReporte || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaReporte" value={data.fechaReporte || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>ID Reporte de Servicio</label>
-                  <input type="text" className="input" name="idReporteServicio" value={data.idReporteServicio || ''} onChange={handleChange} />
+                  <input type="text" className="input" disabled={!canEdit} name="idReporteServicio" value={data.idReporteServicio || ''} onChange={handleChange} />
                 </div>
               </div>
             </motion.div>
@@ -178,19 +189,19 @@ export default function QuoteTrackingPanel({ quoteId }: QuoteTrackingPanelProps)
               <div className="grid-2" style={{ padding: 20, gap: 20 }}>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label>Laboratorio Externo (Nombre)</label>
-                  <input type="text" className="input" name="laboratorioExterno" value={data.laboratorioExterno || ''} onChange={handleChange} placeholder="Ej: INM, LOGAN..." />
+                  <input type="text" className="input" disabled={!canEdit} name="laboratorioExterno" value={data.laboratorioExterno || ''} onChange={handleChange} placeholder="Ej: INM, LOGAN..." />
                 </div>
                 <div className="form-group">
                   <label>Fecha de Ingreso a Lab. Externo</label>
-                  <input type="date" className="input" name="fechaIngresoLabExterno" value={data.fechaIngresoLabExterno || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaIngresoLabExterno" value={data.fechaIngresoLabExterno || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>Fecha de Entrega (Lab Externo)</label>
-                  <input type="date" className="input" name="fechaEntregaEquipoLabExterno" value={data.fechaEntregaEquipoLabExterno || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaEntregaEquipoLabExterno" value={data.fechaEntregaEquipoLabExterno || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>Fecha de Recoger el Equipo</label>
-                  <input type="date" className="input" name="fechaRecogerEquipo" value={data.fechaRecogerEquipo || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaRecogerEquipo" value={data.fechaRecogerEquipo || ''} onChange={handleChange} />
                 </div>
               </div>
             </motion.div>
@@ -207,27 +218,27 @@ export default function QuoteTrackingPanel({ quoteId }: QuoteTrackingPanelProps)
               <div className="grid-2" style={{ padding: 20, gap: 20 }}>
                 <div className="form-group">
                   <label>Fecha Entrega al Cliente</label>
-                  <input type="date" className="input" name="fechaEntregaEquipoCliente" value={data.fechaEntregaEquipoCliente || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaEntregaEquipoCliente" value={data.fechaEntregaEquipoCliente || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>ID Reporte Entrega Servicios</label>
-                  <input type="text" className="input" name="idReporteEntregaServicios" value={data.idReporteEntregaServicios || ''} onChange={handleChange} />
+                  <input type="text" className="input" disabled={!canEdit} name="idReporteEntregaServicios" value={data.idReporteEntregaServicios || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>Fecha Reporte Entrega</label>
-                  <input type="date" className="input" name="fechaReporteEntregaServicio" value={data.fechaReporteEntregaServicio || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaReporteEntregaServicio" value={data.fechaReporteEntregaServicio || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>ID Certificado</label>
-                  <input type="text" className="input" name="idCertificado" value={data.idCertificado || ''} onChange={handleChange} placeholder="Ej: 4200243194" />
+                  <input type="text" className="input" disabled={!canEdit} name="idCertificado" value={data.idCertificado || ''} onChange={handleChange} placeholder="Ej: 4200243194" />
                 </div>
                 <div className="form-group">
                   <label>Fecha Emisión Certificado</label>
-                  <input type="date" className="input" name="fechaEmisionCertificado" value={data.fechaEmisionCertificado || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaEmisionCertificado" value={data.fechaEmisionCertificado || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>Fecha Entrega Certificado</label>
-                  <input type="date" className="input" name="fechaEntregaCertificado" value={data.fechaEntregaCertificado || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaEntregaCertificado" value={data.fechaEntregaCertificado || ''} onChange={handleChange} />
                 </div>
               </div>
             </motion.div>
@@ -244,19 +255,19 @@ export default function QuoteTrackingPanel({ quoteId }: QuoteTrackingPanelProps)
               <div className="grid-2" style={{ padding: 20, gap: 20 }}>
                 <div className="form-group">
                   <label>ID Factura</label>
-                  <input type="text" className="input" name="idFactura" value={data.idFactura || ''} onChange={handleChange} />
+                  <input type="text" className="input" disabled={!canEdit} name="idFactura" value={data.idFactura || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>Fecha de Factura</label>
-                  <input type="date" className="input" name="fechaFactura" value={data.fechaFactura || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaFactura" value={data.fechaFactura || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>Comprobante de Egreso</label>
-                  <input type="text" className="input" name="comprobanteEgreso" value={data.comprobanteEgreso || ''} onChange={handleChange} />
+                  <input type="text" className="input" disabled={!canEdit} name="comprobanteEgreso" value={data.comprobanteEgreso || ''} onChange={handleChange} />
                 </div>
                 <div className="form-group">
                   <label>Fecha de Pago</label>
-                  <input type="date" className="input" name="fechaPago" value={data.fechaPago || ''} onChange={handleChange} />
+                  <input type="date" className="input" disabled={!canEdit} name="fechaPago" value={data.fechaPago || ''} onChange={handleChange} />
                 </div>
               </div>
             </motion.div>

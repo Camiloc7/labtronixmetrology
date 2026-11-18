@@ -10,8 +10,11 @@ import { formatDate, formatCOP, QUOTE_STATUS_LABELS, getQuoteStatusBadge } from 
 import { Pagination } from '@/components/ui/Pagination';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import type { Quote } from '@/lib/types';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function QuotesPage() {
+  const { user } = useAuth();
+  const canManageQuotes = user?.role === 'ADMIN' || user?.role === 'COMERCIAL';
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,14 +68,18 @@ export default function QuotesPage() {
         <div style={{ display: 'flex', gap: '12px' }}>
           <ImportExportActions
             onExport={handleExport}
-            onImport={handleImport}
+            onImport={canManageQuotes ? handleImport : undefined}
             onImportSuccess={reloadData}
             entityName="Cotizaciones"
             expectedColumns={QUOTES_COLUMNS}
+            canExport={true}
+            canImport={canManageQuotes}
           />
-          <Link href="/quotes/new" className="btn btn--primary">
-            <Plus size={18} weight="bold" /> Nueva Cotización
-          </Link>
+          {canManageQuotes && (
+            <Link href="/quotes/new" className="btn btn--primary">
+              <Plus size={18} weight="bold" /> Nueva Cotización
+            </Link>
+          )}
         </div>
       </div>
 
@@ -96,10 +103,14 @@ export default function QuotesPage() {
           <div className="empty-state">
             <FileText size={48} weight="thin" className="empty-state__icon" />
             <p className="empty-state__title">Sin cotizaciones</p>
-            <p className="empty-state__sub">Crea la primera propuesta económica</p>
-            <Link href="/quotes/new" className="btn btn--primary" style={{ marginTop: 12 }}>
-              <Plus size={16} weight="bold" /> Nueva Cotización
-            </Link>
+            <p className="empty-state__sub">
+              {canManageQuotes ? 'Crea la primera propuesta económica' : 'No hay cotizaciones disponibles para mostrar'}
+            </p>
+            {canManageQuotes && (
+              <Link href="/quotes/new" className="btn btn--primary" style={{ marginTop: 12 }}>
+                <Plus size={16} weight="bold" /> Nueva Cotización
+              </Link>
+            )}
           </div>
         </div>
       ) : (

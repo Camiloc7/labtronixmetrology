@@ -66,6 +66,22 @@ fi
 mv "$PARTIAL" "$TARGET"
 trap - EXIT
 
+# Copia offsite opcional (no rompe el backup local si falla la configuración).
+if [ -n "${OFFSITE_RCLONE_REMOTE:-}" ]; then
+  RCLONE_BIN="$(command -v rclone || true)"
+  if [ -n "$RCLONE_BIN" ]; then
+    echo "Subiendo backup a remoto rclone: $OFFSITE_RCLONE_REMOTE"
+    "$RCLONE_BIN" copy "$TARGET" "$OFFSITE_RCLONE_REMOTE"
+  else
+    echo "ADVERTENCIA: OFFSITE_RCLONE_REMOTE definido pero rclone no esta instalado" >&2
+  fi
+fi
+
+if [ -n "${OFFSITE_BACKUP_COMMAND:-}" ]; then
+  echo "Ejecutando comando offsite personalizado"
+  OFFSITE_BACKUP_FILE="$TARGET" bash -lc "$OFFSITE_BACKUP_COMMAND"
+fi
+
 # Retencion.
 find "$BACKUP_DIR" -maxdepth 1 -name 'labtronix_*.sql.gz' -mtime +"$KEEP_DAYS" -delete
 

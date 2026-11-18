@@ -7,8 +7,11 @@ import { Pagination } from '@/components/ui/Pagination';
 import { workOrdersApi } from '@/lib/api';
 import type { WorkOrder } from '@/lib/types';
 import { subscribeToWorkOrderEvents } from '@/lib/work-order-realtime';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function WorkOrdersPage() {
+  const { user } = useAuth();
+  const canCreateOt = user?.role === 'ADMIN' || user?.role === 'TECNICO';
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,9 +58,11 @@ export default function WorkOrdersPage() {
           <p className="page-description">Seguimiento y gestión de calibraciones de equipos</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <Link href="/work-orders/new" className="btn btn-primary">
-            <Plus size={18} weight="bold" /> Nueva OT
-          </Link>
+          {canCreateOt && (
+            <Link href="/work-orders/new" className="btn btn-primary">
+              <Plus size={18} weight="bold" /> Nueva OT
+            </Link>
+          )}
         </div>
       </div>
 

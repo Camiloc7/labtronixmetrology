@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Camera, Image as ImageIcon, Trash, Plus } from '@phosphor-icons/react';
+import { Camera, Image as ImageIcon, Trash } from '@phosphor-icons/react';
 import { workOrdersApi } from '@/lib/api';
 import CameraCapture from '../ui/CameraCapture';
 
@@ -18,9 +18,16 @@ interface PhotoGalleryProps {
   photos: Photo[];
   onPhotoAdded: (newPhoto: Photo) => void;
   onPhotoDeleted: (photoId: string) => void;
+  canManage?: boolean;
 }
 
-export default function PhotoGallery({ itemId, photos = [], onPhotoAdded, onPhotoDeleted }: PhotoGalleryProps) {
+export default function PhotoGallery({
+  itemId,
+  photos = [],
+  onPhotoAdded,
+  onPhotoDeleted,
+  canManage = true,
+}: PhotoGalleryProps) {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -90,27 +97,29 @@ export default function PhotoGallery({ itemId, photos = [], onPhotoAdded, onPhot
     <div style={{ marginTop: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Registro Fotográfico</h4>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button 
-            className="btn btn-secondary" 
-            onClick={() => setIsCameraOpen(true)}
-            disabled={uploading}
-            style={{ padding: '6px 12px', fontSize: '0.85rem' }}
-          >
-            <Camera size={18} /> Cámara
-          </button>
-          
-          <label className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.85rem', cursor: 'pointer', margin: 0 }}>
-            <input 
-              type="file" 
-              accept="image/*" 
-              onChange={handleFileUpload} 
-              style={{ display: 'none' }} 
+        {canManage && (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setIsCameraOpen(true)}
               disabled={uploading}
-            />
-            <ImageIcon size={18} /> Subir
-          </label>
-        </div>
+              style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+            >
+              <Camera size={18} /> Cámara
+            </button>
+
+            <label className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.85rem', cursor: 'pointer', margin: 0 }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+                disabled={uploading}
+              />
+              <ImageIcon size={18} /> Subir
+            </label>
+          </div>
+        )}
       </div>
 
       {uploading && (
@@ -120,15 +129,19 @@ export default function PhotoGallery({ itemId, photos = [], onPhotoAdded, onPhot
       )}
 
       {photos.length === 0 ? (
-        <div style={{ 
-          padding: '32px', 
-          border: '2px dashed var(--color-border)', 
-          borderRadius: 'var(--radius-md)', 
+        <div style={{
+          padding: '32px',
+          border: '2px dashed var(--color-border)',
+          borderRadius: 'var(--radius-md)',
           textAlign: 'center',
           color: 'var(--color-text-muted)'
         }}>
           <Camera size={32} style={{ opacity: 0.5, marginBottom: '8px' }} />
-          <p style={{ margin: 0, fontSize: '0.9rem' }}>No hay fotos registradas para este equipo.</p>
+          <p style={{ margin: 0, fontSize: '0.9rem' }}>
+            {canManage
+              ? 'No hay fotos registradas para este equipo.'
+              : 'No hay fotos registradas para este equipo.'}
+          </p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px' }}>
@@ -167,27 +180,29 @@ export default function PhotoGallery({ itemId, photos = [], onPhotoAdded, onPhot
                   Imagen no disponible
                 </div>
               )}
-              <button
-                onClick={() => handleDelete(photo.id)}
-                style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  background: 'rgba(255,0,0,0.8)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '28px',
-                  height: '28px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer'
-                }}
-                title="Eliminar foto"
-              >
-                <Trash size={14} weight="bold" />
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => handleDelete(photo.id)}
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    background: 'rgba(255,0,0,0.8)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '28px',
+                    height: '28px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                  title="Eliminar foto"
+                >
+                  <Trash size={14} weight="bold" />
+                </button>
+              )}
             </div>
           ))}
         </div>

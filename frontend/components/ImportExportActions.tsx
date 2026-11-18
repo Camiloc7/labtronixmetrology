@@ -14,13 +14,15 @@ export interface ExpectedColumn {
 }
 
 interface ImportExportActionsProps {
-  onExport: () => Promise<void>;
-  onImport: (file: File) => Promise<any>;
+  onExport?: () => Promise<void>;
+  onImport?: (file: File) => Promise<any>;
   onImportSuccess?: () => void;
   exportLabel?: string;
   importLabel?: string;
   entityName: string;
-  expectedColumns: ExpectedColumn[];
+  expectedColumns?: ExpectedColumn[];
+  canExport?: boolean;
+  canImport?: boolean;
 }
 
 export function ImportExportActions({
@@ -30,7 +32,9 @@ export function ImportExportActions({
   exportLabel = 'Exportar',
   importLabel = 'Importar',
   entityName,
-  expectedColumns,
+  expectedColumns = [],
+  canExport = true,
+  canImport = true,
 }: ImportExportActionsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -39,6 +43,7 @@ export function ImportExportActions({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleExportClick = async () => {
+    if (!onExport) return;
     setIsExporting(true);
     try {
       await onExport();
@@ -58,7 +63,7 @@ export function ImportExportActions({
   };
 
   const executeImport = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !onImport) return;
 
     setIsImporting(true);
     try {
@@ -79,27 +84,37 @@ export function ImportExportActions({
     }
   };
 
+  const showExport = canExport && !!onExport;
+  const showImport = canImport && !!onImport;
+
+  if (!showExport && !showImport) return null;
+
   return (
     <>
       <div style={{ display: 'flex', gap: '8px' }}>
-        <button
-          onClick={() => setShowModal(true)}
-          disabled={isImporting || isExporting}
-          className="btn btn--secondary"
-        >
-          <UploadSimple size={16} weight="bold" />
-          {importLabel}
-        </button>
-        <button
-          onClick={handleExportClick}
-          disabled={isImporting || isExporting}
-          className="btn btn--primary"
-        >
-          {isExporting ? <Spinner size={16} className="animate-spin" /> : <DownloadSimple size={16} weight="bold" />}
-          {exportLabel}
-        </button>
+        {showImport && (
+          <button
+            onClick={() => setShowModal(true)}
+            disabled={isImporting || isExporting}
+            className="btn btn--secondary"
+          >
+            <UploadSimple size={16} weight="bold" />
+            {importLabel}
+          </button>
+        )}
+        {showExport && (
+          <button
+            onClick={handleExportClick}
+            disabled={isImporting || isExporting}
+            className="btn btn--primary"
+          >
+            {isExporting ? <Spinner size={16} className="animate-spin" /> : <DownloadSimple size={16} weight="bold" />}
+            {exportLabel}
+          </button>
+        )}
       </div>
 
+      {showImport && (
       <Modal
         isOpen={showModal}
         onClose={() => !isImporting && setShowModal(false)}
@@ -151,6 +166,7 @@ export function ImportExportActions({
           </button>
         </div>
       </Modal>
+      )}
     </>
   );
 }

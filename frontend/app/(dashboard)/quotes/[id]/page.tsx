@@ -10,11 +10,14 @@ import { formatDate, formatCOP, QUOTE_STATUS_LABELS, getQuoteStatusBadge } from 
 import type { Quote } from '@/lib/types';
 import QuoteTrackingPanel from '@/components/quotes/QuoteTrackingPanel';
 import QuoteReceptionsPanel from '@/components/quotes/QuoteReceptionsPanel';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 const STATUS_OPTIONS = ['BORRADOR', 'ENVIADA', 'APROBADA', 'RECHAZADA'] as const;
 
 export default function QuoteDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const canManageQuotes = user?.role === 'ADMIN' || user?.role === 'COMERCIAL';
   const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -125,21 +128,23 @@ export default function QuoteDetailPage() {
         </motion.div>
 
         {/* Cambiar estado */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card">
-          <h2 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 16 }}>Cambiar Estado</h2>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {STATUS_OPTIONS.map((s) => (
-              <button
-                key={s}
-                className={`btn btn--sm ${s === quote.status ? 'btn--primary' : 'btn--secondary'}`}
-                onClick={() => handleStatusChange(s)}
-                disabled={s === quote.status || updatingStatus}
-              >
-                {QUOTE_STATUS_LABELS[s]}
-              </button>
-            ))}
-          </div>
-        </motion.div>
+        {canManageQuotes && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card">
+            <h2 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 16 }}>Cambiar Estado</h2>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {STATUS_OPTIONS.map((s) => (
+                <button
+                  key={s}
+                  className={`btn btn--sm ${s === quote.status ? 'btn--primary' : 'btn--secondary'}`}
+                  onClick={() => handleStatusChange(s)}
+                  disabled={s === quote.status || updatingStatus}
+                >
+                  {QUOTE_STATUS_LABELS[s]}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Panel de Trazabilidad */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
@@ -155,9 +160,11 @@ export default function QuoteDetailPage() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Ítems de Cotización</h2>
-            <button type="button" onClick={handleSyncEquipments} className="btn btn--secondary btn--sm">
-              <ArrowsMerge size={16} weight="bold" /> Sincronizar al Inventario
-            </button>
+            {canManageQuotes && (
+              <button type="button" onClick={handleSyncEquipments} className="btn btn--secondary btn--sm">
+                <ArrowsMerge size={16} weight="bold" /> Sincronizar al Inventario
+              </button>
+            )}
           </div>
           <div className="table-wrapper" style={{ border: 'none', overflowX: 'auto' }}>
             <table className="table" style={{ minWidth: 1200 }}>
