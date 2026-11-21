@@ -134,6 +134,53 @@ export default function QuoteDetailPage() {
               <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginBottom: 4 }}>Válida hasta</div>
               <div>{quote.validUntil ? formatDate(quote.validUntil) : 'Sin fecha límite'}</div>
             </div>
+            <div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginBottom: 4 }}>Canal de solicitud</div>
+              <div>{quote.requestChannel || '—'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginBottom: 4 }}>Requisición a compras</div>
+              <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
+                <label style={{ display:'flex', gap:8, alignItems:'center', fontSize:14 }}>
+                  <input type="checkbox" checked={!!quote.requisitionId} disabled={!canManageQuotes || !!quote.requisitionId} onChange={(e)=>{ if(e.target.checked) handleCreateRequisition(); }} />
+                  Generar requisición automática
+                </label>
+                {quote.requisitionId && <Link href={`/requisitions/${quote.requisitionId}`} className="btn btn--secondary btn--sm">Ver requisición</Link>}
+              </div>
+            </div>
+            <div style={{ gridColumn:'span 2' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginBottom: 4 }}>Soporte de solicitud</div>
+              <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+                {quote.supportFileName ? <span style={{ fontSize:13 }}>{quote.supportFileName}</span> : <span style={{ color:'var(--color-text-muted)' }}>Sin soporte cargado</span>}
+                {quote.supportFilePublicId && <button className="btn btn--secondary btn--sm" onClick={async ()=>{ try{ const s=await quotesApi.getSupport(id as string); window.open(s.url,'_blank'); }catch{ toast.error('No se pudo abrir el soporte'); } }}>Ver soporte</button>}
+                {canManageQuotes && <label className="btn btn--ghost btn--sm" style={{ cursor:'pointer' }}>Cargar soporte<input type="file" hidden onChange={(e)=>handleSupportUpload(e.target.files?.[0])} /></label>}
+              </div>
+            </div>
+            {(quote.contacts?.length || 0) > 0 && (
+              <div style={{ gridColumn:'span 2' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginBottom: 8 }}>Contactos</div>
+                <div style={{ display:'grid', gap:8 }}>
+                  {quote.contacts!.map((c, i) => (
+                    <div key={c.id || i} style={{ border:'1px solid var(--color-border)', borderRadius:8, padding:10, fontSize:13 }}>
+                      <strong>{c.name}</strong> <span style={{ color:'var(--color-text-muted)' }}>({c.type}{c.position ? ' · ' + c.position : ''}{c.isPrimary ? ' · Principal' : ''})</span>
+                      <div>{(c.phones||[]).filter(Boolean).join(', ')} {(c.emails||[]).filter(Boolean).length ? ' · ' + (c.emails||[]).filter(Boolean).join(', ') : ''}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {(quote.paymentTerms || quote.deliveryTime || quote.deliveryPlace || quote.warranty || quote.offerValidity) && (
+              <div style={{ gridColumn:'span 2' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginBottom: 8 }}>Condiciones comerciales</div>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:8, fontSize:13 }}>
+                  {quote.paymentTerms && <div><strong>Pago:</strong> {quote.paymentTerms}</div>}
+                  {quote.deliveryTime && <div><strong>Entrega:</strong> {quote.deliveryTime}</div>}
+                  {quote.deliveryPlace && <div><strong>Sitio:</strong> {quote.deliveryPlace}</div>}
+                  {quote.warranty && <div><strong>Garantía:</strong> {quote.warranty}</div>}
+                  {quote.offerValidity && <div><strong>Vigencia oferta:</strong> {quote.offerValidity}</div>}
+                </div>
+              </div>
+            )}
             {quote.notes && (
               <div style={{ gridColumn: 'span 2' }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginBottom: 4 }}>Observaciones</div>

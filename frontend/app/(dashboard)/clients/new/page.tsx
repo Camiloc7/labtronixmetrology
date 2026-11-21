@@ -6,7 +6,8 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { ArrowLeft, FloppyDisk } from '@phosphor-icons/react';
 import { clientsApi } from '@/lib/api';
-import type { CreateClientDto } from '@/lib/types';
+import type { CreateClientDto, ClientContact } from '@/lib/types';
+import ContactEditor from '@/components/clients/ContactEditor';
 
 export default function NewClientPage() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function NewClientPage() {
     address: '',
     city: '',
     notes: '',
+    contacts: [],
   });
 
   const set = (field: keyof CreateClientDto, value: string) =>
@@ -99,6 +101,9 @@ export default function NewClientPage() {
                 onChange={(e) => set('notes', e.target.value)}
                 style={{ resize: 'vertical' }}
               />
+            </div>
+            <div style={{ gridColumn: 'span 2', marginTop: 8 }}>
+              <ContactEditor value={(form.contacts as ClientContact[]) || []} onChange={(contacts) => setForm((p) => ({ ...p, contacts }))} />
             </div>
           </div>
 

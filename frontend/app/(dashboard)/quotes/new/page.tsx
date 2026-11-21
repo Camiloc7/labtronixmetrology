@@ -1,14 +1,15 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Plus, Trash, FloppyDisk } from '@phosphor-icons/react';
-import { quotesApi } from '@/lib/api';
+import { quotesApi, clientsApi } from '@/lib/api';
 import { formatCOP } from '@/lib/utils/formatters';
-import type { CreateQuoteDto, CreateQuoteItemDto } from '@/lib/types';
+import type { CreateQuoteDto, CreateQuoteItemDto, ClientContact, QuoteRequestChannel } from '@/lib/types';
 import ClientSelector from '@/components/ui/ClientSelector';
+import ContactEditor from '@/components/clients/ContactEditor';
 
 const EMPTY_ITEM: CreateQuoteItemDto = { 
   description: '', 
@@ -32,6 +33,15 @@ export default function NewQuotePage() {
   const [clientId, setClientId] = useState('');
   const [notes, setNotes] = useState('');
   const [validUntil, setValidUntil] = useState('');
+  const [requestChannel, setRequestChannel] = useState<QuoteRequestChannel | ''>('');
+  const [contacts, setContacts] = useState<ClientContact[]>([]);
+  const [paymentTerms, setPaymentTerms] = useState('');
+  const [deliveryTime, setDeliveryTime] = useState('');
+  const [deliveryPlace, setDeliveryPlace] = useState('');
+  const [warranty, setWarranty] = useState('');
+  const [offerValidity, setOfferValidity] = useState('');
+  const [supportFile, setSupportFile] = useState<File | null>(null);
+  const [createRequisition, setCreateRequisition] = useState(false);
   const [items, setItems] = useState<CreateQuoteItemDto[]>([{ ...EMPTY_ITEM }]);
 
   const updateItem = (index: number, field: keyof CreateQuoteItemDto, value: string | number) => {

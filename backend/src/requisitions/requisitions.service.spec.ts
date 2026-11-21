@@ -14,6 +14,7 @@ const mockRequisitionsRepo = {
   find: jest.fn(),
   merge: jest.fn(),
   remove: jest.fn(),
+  query: jest.fn().mockResolvedValue([{ next: 1 }]),
 };
 
 const mockSettingsService = {
@@ -77,13 +78,14 @@ describe('RequisitionsService', () => {
 
   describe('create', () => {
     it('should create a requisition', async () => {
+      mockRequisitionsRepo.findOne.mockResolvedValue(null);
       mockRequisitionsRepo.create.mockImplementation((entity) => ({ id: 'new-id', ...entity }));
       mockRequisitionsRepo.save.mockImplementation((entity) => Promise.resolve(entity));
 
-      const result = await service.create({ activity: 'New Activity' } as any);
+      const result = await service.create({ activity: 'New Activity', consecutiveNumber: 'REQ-0001' } as any);
       
       expect(result.activity).toBe('New Activity');
-      expect(mockRequisitionsRepo.create).toHaveBeenCalledWith({ activity: 'New Activity' });
+      expect(mockRequisitionsRepo.create).toHaveBeenCalledWith(expect.objectContaining({ activity: 'New Activity', consecutiveNumber: 'REQ-0001' }));
       expect(mockRequisitionsRepo.save).toHaveBeenCalled();
     });
   });

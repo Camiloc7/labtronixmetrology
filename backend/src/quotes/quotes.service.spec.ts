@@ -12,6 +12,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { NotFoundException } from '@nestjs/common';
 import { ILike } from 'typeorm';
 import { Response } from 'express';
+import { Requisition } from '../requisitions/entities/requisition.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 const mockManager = {
   save: jest.fn((entity: any, data?: any) =>
@@ -63,7 +65,9 @@ const mockTrackingRepo = {
   create: jest.fn(),
 };
 
-const mockNotificationsService = {};
+const mockRequisitionsRepo = { findOne: jest.fn(), create: jest.fn(), save: jest.fn(), query: jest.fn() };
+const mockNotificationsService = { create: jest.fn() };
+const mockCloudinaryService = { uploadFile: jest.fn(), deleteImage: jest.fn(), generateSignedUrl: jest.fn(() => 'https://signed') };
 
 describe('QuotesService', () => {
   let service: QuotesService;
@@ -77,9 +81,11 @@ describe('QuotesService', () => {
         { provide: getRepositoryToken(QuoteHistory), useValue: mockHistoryRepo },
         { provide: getRepositoryToken(Client), useValue: mockClientsRepo },
         { provide: getRepositoryToken(ServiceTracking), useValue: mockTrackingRepo },
+        { provide: getRepositoryToken(Requisition), useValue: mockRequisitionsRepo },
         { provide: ExcelService, useValue: mockExcelService },
         { provide: SettingsService, useValue: mockSettingsService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: CloudinaryService, useValue: mockCloudinaryService },
       ],
     }).compile();
 
@@ -125,7 +131,7 @@ describe('QuotesService', () => {
       expect(result.id).toBe('1');
       expect(mockQuotesRepo.findOne).toHaveBeenCalledWith({
         where: { id: '1' },
-        relations: { items: true, client: true, createdBy: true },
+        relations: { items: true, client: true, createdBy: true, requisition: true },
       });
     });
 

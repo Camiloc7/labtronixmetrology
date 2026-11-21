@@ -269,6 +269,7 @@ export interface CreateClientDto {
   address?: string;
   city?: string;
   notes?: string;
+  contacts?: ClientContact[];
 }
 
 export interface CreateQuoteItemDto {
