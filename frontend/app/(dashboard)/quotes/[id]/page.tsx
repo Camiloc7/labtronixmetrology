@@ -55,6 +55,22 @@ export default function QuoteDetailPage() {
     }
   };
 
+  const handleSupportUpload = async (file?: File) => {
+    if (!file || !id) return;
+    try {
+      await toast.promise(quotesApi.uploadSupport(id, file), { loading: 'Subiendo soporte...', success: 'Soporte cargado', error: 'Error al subir soporte' });
+      setQuote(await quotesApi.getOne(id));
+    } catch (e) { console.error(e); }
+  };
+  const handleCreateRequisition = async () => {
+    if (!id) return;
+    try {
+      const req = await toast.promise(quotesApi.createRequisition(id), { loading: 'Generando requisici?n...', success: 'Requisici?n generada/vinculada', error: 'Error al generar requisici?n' });
+      setQuote(await quotesApi.getOne(id));
+      if (req?.id) window.open(`/requisitions/${req.id}`, '_blank');
+    } catch (e) { console.error(e); }
+  };
+
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}><div className="spinner spinner--lg" /></div>;
   if (!quote) return null;
 

@@ -1,10 +1,11 @@
 import { Type } from 'class-transformer';
 import {
-  IsArray, IsDateString, IsEnum, IsNotEmpty, IsNumber,
+  IsArray, IsDateString, IsEnum, IsIn, IsNotEmpty, IsNumber,
   IsOptional, IsString, IsUUID, Min, ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { QuoteStatus } from '../entities/quote.entity';
+import { QuoteRequestChannel, QuoteStatus } from '../entities/quote.entity';
+import { ClientContactDto } from '../../clients/dto/create-client.dto';
 
 export class CreateQuoteItemDto {
   @ApiProperty({ example: 'Calibración de balanza analítica' })
@@ -92,6 +93,43 @@ export class CreateQuoteDto {
   @IsOptional()
   @IsDateString()
   validUntil?: string;
+
+  @ApiPropertyOptional({ enum: QuoteRequestChannel })
+  @IsOptional()
+  @IsEnum(QuoteRequestChannel)
+  requestChannel?: QuoteRequestChannel;
+
+  @ApiPropertyOptional({ type: [ClientContactDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ClientContactDto)
+  contacts?: ClientContactDto[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  paymentTerms?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  deliveryTime?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  deliveryPlace?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  warranty?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  offerValidity?: string;
 
   @ApiProperty({ type: [CreateQuoteItemDto] })
   @IsArray()

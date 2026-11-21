@@ -3,6 +3,18 @@ import {
   CreateDateColumn, UpdateDateColumn, Index
 } from 'typeorm';
 
+export type ClientContactType = 'GENERAL' | 'TECNICO' | 'COMPRAS' | 'OTRO';
+
+export interface ClientContact {
+  id: string;
+  type: ClientContactType;
+  name: string;
+  position?: string;
+  phones: string[];
+  emails: string[];
+  isPrimary?: boolean;
+}
+
 @Entity('clients')
 export class Client {
   @PrimaryGeneratedColumn('uuid')
@@ -18,7 +30,7 @@ export class Client {
   @Column({ length: 50, nullable: true, unique: true })
   nit: string;
 
-  // General Contact (Keep for legacy or general purposes)
+  // Legacy contacts (kept for compatibility/imports; UI uses contacts[])
   @Column({ name: 'contact_name', length: 150, nullable: true })
   contactName: string;
 
@@ -28,7 +40,6 @@ export class Client {
   @Column({ length: 200, nullable: true })
   email: string;
 
-  // Technical Contact
   @Column({ name: 'contacto_tecnico', length: 150, nullable: true })
   contactoTecnico: string;
 
@@ -38,7 +49,6 @@ export class Client {
   @Column({ name: 'email_tecnico', length: 200, nullable: true })
   emailTecnico: string;
 
-  // Commercial Contact
   @Column({ name: 'contacto_comercial', length: 150, nullable: true })
   contactoComercial: string;
 
@@ -47,6 +57,9 @@ export class Client {
 
   @Column({ name: 'email_comercial', length: 200, nullable: true })
   emailComercial: string;
+
+  @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
+  contacts: ClientContact[];
 
   @Column({ type: 'text', nullable: true })
   address: string;

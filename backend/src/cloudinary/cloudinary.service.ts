@@ -50,13 +50,24 @@ export class CloudinaryService {
     file: Express.Multer.File,
     folder: string = 'labtronix/equipment',
   ): Promise<any> {
+    return this.uploadFile(file, folder, 'image');
+  }
+
+  uploadFile(
+    file: Express.Multer.File,
+    folder: string,
+    resourceType: 'image' | 'raw' | 'auto' = 'auto',
+  ): Promise<any> {
     this.assertConfigured();
 
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder,
-          type: 'authenticated', // Mantiene la foto privada (solo accesible con firma)
+          type: 'authenticated',
+          resource_type: resourceType,
+          use_filename: true,
+          unique_filename: true,
         },
         (error, result) => {
           if (error) return reject(error);
@@ -68,13 +79,13 @@ export class CloudinaryService {
     });
   }
 
-  deleteImage(publicId: string): Promise<any> {
+  deleteImage(publicId: string, resourceType: 'image' | 'raw' | 'auto' = 'image'): Promise<any> {
     this.assertConfigured();
 
     return new Promise((resolve, reject) => {
       cloudinary.uploader.destroy(
         publicId,
-        { type: 'authenticated' },
+        { type: 'authenticated', resource_type: resourceType },
         (error, result) => {
           if (error) return reject(error);
           resolve(result);
@@ -83,14 +94,14 @@ export class CloudinaryService {
     });
   }
 
-  generateSignedUrl(publicId: string): string {
-    // Genera una URL firmada y segura (válida mientras no cambie la firma)
+  generateSignedUrl(publicId: string, resourceType: 'image' | 'raw' | 'video' = 'image'): string {
     if (!this.configured || !publicId) return '';
 
     return cloudinary.url(publicId, {
       type: 'authenticated',
       sign_url: true,
       secure: true,
+      resource_type: resourceType,
     });
   }
 }

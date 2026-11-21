@@ -27,6 +27,18 @@ export interface User {
   updatedAt: string;
 }
 
+export type ClientContactType = 'GENERAL' | 'TECNICO' | 'COMPRAS' | 'OTRO';
+
+export interface ClientContact {
+  id: string;
+  type: ClientContactType;
+  name: string;
+  position?: string;
+  phones: string[];
+  emails: string[];
+  isPrimary?: boolean;
+}
+
 export interface Client {
   id: string;
   companyName: string;
@@ -34,6 +46,13 @@ export interface Client {
   contactName?: string;
   phone?: string;
   email?: string;
+  contactoTecnico?: string;
+  telefonoTecnico?: string;
+  emailTecnico?: string;
+  contactoComercial?: string;
+  telefonoComercial?: string;
+  emailComercial?: string;
+  contacts?: ClientContact[];
   address?: string;
   city?: string;
   notes?: string;
@@ -60,6 +79,8 @@ export interface QuoteItem {
   calibrationPoints?: string;
 }
 
+export type QuoteRequestChannel = 'WHATSAPP' | 'TELEFONICO' | 'CORREO' | 'PRESENCIAL' | 'SOPORTE_CARGADO';
+
 export interface Quote {
   id: string;
   quoteNumber: string;
@@ -71,6 +92,18 @@ export interface Quote {
   notes?: string;
   pdfUrl?: string;
   validUntil?: string;
+  requestChannel?: QuoteRequestChannel;
+  supportFilePublicId?: string;
+  supportFileName?: string;
+  supportFileMime?: string;
+  contacts?: ClientContact[];
+  paymentTerms?: string;
+  deliveryTime?: string;
+  deliveryPlace?: string;
+  warranty?: string;
+  offerValidity?: string;
+  requisitionId?: string;
+  requisition?: Requisition;
   items: QuoteItem[];
   createdAt: string;
   updatedAt: string;
@@ -259,6 +292,13 @@ export interface CreateQuoteDto {
   status?: QuoteStatus;
   notes?: string;
   validUntil?: string;
+  requestChannel?: QuoteRequestChannel;
+  contacts?: ClientContact[];
+  paymentTerms?: string;
+  deliveryTime?: string;
+  deliveryPlace?: string;
+  warranty?: string;
+  offerValidity?: string;
   items: CreateQuoteItemDto[];
 }
 
@@ -311,12 +351,13 @@ export interface CreateRequisitionItemDto {
 }
 
 export interface CreateRequisitionDto {
-  consecutiveNumber: string;
+  consecutiveNumber?: string;
   activity: string;
   date: string;
   certificateToName: string;
   certificateAddress: string;
   quoteNumber?: string;
+  quoteId?: string;
   requesterName: string;
   requesterRole: string;
   authorizerName?: string;

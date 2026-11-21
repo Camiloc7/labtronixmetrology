@@ -31,12 +31,26 @@ export class RequisitionsService {
     private settingsService: SettingsService,
   ) {}
 
+  private async generateConsecutiveNumber(): Promise<string> {
+    const rows = await this.requisitionsRepository.query(
+      `SELECT COALESCE(MAX(CAST(SUBSTRING(consecutive_number FROM 'REQ-([0-9]+)') AS INTEGER)),0)+1 AS next FROM requisitions WHERE consecutive_number ~ '^REQ-[0-9]+$'`,
+    );
+    return `REQ-${String(rows[0]?.next || 1).padStart(4, '0')}`;
+  }
+
   async create(
     createRequisitionDto: CreateRequisitionDto,
   ): Promise<Requisition> {
-    const requisition =
-      this.requisitionsRepository.create(createRequisitionDto);
-    return this.requisitionsRepository.save(requisition);
+    const dto: any = { ...createRequisitionDto };
+    if (!dto.consecutiveNumber?.trim()) {
+      dto.consecutiveNumber = await this.generateConsecutiveNumber();
+    }
+    if (dto.quoteId) {
+      const existing = await this.requisitionsRepository.findOne({ where: { quoteId: dto.quoteId } });
+      if (existing) return existing;
+    }
+    const requisition = this.requisitionsRepository.create(dto);
+    return this.requisitionsRepository.save(requisition as any) as unknown as Promise<Requisition>;
   }
 
   async findAll(

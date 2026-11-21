@@ -7,7 +7,8 @@ import toast from 'react-hot-toast';
 import { ArrowLeft, PencilSimple, FloppyDisk, X } from '@phosphor-icons/react';
 import { clientsApi } from '@/lib/api';
 import { formatDate, formatDateTime } from '@/lib/utils/formatters';
-import type { Client } from '@/lib/types';
+import type { Client, ClientContact } from '@/lib/types';
+import ContactEditor from '@/components/clients/ContactEditor';
 import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function ClientDetailPage() {
@@ -20,12 +21,12 @@ export default function ClientDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(searchParams.get('edit') === 'true' && canManage);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<Partial<Client>>({});
+  const [form, setForm] = useState<Partial<Client>>({ contacts: [] });
 
   useEffect(() => {
     clientsApi.getOne(id).then((data) => {
       setClient(data);
-      setForm(data);
+      setForm({ ...data, contacts: data.contacts || [] });
       if (searchParams.get('edit') === 'true' && !canManage) {
         setEditing(false);
       }
@@ -147,6 +148,9 @@ export default function ClientDetailPage() {
                 onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
               />
             </div>
+            <div style={{ gridColumn: 'span 2', marginTop: 8 }}>
+              <ContactEditor value={(form.contacts as ClientContact[]) || []} onChange={(contacts) => setForm((p) => ({ ...p, contacts }))} />
+            </div>
           </div>
         ) : (
           <div>
@@ -166,6 +170,20 @@ export default function ClientDetailPage() {
                 </div>
               ) : null)}
             </div>
+            {(client.contacts?.length || 0) > 0 && (
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginBottom: 10 }}>Contactos</div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {client.contacts!.map((c, i) => (
+                    <div key={c.id || i} style={{ border: '1px solid var(--color-border)', borderRadius: 10, padding: 12 }}>
+                      <div style={{ fontWeight: 600 }}>{c.name} <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>({c.type}{c.position ? ` ? ${c.position}` : ''}{c.isPrimary ? ' ? Principal' : ''})</span></div>
+                      {(c.phones?.filter(Boolean).length || 0) > 0 && <div style={{ fontSize: 13 }}>{c.phones.filter(Boolean).join(', ')}</div>}
+                      {(c.emails?.filter(Boolean).length || 0) > 0 && <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{c.emails.filter(Boolean).join(', ')}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {client.notes && (
               <div style={{ marginTop: 20 }}>
                 <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700, marginBottom: 6 }}>Notas</div>

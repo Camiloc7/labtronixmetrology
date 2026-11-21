@@ -33,12 +33,7 @@ export default function NewRequisitionPage() {
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.consecutiveNumber.trim()) {
-      toast.error('El número de consecutivo es obligatorio');
-      return;
-    }
-    if (formData.items.length === 0) {
+    e.preventDefault();    if (formData.items.length === 0) {
       toast.error('Debe agregar al menos un ítem');
       return;
     }
@@ -101,10 +96,9 @@ export default function NewRequisitionPage() {
               <input
                 type="text"
                 className="input"
-                required
-                value={formData.consecutiveNumber}
+                value={formData.consecutiveNumber || ''}
                 onChange={(e) => setFormData({ ...formData, consecutiveNumber: e.target.value })}
-                placeholder="Ej. 151-26"
+                placeholder="Se generar? autom?ticamente"
               />
             </div>
             <div className="form-group">

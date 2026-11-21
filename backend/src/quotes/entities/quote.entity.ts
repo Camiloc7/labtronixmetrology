@@ -2,16 +2,25 @@ import {
   Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, OneToOne,
   JoinColumn, CreateDateColumn, UpdateDateColumn, Index
 } from 'typeorm';
-import { Client } from '../../clients/entities/client.entity';
+import { Client, ClientContact } from '../../clients/entities/client.entity';
 import { User } from '../../users/entities/user.entity';
 import { QuoteItem } from './quote-item.entity';
 import { ServiceTracking } from './service-tracking.entity';
+import type { Requisition } from '../../requisitions/entities/requisition.entity';
 
 export enum QuoteStatus {
   BORRADOR = 'BORRADOR',
   ENVIADA = 'ENVIADA',
   APROBADA = 'APROBADA',
   RECHAZADA = 'RECHAZADA',
+}
+
+export enum QuoteRequestChannel {
+  WHATSAPP = 'WHATSAPP',
+  TELEFONICO = 'TELEFONICO',
+  CORREO = 'CORREO',
+  PRESENCIAL = 'PRESENCIAL',
+  SOPORTE_CARGADO = 'SOPORTE_CARGADO',
 }
 
 @Entity('quotes')
@@ -50,6 +59,43 @@ export class Quote {
 
   @Column({ name: 'valid_until', type: 'date', nullable: true })
   validUntil: Date;
+
+  @Column({ name: 'request_channel', type: 'varchar', length: 50, nullable: true })
+  requestChannel: QuoteRequestChannel | null;
+
+  @Column({ name: 'support_file_public_id', length: 255, nullable: true })
+  supportFilePublicId: string | null;
+
+  @Column({ name: 'support_file_name', length: 255, nullable: true })
+  supportFileName: string | null;
+
+  @Column({ name: 'support_file_mime', length: 100, nullable: true })
+  supportFileMime: string | null;
+
+  @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
+  contacts: ClientContact[];
+
+  @Column({ name: 'payment_terms', type: 'text', nullable: true })
+  paymentTerms: string | null;
+
+  @Column({ name: 'delivery_time', type: 'text', nullable: true })
+  deliveryTime: string | null;
+
+  @Column({ name: 'delivery_place', type: 'text', nullable: true })
+  deliveryPlace: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  warranty: string | null;
+
+  @Column({ name: 'offer_validity', type: 'text', nullable: true })
+  offerValidity: string | null;
+
+  @ManyToOne('Requisition', { nullable: true })
+  @JoinColumn({ name: 'requisition_id' })
+  requisition: any;
+
+  @Column({ name: 'requisition_id', type: 'uuid', nullable: true })
+  requisitionId: string | null;
 
   @OneToMany(() => QuoteItem, (item) => item.quote, { cascade: true, eager: true })
   items: QuoteItem[];

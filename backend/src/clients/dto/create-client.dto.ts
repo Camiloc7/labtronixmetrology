@@ -1,5 +1,47 @@
-import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsArray, IsBoolean, IsEmail, IsIn, IsOptional, IsString, MaxLength, ValidateNested,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+
+export class ClientContactDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  id?: string;
+
+  @ApiProperty({ enum: ['GENERAL', 'TECNICO', 'COMPRAS', 'OTRO'] })
+  @IsIn(['GENERAL', 'TECNICO', 'COMPRAS', 'OTRO'])
+  type: 'GENERAL' | 'TECNICO' | 'COMPRAS' | 'OTRO';
+
+  @ApiProperty()
+  @IsString()
+  @MaxLength(150)
+  name: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  position?: string;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  phones?: string[];
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsEmail({}, { each: true })
+  emails?: string[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isPrimary?: boolean;
+}
 
 export class CreateClientDto {
   @ApiPropertyOptional({ example: 'CLI-001' })
@@ -60,6 +102,13 @@ export class CreateClientDto {
   @IsOptional()
   @IsEmail()
   emailComercial?: string;
+
+  @ApiPropertyOptional({ type: [ClientContactDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ClientContactDto)
+  contacts?: ClientContactDto[];
 
   @ApiPropertyOptional({ example: 'Cra 10 # 20-30' })
   @IsOptional()

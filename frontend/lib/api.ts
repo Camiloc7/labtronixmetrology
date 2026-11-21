@@ -131,6 +131,13 @@ export const quotesApi = {
   getTechnicalExcelUrl: (id: string) => `${API_URL}/quotes/${id}/technical-excel`,
   getTracking: (id: string) => api.get(`/quotes/${id}/tracking`).then(res => res.data),
   updateTracking: (id: string, data: any) => api.patch(`/quotes/${id}/tracking`, data).then(res => res.data),
+  uploadSupport: (id: string, file: File) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return api.post(`/quotes/${id}/support`, fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then((r) => r.data);
+  },
+  getSupport: (id: string) => api.get(`/quotes/${id}/support`).then((r) => r.data),
+  createRequisition: (id: string) => api.post(`/quotes/${id}/requisition`).then((r) => r.data),
 };
 
 // ─── Equipment ────────────────────────────────────────────────────────────────

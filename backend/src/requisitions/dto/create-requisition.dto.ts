@@ -17,8 +17,12 @@ export class CreateRequisitionItemDto {
 
 export class CreateRequisitionDto {
   @IsString()
-  @IsNotEmpty()
-  consecutiveNumber: string;
+  @IsOptional()
+  consecutiveNumber?: string;
+
+  @IsString()
+  @IsOptional()
+  quoteId?: string;
 
   @IsString()
   @IsNotEmpty()

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { Response } from 'express';
@@ -12,16 +12,20 @@ import {
 import { QuoteItem } from './entities/quote-item.entity';
 import { ServiceTracking } from './entities/service-tracking.entity';
 import { CreateQuoteDto } from './dto/create-quote.dto';
-import { Client } from '../clients/entities/client.entity';
+import { UpdateQuoteDto } from './dto/update-quote.dto';
+import { Client, ClientContact } from '../clients/entities/client.entity';
 import { ExcelService } from '../common/excel/excel.service';
 import { SettingsService } from '../settings/settings.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import * as fs from 'fs';
 import * as path from 'path';
+import { randomUUID } from 'crypto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { ILike } from 'typeorm';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { Requisition } from '../requisitions/entities/requisition.entity';
 
 @Injectable()
 export class QuotesService implements OnModuleInit {
@@ -36,9 +40,12 @@ export class QuotesService implements OnModuleInit {
     private readonly clientsRepo: Repository<Client>,
     @InjectRepository(ServiceTracking)
     private readonly trackingRepo: Repository<ServiceTracking>,
+    @InjectRepository(Requisition)
+    private readonly requisitionsRepo: Repository<Requisition>,
     private readonly excelService: ExcelService,
     private readonly settingsService: SettingsService,
     private readonly notificationsService: NotificationsService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async onModuleInit() {
@@ -96,10 +103,41 @@ export class QuotesService implements OnModuleInit {
     };
   }
 
+  private normalizeContacts(contacts?: any[]): ClientContact[] {
+    if (!Array.isArray(contacts)) return [];
+    return contacts
+      .filter((c) => c && typeof c.name === 'string' && c.name.trim())
+      .map((c) => ({
+        id: c.id || randomUUID(),
+        type: c.type || 'OTRO',
+        name: c.name.trim(),
+        position: c.position?.trim() || '',
+        phones: Array.isArray(c.phones) ? c.phones.filter(Boolean).map(String) : [],
+        emails: Array.isArray(c.emails) ? c.emails.filter(Boolean).map(String) : [],
+        isPrimary: Boolean(c.isPrimary),
+      }));
+  }
+
+  private getLogoBase64(): string | null {
+    for (const rel of ['../frontend/public/logo.png', '../../frontend/public/logo.png', 'frontend/public/logo.png']) {
+      try {
+        const logoPath = path.resolve(process.cwd(), rel);
+        if (fs.existsSync(logoPath)) {
+          return 'data:image/png;base64,' + fs.readFileSync(logoPath).toString('base64');
+        }
+      } catch {}
+    }
+    return null;
+  }
+
+  private getSupportResourceType(mime?: string | null): 'image' | 'raw' {
+    return mime?.startsWith('image/') ? 'image' : 'raw';
+  }
+
   async findOne(id: string): Promise<Quote> {
     const quote = await this.quotesRepo.findOne({
       where: { id },
-      relations: { items: true, client: true, createdBy: true },
+      relations: { items: true, client: true, createdBy: true, requisition: true },
     });
     if (!quote) throw new NotFoundException(`Cotización ${id} no encontrada`);
     return quote;
@@ -134,32 +172,35 @@ export class QuotesService implements OnModuleInit {
           quoteNumber,
           clientId: dto.clientId,
           createdById: userId,
-          status: dto.status,
+          status: dto.status || QuoteStatus.BORRADOR,
           notes: dto.notes,
           validUntil: dto.validUntil ? new Date(dto.validUntil) : undefined,
+          requestChannel: dto.requestChannel,
+          contacts: this.normalizeContacts(dto.contacts),
+          paymentTerms: dto.paymentTerms,
+          deliveryTime: dto.deliveryTime,
+          deliveryPlace: dto.deliveryPlace,
+          warranty: dto.warranty,
+          offerValidity: dto.offerValidity,
           totalValue,
           items,
         });
 
         return await this.quotesRepo.manager.transaction(async (manager) => {
           const savedQuote = await manager.save(quote);
-
           const history = manager.create(QuoteHistory, {
             quoteId: savedQuote.id,
             userId,
             action: QuoteHistoryAction.CREATED,
-            changes: { initialTotal: totalValue, initialStatus: dto.status },
+            changes: { initialTotal: totalValue, initialStatus: savedQuote.status },
           });
           await manager.save(history);
-
           return savedQuote;
         });
       } catch (error: any) {
         if (error.code === '23505' && retries > 1) {
           retries--;
-          await new Promise((resolve) =>
-            setTimeout(resolve, Math.random() * 90 + 10),
-          );
+          await new Promise((resolve) => setTimeout(resolve, Math.random() * 90 + 10));
           continue;
         }
         throw error;
@@ -170,7 +211,7 @@ export class QuotesService implements OnModuleInit {
 
   async update(
     id: string,
-    dto: Partial<CreateQuoteDto>,
+    dto: UpdateQuoteDto,
     userId?: string,
   ): Promise<Quote> {
     const quote = await this.findOne(id);
@@ -185,10 +226,11 @@ export class QuotesService implements OnModuleInit {
     }
 
     const changes: any = {};
-    if (dto.status && dto.status !== quote.status)
-      changes.status = { old: quote.status, new: dto.status };
-    if (dto.notes !== undefined && dto.notes !== quote.notes)
-      changes.notes = { old: quote.notes, new: dto.notes };
+    const simpleFields = ['status','notes','requestChannel','paymentTerms','deliveryTime','deliveryPlace','warranty','offerValidity'] as const;
+    for (const f of simpleFields) {
+      const nv = (dto as any)[f];
+      if (nv !== undefined && nv !== (quote as any)[f]) changes[f] = { old: (quote as any)[f], new: nv };
+    }
     if (dto.validUntil) {
       const newValid = new Date(dto.validUntil).toISOString().split('T')[0];
       const oldValid = quote.validUntil
@@ -196,6 +238,13 @@ export class QuotesService implements OnModuleInit {
         : null;
       if (newValid !== oldValid)
         changes.validUntil = { old: oldValid, new: newValid };
+    }
+    if (dto.contacts !== undefined) {
+      const normalized = this.normalizeContacts(dto.contacts as any);
+      if (JSON.stringify(normalized) !== JSON.stringify(quote.contacts || [])) {
+        changes.contacts = { old: quote.contacts || [], new: normalized };
+        (dto as any).contacts = normalized;
+      }
     }
 
     let newItems: QuoteItem[] = [];
@@ -234,9 +283,17 @@ export class QuotesService implements OnModuleInit {
         await manager.save(QuoteItem, newItems);
       }
 
+      const dtoAny = dto as any;
       const updatedQuote = (await manager.save(Quote, {
         ...quote,
         ...dto,
+        contacts: dtoAny.contacts !== undefined ? dtoAny.contacts : quote.contacts,
+        requestChannel: dto.requestChannel !== undefined ? dto.requestChannel : quote.requestChannel,
+        paymentTerms: dto.paymentTerms !== undefined ? dto.paymentTerms : quote.paymentTerms,
+        deliveryTime: dto.deliveryTime !== undefined ? dto.deliveryTime : quote.deliveryTime,
+        deliveryPlace: dto.deliveryPlace !== undefined ? dto.deliveryPlace : quote.deliveryPlace,
+        warranty: dto.warranty !== undefined ? dto.warranty : quote.warranty,
+        offerValidity: dto.offerValidity !== undefined ? dto.offerValidity : quote.offerValidity,
         totalValue:
           newItems.length > 0
             ? newItems.reduce((s, i) => s + Number(i.subtotal), 0)
@@ -277,12 +334,83 @@ export class QuotesService implements OnModuleInit {
     });
   }
 
+  async uploadSupport(id: string, file: Express.Multer.File) {
+    const quote = await this.findOne(id);
+    const allowed = ['application/pdf','image/png','image/jpeg','image/webp','image/gif','text/plain','message/rfc822'];
+    const ok = allowed.includes(file.mimetype) || file.mimetype.startsWith('image/');
+    if (!ok) throw new BadRequestException('Tipo de archivo no soportado. Use imagen, PDF o archivo de correo/texto.');
+    if (quote.supportFilePublicId) {
+      try { await this.cloudinaryService.deleteImage(quote.supportFilePublicId, this.getSupportResourceType(quote.supportFileMime)); } catch {}
+    }
+    const resourceType = this.getSupportResourceType(file.mimetype);
+    const uploaded = await this.cloudinaryService.uploadFile(file, 'labtronix/quote-support', resourceType === 'raw' ? 'raw' : 'image');
+    quote.supportFilePublicId = uploaded.public_id;
+    quote.supportFileName = file.originalname;
+    quote.supportFileMime = file.mimetype;
+    await this.quotesRepo.save(quote);
+    return { publicId: uploaded.public_id, fileName: file.originalname, mime: file.mimetype, url: this.cloudinaryService.generateSignedUrl(uploaded.public_id, resourceType) };
+  }
+
+  async getSupportUrl(id: string) {
+    const quote = await this.findOne(id);
+    if (!quote.supportFilePublicId) throw new NotFoundException('La cotizaci?n no tiene soporte cargado');
+    const resourceType = this.getSupportResourceType(quote.supportFileMime);
+    return { url: this.cloudinaryService.generateSignedUrl(quote.supportFilePublicId, resourceType), fileName: quote.supportFileName, mime: quote.supportFileMime };
+  }
+
+  async createRequisitionFromQuote(id: string, userId: string) {
+    const quote = await this.findOne(id);
+    if (quote.requisitionId) {
+      const existing = await this.requisitionsRepo.findOne({ where: { id: quote.requisitionId } });
+      if (existing) return existing;
+    }
+    const existingByQuote = await this.requisitionsRepo.findOne({ where: { quoteId: quote.id } });
+    if (existingByQuote) {
+      quote.requisitionId = existingByQuote.id;
+      await this.quotesRepo.save(quote);
+      return existingByQuote;
+    }
+
+    const contact = (quote.contacts || []).find((c) => c.type === 'COMPRAS' && c.isPrimary)
+      || (quote.contacts || []).find((c) => c.type === 'COMPRAS')
+      || (quote.contacts || []).find((c) => c.isPrimary)
+      || (quote.contacts || [])[0];
+    const client = quote.client;
+    const consecutive = await this.requisitionsRepo.query(`SELECT COALESCE(MAX(CAST(SUBSTRING(consecutive_number FROM 'REQ-([0-9]+)') AS INTEGER)),0)+1 AS next FROM requisitions WHERE consecutive_number ~ '^REQ-[0-9]+$'`);
+    const consecutiveNumber = `REQ-${String(consecutive[0]?.next || 1).padStart(4,'0')}`;
+
+    const req = this.requisitionsRepo.create({
+      consecutiveNumber,
+      activity: 'Calibraci?n de Equipos',
+      date: new Date(),
+      certificateToName: client?.companyName || '',
+      certificateAddress: client?.address || client?.city || '',
+      quoteNumber: quote.quoteNumber,
+      quoteId: quote.id,
+      requesterName: contact?.name || client?.contactName || 'Solicitante',
+      requesterRole: contact?.position || (contact?.type === 'COMPRAS' ? 'Compras' : 'Contacto'),
+      authorizerName: '',
+      authorizerRole: '',
+      items: (quote.items || []).map((i) => ({
+        description: i.equipmentName ? `${i.description} - ${i.equipmentName}` : i.description,
+        quantity: i.quantity,
+        unitOfMeasure: 'Und',
+      })) as any,
+    } as any);
+
+    const saved = await this.requisitionsRepo.save(req as any);
+    quote.requisitionId = (saved as any).id;
+    await this.quotesRepo.save(quote);
+    const history = this.historyRepo.create({ quoteId: quote.id, userId, action: QuoteHistoryAction.UPDATED, changes: { requisitionId: { old: null, new: (saved as any).id } } });
+    await this.historyRepo.save(history);
+    return this.requisitionsRepo.findOne({ where: { id: (saved as any).id }, relations: { quote: true } });
+  }
+
   async getTracking(id: string): Promise<ServiceTracking> {
     const tracking = await this.trackingRepo.findOne({
       where: { quoteId: id },
     });
     if (!tracking) {
-      // Si no existe, lo creamos para evitar errores 404
       const newTracking = this.trackingRepo.create({ quoteId: id });
       return this.trackingRepo.save(newTracking);
     }
@@ -329,24 +457,7 @@ export class QuotesService implements OnModuleInit {
     };
     const printer = new PdfPrinter(fonts);
 
-    // Attempt to load logo from frontend/public
-    let logoBase64: string | null = null;
-    try {
-      const logoPath = path.join(
-        process.cwd(),
-        '..',
-        'frontend',
-        'public',
-        'logo.png',
-      );
-      if (fs.existsSync(logoPath)) {
-        logoBase64 =
-          'data:image/png;base64,' +
-          fs.readFileSync(logoPath).toString('base64');
-      }
-    } catch (e) {
-      console.warn('Logo not found or could not be loaded', e);
-    }
+    const logoBase64 = this.getLogoBase64();
 
     const docDefinition: any = {
       pageSize: 'A4',
@@ -470,7 +581,7 @@ export class QuotesService implements OnModuleInit {
                   fontSize: 8,
                 },
                 {
-                  text: client?.contactName || '',
+                  text: [client?.contactName, quote.requestChannel ? `Canal: ${quote.requestChannel}` : null].filter(Boolean).join('\n') || '',
                   alignment: 'center',
                   fontSize: 8,
                   colSpan: 2,
@@ -733,17 +844,13 @@ export class QuotesService implements OnModuleInit {
                 },
                 {},
               ],
-              [{ text: 'Forma de pago:', bold: true }, { text: '' }],
-              [{ text: 'Tiempo de entrega:', bold: true }, { text: '' }],
-              [{ text: 'Sitio de entrega:', bold: true }, { text: '' }],
-              [{ text: 'Garantía:', bold: true }, { text: '' }],
+              [{ text: 'Forma de pago:', bold: true }, { text: quote.paymentTerms || '' }],
+              [{ text: 'Tiempo de entrega:', bold: true }, { text: quote.deliveryTime || '' }],
+              [{ text: 'Sitio de entrega:', bold: true }, { text: quote.deliveryPlace || '' }],
+              [{ text: 'Garantía:', bold: true }, { text: quote.warranty || '' }],
               [
                 { text: 'Vigencia de la oferta:', bold: true },
-                {
-                  text: quote.validUntil
-                    ? new Date(quote.validUntil).toLocaleDateString('es-CO')
-                    : '',
-                },
+                { text: quote.offerValidity || (quote.validUntil ? new Date(quote.validUntil).toLocaleDateString('es-CO') : '') },
               ],
             ],
           },
@@ -1099,23 +1206,7 @@ export class QuotesService implements OnModuleInit {
 
     const printer = new PdfPrinter(fonts);
 
-    let logoBase64: string | null = null;
-    try {
-      const logoPath = path.join(
-        process.cwd(),
-        '..',
-        'frontend',
-        'public',
-        'logo.png',
-      );
-      if (fs.existsSync(logoPath)) {
-        logoBase64 =
-          'data:image/png;base64,' +
-          fs.readFileSync(logoPath).toString('base64');
-      }
-    } catch (e) {
-      console.warn('Logo not found or could not be loaded', e);
-    }
+    const logoBase64 = this.getLogoBase64();
 
     const docDefinition: any = {
       pageSize: 'A4',

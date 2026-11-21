@@ -1,7 +1,8 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn,
+  Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn,
 } from 'typeorm';
 import { RequisitionItem } from './requisition-item.entity';
+import type { Quote } from '../../quotes/entities/quote.entity';
 
 @Entity('requisitions')
 export class Requisition {
@@ -25,6 +26,13 @@ export class Requisition {
 
   @Column({ name: 'quote_number', length: 50, nullable: true })
   quoteNumber: string;
+
+  @ManyToOne('Quote', { nullable: true })
+  @JoinColumn({ name: 'quote_id' })
+  quote: any;
+
+  @Column({ name: 'quote_id', type: 'uuid', nullable: true })
+  quoteId: string | null;
 
   @Column({ name: 'requester_name', length: 150 })
   requesterName: string;

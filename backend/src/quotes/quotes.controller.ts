@@ -14,9 +14,10 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { QuotesService } from './quotes.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
+import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { UpdateServiceTrackingDto } from './dto/update-service-tracking.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -81,10 +82,35 @@ export class QuotesController {
   @Roles('ADMIN', 'COMERCIAL')
   update(
     @Param('id') id: string,
-    @Body() dto: Partial<CreateQuoteDto>,
+    @Body() dto: UpdateQuoteDto,
     @CurrentUser('sub') userId: string,
   ) {
     return this.quotesService.update(id, dto, userId);
+  }
+
+  @Post(':id/support')
+  @Roles('ADMIN', 'COMERCIAL')
+  @ApiOperation({ summary: 'Subir soporte de solicitud de cotización' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
+  uploadSupport(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No se recibió el archivo de soporte.');
+    return this.quotesService.uploadSupport(id, file);
+  }
+
+  @Get(':id/support')
+  @Roles('ADMIN', 'COMERCIAL', 'TECNICO')
+  @ApiOperation({ summary: 'Obtener URL firmada del soporte de cotización' })
+  getSupport(@Param('id') id: string) {
+    return this.quotesService.getSupportUrl(id);
+  }
+
+  @Post(':id/requisition')
+  @Roles('ADMIN', 'COMERCIAL')
+  @ApiOperation({ summary: 'Generar requisición desde cotización (idempotente)' })
+  createRequisition(@Param('id') id: string, @CurrentUser('sub') userId: string) {
+    return this.quotesService.createRequisitionFromQuote(id, userId);
   }
 
   @Get(':id/history')
