@@ -63,13 +63,13 @@ export class Quote {
   @Column({ name: 'request_channel', type: 'varchar', length: 50, nullable: true })
   requestChannel: QuoteRequestChannel | null;
 
-  @Column({ name: 'support_file_public_id', length: 255, nullable: true })
+  @Column({ name: 'support_file_public_id', type: 'varchar', length: 255, nullable: true })
   supportFilePublicId: string | null;
 
-  @Column({ name: 'support_file_name', length: 255, nullable: true })
+  @Column({ name: 'support_file_name', type: 'varchar', length: 255, nullable: true })
   supportFileName: string | null;
 
-  @Column({ name: 'support_file_mime', length: 100, nullable: true })
+  @Column({ name: 'support_file_mime', type: 'varchar', length: 100, nullable: true })
   supportFileMime: string | null;
 
   @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
